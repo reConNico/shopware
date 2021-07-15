@@ -30,6 +30,10 @@ trait FixtureBehaviour
     {
         $sql = file_get_contents($name);
 
+        if (!\is_string($sql)) {
+            throw new \RuntimeException(sprintf('Could not read fixture "%s"', $name));
+        }
+
         Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->exec($sql);
     }
 }

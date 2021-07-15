@@ -340,7 +340,7 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
         );
 
         // if default shop locale is allowed, use it, otherwise use the first allowed locale
-        return in_array($defaultShopLocale, $backendLocales) ? $defaultShopLocale : array_shift($backendLocales);
+        return \in_array($defaultShopLocale, $backendLocales) ? $defaultShopLocale : array_shift($backendLocales);
     }
 
     /**
@@ -365,6 +365,19 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      */
     public function onInitResourceBackendSession(Enlight_Event_EventArgs $args)
     {
+        // If another session is already started, save and close it before starting the backend session below.
+        // We need to do this, because the other session would use the session id of the backend session and thus write
+        // its data into the wrong session.
+        Enlight_Components_Session_Namespace::ensureFrontendSessionClosed(Shopware()->Container());
+        // Ensure no session is active before starting the backend session below. We need to do this because there could
+        // be another session with inconsistent/invalid state in the container.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+            // The empty session id signals to `Enlight_Components_Session_Namespace::start()` that the session cookie
+            // should be used as session id.
+            session_id('');
+        }
+
         $sessionOptions = $this->getSessionOptions();
         $saveHandler = $this->createSaveHandler(Shopware()->Container());
         $storage = new NativeSessionStorage($sessionOptions);
@@ -436,6 +449,8 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
     protected function initLocale()
     {
         $container = $this->Application()->Container();
+        /** @var string $revision */
+        $revision = $container->getParameter('shopware.release.revision');
 
         $locale = $this->getCurrentLocale();
         $container->get('locale')->setLocale($locale->toString());
@@ -444,7 +459,7 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
         $baseHash = $this->request->getScheme() . '://'
                   . $this->request->getHttpHost()
                   . $this->request->getBaseUrl() . '?'
-                  . $container->getParameter('shopware.release.revision');
+                  . $revision;
         $baseHash = substr(sha1($baseHash), 0, 5);
         $template->setCompileId('backend_' . $locale->toString() . '_' . $baseHash);
 
@@ -494,6 +509,7 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      */
     private function getSessionOptions()
     {
+        /** @var array<string, string> $options */
         $options = Shopware()->Container()->getParameter('shopware.backendsession');
 
         if ($this->request !== null && !isset($options['cookie_path'])) {
@@ -519,11 +535,13 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      */
     private function createSaveHandler(Container $container)
     {
+        /** @var array<string, string> $sessionOptions */
         $sessionOptions = $container->getParameter('shopware.backendsession');
         if (isset($sessionOptions['save_handler']) && $sessionOptions['save_handler'] !== 'db') {
             return null;
         }
 
+        /** @var array<string, string> $dbOptions */
         $dbOptions = $container->getParameter('shopware.db');
         $conn = Db::createPDO($dbOptions);
 

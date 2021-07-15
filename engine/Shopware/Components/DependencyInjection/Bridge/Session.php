@@ -41,12 +41,16 @@ class Session
      */
     public function createSaveHandler(Container $container)
     {
-        $sessionOptions = $container->getParameter('shopware.session');
+        $sessionOptions = (array) $container->getParameter('shopware.session');
         if (isset($sessionOptions['save_handler']) && $sessionOptions['save_handler'] !== 'db') {
             return null;
         }
 
         $dbOptions = $container->getParameter('shopware.db');
+        if (!\is_array($dbOptions)) {
+            throw new \RuntimeException('Parameter shopware.db has to be an array');
+        }
+
         $conn = Db::createPDO($dbOptions);
 
         return new PdoSessionHandler(
@@ -67,7 +71,24 @@ class Session
      */
     public function createSession(Container $container, \SessionHandlerInterface $saveHandler = null)
     {
+        // If another session is already started, save and close it before starting the frontend session below.
+        // We need to do this, because the other session would use the session id of the frontend session and thus write
+        // its data into the wrong session.
+        \Enlight_Components_Session_Namespace::ensureBackendSessionClosed($container);
+        // Ensure no session is active before starting the frontend session below. We need to do this because there
+        // could be another session with inconsistent/invalid state in the container.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+            // The empty session id signals to `Enlight_Components_Session_Namespace::start()` that the session cookie
+            // should be used as session id.
+            session_id('');
+        }
+
         $sessionOptions = $container->getParameter('shopware.session');
+
+        if (!\is_array($sessionOptions)) {
+            throw new \RuntimeException('Parameter shopware.session has to be an array');
+        }
 
         /** @var \Shopware\Models\Shop\Shop $shop */
         $shop = $container->get('shop');
@@ -96,11 +117,11 @@ class Session
         unset($sessionOptions['locking']);
 
         if (isset($sessionOptions['save_path'])) {
-            ini_set('session.save_path', $sessionOptions['save_path']);
+            ini_set('session.save_path', (string) $sessionOptions['save_path']);
         }
 
         if (isset($sessionOptions['save_handler'])) {
-            ini_set('session.save_handler', $sessionOptions['save_handler']);
+            ini_set('session.save_handler', (string) $sessionOptions['save_handler']);
         }
 
         $storage = new NativeSessionStorage($sessionOptions, $saveHandler);

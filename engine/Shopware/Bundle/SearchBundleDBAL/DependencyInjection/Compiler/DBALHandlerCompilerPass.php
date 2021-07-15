@@ -41,6 +41,9 @@ class DBALHandlerCompilerPass implements CompilerPassInterface
         $taggedServicesIds += array_keys($container->findTaggedServiceIds(
             'facet_handler_dbal'
         ));
+        $taggedServicesIds += array_keys($container->findTaggedServiceIds(
+            'criteria_request_handler'
+        ));
 
         if (empty($taggedServicesIds)) {
             return;

@@ -128,6 +128,11 @@ class ProductProvider implements ProviderInterface
      */
     private $manualPositionLoader;
 
+    /**
+     * @var \Shopware_Components_Config
+     */
+    private $config;
+
     public function __construct(
         ListProductGatewayInterface $productGateway,
         CheapestPriceServiceInterface $cheapestPriceService,
@@ -143,7 +148,8 @@ class ProductProvider implements ProviderInterface
         ProductConfigurationLoader $configurationLoader,
         ProductListingVariationLoader $visibilityLoader,
         CrudServiceInterface $crudService,
-        ProductManualPositionLoaderInterface $manualPositionLoader
+        ProductManualPositionLoaderInterface $manualPositionLoader,
+        \Shopware_Components_Config $config
     ) {
         $this->productGateway = $productGateway;
         $this->cheapestPriceService = $cheapestPriceService;
@@ -160,6 +166,7 @@ class ProductProvider implements ProviderInterface
         $this->listingVariationLoader = $visibilityLoader;
         $this->crudService = $crudService;
         $this->manualPositionLoader = $manualPositionLoader;
+        $this->config = $config;
     }
 
     /**
@@ -227,6 +234,7 @@ class ProductProvider implements ProviderInterface
             if (isset($average[$number])) {
                 $product->setVoteAverage($average[$number]);
             }
+
             if (isset($calculated[$number])) {
                 $product->setCalculatedPrices($calculated[$number]);
             }
@@ -288,7 +296,7 @@ class ProductProvider implements ProviderInterface
         $id = $product->getId();
         $number = $product->getNumber();
 
-        if (!array_key_exists($id, $configurations)) {
+        if (!\array_key_exists($id, $configurations)) {
             return;
         }
 
@@ -302,10 +310,10 @@ class ProductProvider implements ProviderInterface
 
         $product->setFullConfiguration($configurations[$id]);
 
-        if (array_key_exists($number, $variantConfiguration)) {
+        if (\array_key_exists($number, $variantConfiguration)) {
             $product->setConfiguration($variantConfiguration[$number]);
         }
-        if (array_key_exists($id, $combinations)) {
+        if (\array_key_exists($id, $combinations)) {
             $product->setAvailableCombinations($combinations[$id]);
         }
 
@@ -322,13 +330,13 @@ class ProductProvider implements ProviderInterface
                 )
             );
 
-            if (array_key_exists($product->getNumber(), $listingPrices)) {
+            if (\array_key_exists($product->getNumber(), $listingPrices)) {
                 $product->setListingVariationPrices(
                     $listingPrices[$product->getNumber()]
                 );
             }
 
-            if (array_key_exists($number, $availability)) {
+            if (\array_key_exists($number, $availability)) {
                 $product->setAvailability($availability[$number]);
             }
         }
@@ -473,10 +481,16 @@ class ProductProvider implements ProviderInterface
                 /* @var ProductContextInterface $context */
                 $this->priceCalculationService->calculateProduct($product, $context);
 
-                if ($product->getCheapestPrice()) {
-                    $product->getCheapestPrice()->setRule(null);
+                $priceObj = $product->getCheapestUnitPrice();
 
-                    $prices[$number][$key] = $product->getCheapestPrice();
+                if ($this->config->get('calculateCheapestPriceWithMinPurchase')) {
+                    $priceObj = $product->getCheapestPrice();
+                }
+
+                if ($priceObj) {
+                    $priceObj->setRule(null);
+
+                    $prices[$number][$key] = $priceObj;
                 }
             }
         }
@@ -502,7 +516,7 @@ class ProductProvider implements ProviderInterface
 
     private function isValid(Shop $shop, $product): bool
     {
-        $valid = in_array($shop->getCategory()->getId(), $product->getCategoryIds());
+        $valid = \in_array($shop->getCategory()->getId(), $product->getCategoryIds());
         if (!$valid) {
             return false;
         }
@@ -519,7 +533,7 @@ class ProductProvider implements ProviderInterface
 
         $defaultCurrencyId = $shop->getCurrency()->getId();
 
-        if (!in_array($defaultCurrencyId, $currencies, true)) {
+        if (!\in_array($defaultCurrencyId, $currencies, true)) {
             $currencies[] = $defaultCurrencyId;
         }
 
@@ -537,7 +551,7 @@ class ProductProvider implements ProviderInterface
     {
         $merged = [];
         foreach ($configurations as $config) {
-            if (in_array($config->getId(), $expandGroupIds, true)) {
+            if (\in_array($config->getId(), $expandGroupIds, true)) {
                 $merged[] = $config;
                 continue;
             }
@@ -590,7 +604,7 @@ class ProductProvider implements ProviderInterface
     private function neededToIndex(array $groups, VariantFacet $variantFacet): bool
     {
         foreach ($groups as $group) {
-            if (in_array($group, $variantFacet->getGroupIds(), true)) {
+            if (\in_array($group, $variantFacet->getGroupIds(), true)) {
                 return true;
             }
         }

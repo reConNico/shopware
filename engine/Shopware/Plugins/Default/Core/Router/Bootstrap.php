@@ -94,6 +94,12 @@ class Shopware_Plugins_Core_Router_Bootstrap extends Shopware_Components_Plugin_
         if (($host = $request->getHeader('X_FORWARDED_HOST')) !== null
             && $host === $shop->getHost()
         ) {
+            // If the base path is null, set it to empty string. Otherwise the request will try to assemble the base path. On a reverse proxy setup with varnish this will fail on virtual URLs like /en
+            // The X-Forwarded-Host header is only set in such environments
+            if ($shop->getBasePath() === null) {
+                $shop->setBasePath('');
+            }
+
             $request->setSecure();
             $request->setBasePath($shop->getBasePath());
             $request->setBaseUrl($shop->getBaseUrl());
@@ -353,17 +359,17 @@ class Shopware_Plugins_Core_Router_Bootstrap extends Shopware_Components_Plugin_
         $repository = $this->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Shop::class);
         $requestShop = $repository->getActiveShopByRequestAsArray($request);
         if ($requestShop && strpos($url, $requestShop['base_url']) === 0) {
-            $url = substr($url, strlen($requestShop['base_url']));
+            $url = substr($url, \strlen($requestShop['base_url']));
         }
 
         $baseUrl = $request->getBaseUrl();
         if (strpos($url, $baseUrl . '/') === 0) {
-            $url = substr($url, strlen($baseUrl));
+            $url = substr($url, \strlen($baseUrl));
         }
 
         $basePath = $newShop->getBasePath();
         if (strpos($url, $basePath) === 0) {
-            $url = substr($url, strlen($basePath));
+            $url = substr($url, \strlen($basePath));
         }
 
         $host = $newShop->getHost();
@@ -481,9 +487,9 @@ class Shopware_Plugins_Core_Router_Bootstrap extends Shopware_Components_Plugin_
         $temp = rtrim($url, '/') . '/';
         switch (true) {
             case strpos($requestUri, $temp) === 0:
-                return substr($requestUri, strlen($url));
+                return substr($requestUri, \strlen($url));
             case $requestUri === $url:
-                return substr($requestUri, strlen($url));
+                return substr($requestUri, \strlen($url));
             default:
                 return $requestUri;
         }

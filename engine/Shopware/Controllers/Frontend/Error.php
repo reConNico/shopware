@@ -50,10 +50,7 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
             $this->enableBackendTheme();
         }
 
-        if (strpos($this->Request()->getHeader('Content-Type'), 'application/json') === 0) {
-            $this->Front()->Plugins()->Json()->setRenderer();
-            $this->View()->assign('success', false);
-        } elseif ($this->Request()->isXmlHttpRequest() || !Shopware()->Container()->initialized('db')) {
+        if ($this->Request()->isXmlHttpRequest() || !Shopware()->Container()->initialized('db')) {
             $this->View()->loadTemplate($templateModule . '/error/exception.tpl');
         } elseif (isset($_ENV['SHELL']) || PHP_SAPI === 'cli') {
             $this->View()->loadTemplate($templateModule . '/error/cli.tpl');
@@ -167,8 +164,13 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
          * If the system is configured to display the exception data, we need
          * to pass it to the template
         */
-        if ($this->Front()->getParam('showException') || $this->Request()->getModuleName() === 'backend') {
-            $path = Shopware()->Container()->getParameter('kernel.root_dir') . '/';
+        if ($this->Front()->getParam('showException')) {
+            $rootDir = Shopware()->Container()->getParameter('shopware.app.rootDir');
+            if (!\is_string($rootDir)) {
+                throw new \RuntimeException('Parameter shopware.app.rootDir has to be an string');
+            }
+
+            $path = $rootDir . '/';
 
             /** @var \Exception $exception */
             $exception = $error->exception;
