@@ -1,4 +1,9 @@
-<a href="https://github.com/shopware/platform"><img src="https://s3.eu-central-1.amazonaws.com/shopware-platform-assets/github-platform/readme/discover_sw6.png" align="right" height="39" /></a>
+# Shopware 5 or Shopware 6
+Hi stranger,
+
+nice to meet you. You are here in the Github repository of "Shopware 5" the predecessor of our current product "Shopware 6" - so if you are interested in the latest Shopware technology, please <a href="https://github.com/shopware/platform">click</a> this way 
+
+<a align="center" href="https://github.com/shopware/platform"><img src="https://s3.eu-central-1.amazonaws.com/shopware-platform-assets/github-platform/readme/discover_sw6.png" align="right" height="39" /></a>
 
 # Shopware 5
 
