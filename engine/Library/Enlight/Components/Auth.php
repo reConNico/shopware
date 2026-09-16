@@ -63,7 +63,7 @@ class Enlight_Components_Auth extends Zend_Auth
      *
      * @return Zend_Auth_Result
      */
-    public function authenticate(Zend_Auth_Adapter_Interface $adapter = null)
+    public function authenticate(?Zend_Auth_Adapter_Interface $adapter = null)
     {
         if ($adapter == null) {
             $adapter = $this->_adapter;
@@ -72,7 +72,9 @@ class Enlight_Components_Auth extends Zend_Auth
 
         if ($result->isValid() && method_exists($adapter, 'getResultRowObject')) {
             $user = $adapter->getResultRowObject();
-            $this->getStorage()->write($user);
+            if (\is_object($user)) {
+                $this->getStorage()->write($user);
+            }
         } else {
             $this->getStorage()->clear();
         }
@@ -85,7 +87,7 @@ class Enlight_Components_Auth extends Zend_Auth
      *
      * @return Zend_Auth_Result
      */
-    public function refresh(Zend_Auth_Adapter_Interface $adapter = null)
+    public function refresh(?Zend_Auth_Adapter_Interface $adapter = null)
     {
         if ($adapter == null) {
             $adapter = $this->_adapter;

@@ -5,28 +5,26 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\SearchBundle;
 
-use Doctrine\DBAL\Driver\Connection;
 use Shopware\Bundle\SearchBundle\BatchProductNumberSearchRequest;
 use Shopware\Bundle\SearchBundle\BatchProductSearch;
 use Shopware\Bundle\SearchBundle\Condition\CategoryCondition;
@@ -47,25 +45,11 @@ class BatchProductSearchTest extends TestCase
      */
     private $batchProductSearch;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
-
     protected function setUp(): void
     {
-        $this->connection = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class);
-        $this->connection->beginTransaction();
         $this->batchProductSearch = Shopware()->Container()->get(BatchProductSearch::class);
 
         parent::setUp();
-    }
-
-    public function tearDown(): void
-    {
-        $this->connection->rollBack();
-
-        parent::tearDown();
     }
 
     public function createProducts(array $products, ShopContext $context, Category $category): array
@@ -81,15 +65,16 @@ class BatchProductSearchTest extends TestCase
     {
         $context = $this->getContext();
         $category = $this->helper->createCategory();
-        $this->createProducts(['SW10002' => [], 'SW10001' => []], $context, $category);
+
+        $this->createProducts(['ES10002' => [], 'ES10003' => []], $context, $category);
 
         $request = new BatchProductNumberSearchRequest();
-        $request->setProductNumbers('test-1', ['SW10002', 'SW10001']);
+        $request->setProductNumbers('test-1', ['ES10002', 'ES10003']);
 
         $result = $this->batchProductSearch->search($request, $context);
 
-        static::assertArrayHasKey('SW10002', $result->get('test-1'));
-        static::assertArrayHasKey('SW10001', $result->get('test-1'));
+        static::assertArrayHasKey('ES10002', $result->get('test-1'));
+        static::assertArrayHasKey('ES10003', $result->get('test-1'));
     }
 
     public function testWithLessProductsThanRequested(): void
@@ -154,7 +139,7 @@ class BatchProductSearchTest extends TestCase
     private function assertProductNumbersExists(array $result, array $numbers): void
     {
         array_walk($numbers, function ($number) use ($result) {
-            static::assertArrayHasKey($number, $result, sprintf('Expected "%s" to be in [%s]', $number, implode(', ', array_keys($result))));
+            static::assertArrayHasKey($number, $result, \sprintf('Expected "%s" to be in [%s]', $number, implode(', ', array_keys($result))));
             static::assertNotNull($result[$number]);
             static::assertSame($number, $result[$number]->getNumber());
         });

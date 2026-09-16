@@ -1,38 +1,41 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Modules\Category;
 
+use Doctrine\DBAL\Connection;
 use Enlight_Components_Test_TestCase;
 use sCategories;
 use Shopware\Bundle\MediaBundle\MediaServiceInterface;
 use Shopware\Tests\Functional\Bundle\StoreFrontBundle\Helper;
 use Shopware\Tests\Functional\Traits\ContainerTrait;
+use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
 
 class sGetCategoriesTest extends Enlight_Components_Test_TestCase
 {
     use ContainerTrait;
+    use DatabaseTransactionBehaviour;
 
     /**
      * @var Helper
@@ -47,8 +50,9 @@ class sGetCategoriesTest extends Enlight_Components_Test_TestCase
     protected function setUp(): void
     {
         $this->helper = new Helper($this->getContainer());
+        $connection = $this->getContainer()->get(Connection::class);
 
-        Shopware()->Db()->query(
+        $connection->executeQuery(
             "DELETE FROM s_categories WHERE description LIKE 'Foo%' AND parent = 3"
         );
 
@@ -57,12 +61,6 @@ class sGetCategoriesTest extends Enlight_Components_Test_TestCase
         $this->module->customerGroupId = 1;
 
         parent::setUp();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->helper->cleanUp();
-        parent::tearDown();
     }
 
     public function testWithMainId()

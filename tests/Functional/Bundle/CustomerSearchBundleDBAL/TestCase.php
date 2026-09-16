@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\CustomerSearchBundleDBAL;
@@ -114,7 +114,7 @@ class TestCase extends Enlight_Components_Test_TestCase
             $customer['addresses'] = [['country_id' => 2]];
         }
 
-        $customerId = $this->insert('s_user', array_merge([
+        $customerData = array_merge([
             'firstname' => 'example',
             'lastname' => 'example',
             'customergroup' => 'EK',
@@ -123,22 +123,22 @@ class TestCase extends Enlight_Components_Test_TestCase
             'paymentpreset' => 1,
             'subshopID' => $customer['subshopID'] ?? 1000,
             'failedlogins' => 0,
-        ], $customer));
+        ], $customer);
+        unset($customerData['addresses'], $customerData['orders'], $customerData['newsletter']);
+        $customerId = $this->insert('s_user', $customerData);
 
-        if (\array_key_exists('addresses', $customer)) {
-            foreach ($customer['addresses'] as $address) {
-                $address['user_id'] = $customerId;
-                $addressId = $this->insert('s_user_addresses', $address);
+        foreach ($customer['addresses'] as $address) {
+            $address['user_id'] = $customerId;
+            $addressId = $this->insert('s_user_addresses', $address);
 
-                $this->connection->update(
-                    's_user',
-                    [
-                        'default_billing_address_id' => $addressId,
-                        'default_shipping_address_id' => $addressId,
-                    ],
-                    ['id' => $customerId]
-                );
-            }
+            $this->connection->update(
+                's_user',
+                [
+                    'default_billing_address_id' => $addressId,
+                    'default_shipping_address_id' => $addressId,
+                ],
+                ['id' => $customerId]
+            );
         }
 
         if (\array_key_exists('orders', $customer)) {
@@ -158,11 +158,9 @@ class TestCase extends Enlight_Components_Test_TestCase
                 $order['userID'] = $customerId;
                 $orderId = $this->insert('s_order', $order);
 
-                if (\array_key_exists('details', $order)) {
-                    foreach ($order['details'] as $detail) {
-                        $detail['orderID'] = $orderId;
-                        $this->insert('s_order_details', $detail);
-                    }
+                foreach ($order['details'] as $detail) {
+                    $detail['orderID'] = $orderId;
+                    $this->insert('s_order_details', $detail);
                 }
             }
         }

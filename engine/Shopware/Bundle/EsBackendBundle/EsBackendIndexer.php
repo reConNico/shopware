@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EsBackendBundle;
@@ -71,6 +71,9 @@ class EsBackendIndexer
         $this->indexFactory = $indexFactory;
     }
 
+    /**
+     * @return void
+     */
     public function index(ProgressHelperInterface $helper)
     {
         foreach ($this->repositories as $repository) {
@@ -84,7 +87,10 @@ class EsBackendIndexer
     }
 
     /**
-     * @param string $index
+     * @param string     $index
+     * @param array<int> $ids
+     *
+     * @return void
      */
     public function indexEntities($index, EsAwareRepository $repository, array $ids)
     {
@@ -94,9 +100,19 @@ class EsBackendIndexer
         $remove = array_diff($ids, $remove);
 
         $booleanFields = [];
+        $dateFields = [];
+        $dateTimeFields = [];
         foreach ($repository->getMapping()['properties'] as $key => $mapping) {
             if ($mapping['type'] === 'boolean') {
                 $booleanFields[] = $key;
+            }
+
+            if ($mapping['type'] === 'date' && $mapping['format'] === 'yyyy-MM-dd') {
+                $dateFields[] = $key;
+            }
+
+            if ($mapping['type'] === 'date' && \in_array($mapping['format'], ['yyyy-MM-dd HH:mm:ss', 'yyyy-MM-dd HH:mm:ss||yyyy-MM-dd'])) {
+                $dateTimeFields[] = $key;
             }
         }
 
@@ -104,8 +120,12 @@ class EsBackendIndexer
         foreach ($data as $row) {
             $documents[] = ['index' => ['_id' => $row['id']]];
             foreach ($row as $key => &$value) {
-                if ($value instanceof DateTime) {
+                if ($value instanceof DateTime && \in_array($key, $dateTimeFields, true)) {
                     $value = $value->format('Y-m-d H:i:s');
+                }
+
+                if ($value instanceof DateTime && \in_array($key, $dateFields, true)) {
+                    $value = $value->format('Y-m-d');
                 }
 
                 if (\in_array($key, $booleanFields, true)) {
@@ -136,6 +156,8 @@ class EsBackendIndexer
 
     /**
      * Removes unused indices
+     *
+     * @return void
      */
     public function cleanupIndices()
     {

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -36,6 +36,7 @@ use Shopware\Components\CSRFWhitelistAware;
 use Shopware\Components\Emotion\Exception\MappingRequiredException;
 use Shopware\Components\Model\Exception\ModelNotFoundException;
 use Shopware\Components\Model\ModelManager;
+use Shopware\Components\Model\QueryBuilder;
 use Shopware\Components\Random;
 use Shopware\Components\ShopRegistrationServiceInterface;
 use Shopware\Models\Category\Category;
@@ -213,14 +214,14 @@ class Shopware_Controllers_Backend_Emotion extends Shopware_Controllers_Backend_
                 $entry = $filterResult;
 
                 switch (strtolower($entry['valueType'])) {
-                    case 'json':
+                    case Field::VALUE_TYPE_JSON:
                         if ($entry['value'] !== '') {
                             $value = Zend_Json::decode($entry['value']);
                         } else {
                             $value = null;
                         }
                         break;
-                    case 'string':
+                    case Field::VALUE_TYPE_STRING:
                     default:
                         $value = $entry['value'];
                         break;
@@ -334,7 +335,7 @@ class Shopware_Controllers_Backend_Emotion extends Shopware_Controllers_Backend_
 
             $this->View()->assign([
                 'success' => false,
-                'message' => sprintf(
+                'message' => \sprintf(
                     'Uploaded file %s is no zip file',
                     $name
                 ),
@@ -343,19 +344,19 @@ class Shopware_Controllers_Backend_Emotion extends Shopware_Controllers_Backend_
             return;
         }
 
-        $downloadPath = sprintf('%s%s', sys_get_temp_dir(), DIRECTORY_SEPARATOR);
+        $downloadPath = \sprintf('%s%s', sys_get_temp_dir(), DIRECTORY_SEPARATOR);
 
         if (!is_writable($downloadPath)) {
             $this->View()->assign([
                 'success' => false,
-                'error' => sprintf("Target Directory %s isn't writable", $downloadPath),
+                'error' => \sprintf("Target Directory %s isn't writable", $downloadPath),
             ]);
 
             return;
         }
 
-        $tempFile = sprintf('%s%s', Random::getAlphanumericString(32), '.zip');
-        $copyTo = sprintf('%s%s', $downloadPath, $tempFile);
+        $tempFile = \sprintf('%s%s', Random::getAlphanumericString(32), '.zip');
+        $copyTo = \sprintf('%s%s', $downloadPath, $tempFile);
 
         $fileSystem->copy($file, $copyTo);
         $fileSystem->remove($file->getPathname());
@@ -373,7 +374,7 @@ class Shopware_Controllers_Backend_Emotion extends Shopware_Controllers_Backend_
      */
     public function importAction()
     {
-        $filePath = sprintf(
+        $filePath = \sprintf(
             '%s%s%s',
             sys_get_temp_dir(),
             DIRECTORY_SEPARATOR,
@@ -407,7 +408,7 @@ class Shopware_Controllers_Backend_Emotion extends Shopware_Controllers_Backend_
                 throw new InvalidArgumentException('File path can not be empty', 1);
             }
 
-            $filePath = sprintf(
+            $filePath = \sprintf(
                 '%s%s%s',
                 sys_get_temp_dir(),
                 DIRECTORY_SEPARATOR,
@@ -963,7 +964,7 @@ class Shopware_Controllers_Backend_Emotion extends Shopware_Controllers_Backend_
             $result = [
                 'success' => true,
                 'total' => $paginator->count(),
-                'data' => $paginator->getIterator()->getArrayCopy(),
+                'data' => iterator_to_array($paginator),
             ];
         } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
@@ -977,7 +978,7 @@ class Shopware_Controllers_Backend_Emotion extends Shopware_Controllers_Backend_
      * @param int|null $limit
      * @param int|null $id
      *
-     * @return Doctrine\ORM\QueryBuilder|Shopware\Components\Model\QueryBuilder
+     * @return QueryBuilder
      */
     protected function getTemplatesQuery($offset = null, $limit = null, $id = null)
     {
@@ -1356,16 +1357,16 @@ class Shopware_Controllers_Backend_Emotion extends Shopware_Controllers_Backend_
     /**
      * Method for processing the different value types of the data fields.
      *
-     * @param array|string $value
+     * @param array<array<string, mixed>>|string|null $value
      */
-    private function processDataFieldValue(Field $field, $value): string
+    private function processDataFieldValue(Field $field, $value): ?string
     {
         $valueType = strtolower($field->getValueType());
         $xType = $field->getXType();
 
         $mediaFields = $this->getMediaXTypes();
 
-        if ($valueType === 'json') {
+        if ($valueType === Field::VALUE_TYPE_JSON) {
             if (\is_array($value)) {
                 foreach ($value as &$val) {
                     if (!isset($val['path'])) {
@@ -1379,8 +1380,12 @@ class Shopware_Controllers_Backend_Emotion extends Shopware_Controllers_Backend_
             $value = Zend_Json::encode($value);
         }
 
-        if (\in_array($xType, $mediaFields, true) && $this->mediaService->isEncoded($value)) {
+        if (\is_string($value) && \in_array($xType, $mediaFields, true) && $this->mediaService->isEncoded($value)) {
             $value = $this->mediaService->normalize($value);
+        }
+
+        if (\is_array($value)) {
+            throw new UnexpectedValueException(\sprintf('Use field value type "%s" if arrays should be saved. Got value type "%s" instead', Field::VALUE_TYPE_JSON, $valueType));
         }
 
         return $value;
@@ -1468,6 +1473,8 @@ class Shopware_Controllers_Backend_Emotion extends Shopware_Controllers_Backend_
     }
 
     /**
+     * @param Query<Template> $query
+     *
      * @return Paginator<Template>
      */
     private function getQueryPaginator(Query $query): Paginator
@@ -1583,7 +1590,7 @@ EOD;
 
         $this->get(ShopRegistrationServiceInterface::class)->registerShop($parent);
 
-        return $this->Front()->Router()->assemble([
+        return $this->Front()->ensureRouter()->assemble([
             'controller' => 'campaign',
             'module' => 'frontend',
             'emotionId' => $emotionId,

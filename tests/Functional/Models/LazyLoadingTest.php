@@ -5,30 +5,29 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Models;
 
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use PHPUnit\Framework\TestCase;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Random;
 use Shopware\Models\Article\Configurator\Template\Price as ConfiguratorPrice;
 use Shopware\Models\Article\Notification;
@@ -42,10 +41,7 @@ use Shopware\Models\Premium\Premium;
 
 class LazyLoadingTest extends TestCase
 {
-    /**
-     * @var EntityManager
-     */
-    private $em;
+    private ModelManager $em;
 
     public static function tearDownAfterClass(): void
     {
@@ -298,17 +294,19 @@ class LazyLoadingTest extends TestCase
         $conn = $this->em->getConnection();
 
         $orderNumber = $conn->fetchOne('SELECT ordernumber FROM s_articles_details');
+        static::assertIsString($orderNumber);
         $email = $conn->fetchOne('SELECT email FROM s_user');
+        static::assertIsString($email);
 
         $conn->insert('s_articles_notification', [
             'ordernumber' => $orderNumber,
             'mail' => $email,
         ]);
 
-        $id = $conn->lastInsertId();
+        $id = (int) $conn->lastInsertId();
 
         $notification = $this->em->getRepository(Notification::class)->find($id);
-        static::assertNotNull($notification);
+        static::assertInstanceOf(Notification::class, $notification);
         static::assertEquals($orderNumber, $notification->getArticleDetail()->getNumber());
         static::assertEquals($email, $notification->getCustomer()->getEmail());
 
@@ -338,10 +336,10 @@ class LazyLoadingTest extends TestCase
         $conn->insert('s_article_configurator_template_prices', [
             'customer_group_key' => 'ek',
         ]);
-        $id = $conn->lastInsertId();
+        $id = (int) $conn->lastInsertId();
 
         $templatePrice = $this->em->getRepository(ConfiguratorPrice::class)->find($id);
-        static::assertNotNull($templatePrice);
+        static::assertInstanceOf(ConfiguratorPrice::class, $templatePrice);
         static::assertNotNull($templatePrice->getCustomerGroup());
         static::assertEquals('EK', $templatePrice->getCustomerGroup()->getKey());
 
@@ -356,10 +354,11 @@ class LazyLoadingTest extends TestCase
     {
         $conn = $this->em->getConnection();
         $email = $conn->fetchOne('SELECT email FROM s_user');
+        static::assertIsString($email);
         $conn->insert('s_campaigns_mailaddresses', [
             'email' => $email,
         ]);
-        $id = $conn->lastInsertId();
+        $id = (int) $conn->lastInsertId();
 
         $address = $this->em->getRepository(Address::class)->find($id);
         static::assertInstanceOf(Address::class, $address);
@@ -387,14 +386,15 @@ class LazyLoadingTest extends TestCase
     {
         $conn = $this->em->getConnection();
         $orderNumber = $conn->fetchOne('SELECT ordernumber FROM s_articles_details ORDER by id');
+        static::assertIsString($orderNumber);
         $conn->insert('s_campaigns_articles', [
             'articleordernumber' => $orderNumber,
         ]);
 
-        $id = $conn->lastInsertId();
+        $id = (int) $conn->lastInsertId();
 
         $productContainerType = $this->em->getRepository(NewsletterProduct::class)->find($id);
-        static::assertNotNull($productContainerType);
+        static::assertInstanceOf(NewsletterProduct::class, $productContainerType);
         static::assertEquals($orderNumber, $productContainerType->getArticleDetail()->getNumber());
 
         $conn->delete('s_campaigns_articles', ['id' => $id]);

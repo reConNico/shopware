@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\FacetHandler;
@@ -41,7 +41,6 @@ use Shopware\Bundle\SearchBundle\FacetResultInterface;
 use Shopware\Bundle\SearchBundleDBAL\PartialFacetHandlerInterface;
 use Shopware\Bundle\SearchBundleDBAL\QueryBuilder;
 use Shopware\Bundle\SearchBundleDBAL\QueryBuilderFactoryInterface;
-use Shopware\Bundle\StoreFrontBundle\Struct;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
@@ -137,7 +136,7 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
         QueryBuilder $query,
         ProductAttributeFacet $facet,
         Criteria $criteria,
-        Struct\ShopContextInterface $context
+        ShopContextInterface $context
     ): ?FacetResultInterface {
         $sqlField = 'productAttribute.' . $facet->getField();
 
@@ -355,6 +354,6 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
                 }
         }
 
-        throw new RuntimeException(sprintf('Could not find template for type "%s" or default template not set', $type));
+        throw new RuntimeException(\sprintf('Could not find template for type "%s" or default template not set', $type));
     }
 }

@@ -1,28 +1,26 @@
 <?php
 
 declare(strict_types=1);
-
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -212,9 +210,15 @@ class Shopware_Controllers_Backend_Analytics extends Shopware_Controllers_Backen
             $this->getToDate()
         );
 
-        $turnover = array_map('reset', $turnover->getData());
-        $visitors = array_map('reset', $visitors->getData());
-        $registrations = array_map('reset', $registrations->getData());
+        $turnover = array_map(function ($turnoverItem) {
+            return reset($turnoverItem);
+        }, $turnover->getData());
+        $visitors = array_map(function ($visitorsItem) {
+            return reset($visitorsItem);
+        }, $visitors->getData());
+        $registrations = array_map(function ($registrationsItem) {
+            return reset($registrationsItem);
+        }, $registrations->getData());
 
         $data = array_merge_recursive($turnover, $visitors);
         $data = array_merge_recursive($data, $registrations);
@@ -335,13 +339,11 @@ class Shopware_Controllers_Backend_Analytics extends Shopware_Controllers_Backen
         );
 
         $referrer = [];
-        $customers = [];
         foreach ($result->getData() as $row) {
-            $url = parse_url($row['referrer']);
-            if (!\is_array($url) || !\array_key_exists('host', $url)) {
+            $host = parse_url($row['referrer'], PHP_URL_HOST);
+            if (!\is_string($host)) {
                 continue;
             }
-            $host = $url['host'];
 
             if (!\array_key_exists($host, $referrer)) {
                 $referrer[$host] = [
@@ -358,14 +360,12 @@ class Shopware_Controllers_Backend_Analytics extends Shopware_Controllers_Backen
                 ];
             }
 
-            if (!\in_array($row['userID'], $customers)) {
-                if (strtotime($row['orderTime']) - strtotime($row['firstLogin']) < 60 * 60 * 24) {
-                    $referrer[$host]['turnoverNewCustomer'] += $row['turnover'];
-                    ++$referrer[$host]['newCustomers'];
-                } else {
-                    $referrer[$host]['turnoverRegularCustomer'] += $row['turnover'];
-                    ++$referrer[$host]['regularCustomers'];
-                }
+            if (strtotime($row['orderTime']) - strtotime($row['firstLogin']) < 60 * 60 * 24) {
+                $referrer[$host]['turnoverNewCustomer'] += $row['turnover'];
+                ++$referrer[$host]['newCustomers'];
+            } else {
+                $referrer[$host]['turnoverRegularCustomer'] += $row['turnover'];
+                ++$referrer[$host]['regularCustomers'];
             }
 
             $referrer[$host]['turnover'] += $row['turnover'];
@@ -398,7 +398,7 @@ class Shopware_Controllers_Backend_Analytics extends Shopware_Controllers_Backen
         });
 
         $this->send(
-            array_values($referrer),
+            $referrer,
             (int) $this->Request()->getParam('limit', 25)
         );
     }
@@ -1228,14 +1228,14 @@ class Shopware_Controllers_Backend_Analytics extends Shopware_Controllers_Backen
 
     private function getToDate(): DateTime
     {
-        //if a "to" date passed, format it over the \DateTime object. Otherwise, create a new date with today
+        // if a "to" date passed, format it over the \DateTime object. Otherwise, create a new date with today
         $toDate = $this->Request()->getParam('toDate');
         if (empty($toDate)) {
             $toDate = new DateTime();
         } else {
             $toDate = new DateTime($toDate);
         }
-        //to get the right value cause 2012-02-02 is smaller than 2012-02-02 15:33:12
+        // to get the right value cause 2012-02-02 is smaller than 2012-02-02 15:33:12
         $toDate = $toDate->add(new DateInterval('P1D'));
 
         return $toDate->sub(new DateInterval('PT1S'));

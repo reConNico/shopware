@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator;
@@ -150,18 +150,18 @@ class ProductHydrator extends Hydrator
         $product->setName($data['__product_name']);
         $product->setShortDescription($data['__product_description']);
         $product->setLongDescription($data['__product_description_long']);
-        $product->setCloseouts((bool) ($data['__product_laststock']));
+        $product->setCloseouts((bool) $data['__product_laststock']);
         $product->setMetaTitle($data['__product_metaTitle']);
         $product->setHasProperties($data['__product_filtergroupID'] > 0);
-        $product->setHighlight((bool) ($data['__product_topseller']));
-        $product->setAllowsNotification((bool) ($data['__product_notification']));
+        $product->setHighlight((bool) $data['__product_topseller']);
+        $product->setAllowsNotification((bool) $data['__product_notification']);
         $product->setKeywords($data['__product_keywords']);
         $product->setTemplate($data['__product_template']);
         $product->setHasConfigurator($data['__product_configurator_set_id'] > 0);
         $product->setHasEsd((bool) $data['__product_has_esd']);
         $product->setIsPriceGroupActive((bool) $data['__product_pricegroupActive']);
         $product->setSales((int) $data['__topSeller_sales']);
-        $product->setShippingFree((bool) ($data['__variant_shippingfree']));
+        $product->setShippingFree((bool) $data['__variant_shippingfree']);
         $product->setStock((int) $data['__variant_instock']);
         $product->setManufacturerNumber($data['__variant_suppliernumber']);
         $product->setMainVariantId((int) $data['__product_main_detail_id']);
@@ -196,7 +196,7 @@ class ProductHydrator extends Hydrator
         $product->setWeight((float) $data['__variant_weight']);
         $product->setWidth((float) $data['__variant_width']);
 
-        $customerGroups = explode('|', $data['__product_blocked_customer_groups']);
+        $customerGroups = explode('|', $data['__product_blocked_customer_groups'] ?? '');
         $customerGroups = array_filter($customerGroups);
         $product->setBlockedCustomerGroupIds($customerGroups);
         $product->setHasAvailableVariant($data['__product_has_available_variants'] > 0);

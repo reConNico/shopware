@@ -8,19 +8,22 @@
 
         {block name='frontend_register_shipping_fieldset_body'}
             <div class="panel--body is--wide">
-                {* Salutation *}
-                {getSalutations variable="salutations"}
 
-                {block name='frontend_register_shipping_fieldset_input_salutation'}
-                    <div class="register--salutation field--select select-field">
-                        <select name="register[shipping][salutation]" id="salutation2" class="normal is--required{if isset($error_flags.salutation)} has--error{/if}">
-                            <option value="" disabled="disabled"{if $form_data.salutation eq ""} selected="selected"{/if}>{s name='RegisterShippingPlaceholderSalutation'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}</option>
-                            {foreach $salutations as $key => $label}
-                                <option value="{$key}"{if $form_data.salutation eq $key} selected="selected"{/if}>{$label}</option>
-                            {/foreach}
-                        </select>
-                    </div>
-                {/block}
+                {if {config name="shopSalutationRequired"}}
+                    {* Salutation *}
+                    {getSalutations variable="salutations"}
+
+                    {block name='frontend_register_shipping_fieldset_input_salutation'}
+                        <div class="register--salutation field--select select-field">
+                            <select name="register[shipping][salutation]" id="salutation2" class="normal is--required{if isset($error_flags.salutation)} has--error{/if}">
+                                <option value="" disabled="disabled"{if $form_data.salutation eq ""} selected="selected"{/if}>{s name='RegisterShippingPlaceholderSalutation'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}</option>
+                                {foreach $salutations as $key => $label}
+                                    <option value="{$key}"{if $form_data.salutation eq $key} selected="selected"{/if}>{$label}</option>
+                                {/foreach}
+                            </select>
+                        </div>
+                    {/block}
+                {/if}
 
                 {* Company *}
                 {block name="frontend_register_shipping_fieldset_input_company"}
@@ -29,7 +32,7 @@
                                name="register[shipping][company]"
                                type="text"
                                placeholder="{s name='RegisterShippingPlaceholderCompany'}{/s}"
-                               id="company2" value="{$form_data.company|escape}"
+                               id="company2" value="{$form_data.company|escapeHtml}"
                                class="register--field{if isset($error_flags.company)} has--error{/if}" />
                     </div>
                 {/block}
@@ -41,7 +44,7 @@
                                name="register[shipping][department]"
                                type="text"
                                placeholder="{s name='RegisterShippingPlaceholderDepartment'}{/s}"
-                               id="department2" value="{$form_data.department|escape}"
+                               id="department2" value="{$form_data.department|escapeHtml}"
                                class="register--field {if isset($error_flags.department)} has--error{/if}" />
                     </div>
                 {/block}
@@ -56,7 +59,7 @@
                                aria-required="true"
                                placeholder="{s name='RegisterShippingPlaceholderFirstname'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
                                id="firstname2"
-                               value="{$form_data.firstname|escape}"
+                               value="{$form_data.firstname|escapeHtml}"
                                class="register--field is--required{if isset($error_flags.firstname)} has--error{/if}" />
                     </div>
                 {/block}
@@ -71,7 +74,7 @@
                                aria-required="true"
                                placeholder="{s name='RegisterShippingPlaceholderLastname'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
                                id="lastname2"
-                               value="{$form_data.lastname|escape}"
+                               value="{$form_data.lastname|escapeHtml}"
                                class="register--field is--required{if isset($error_flags.lastname)} has--error{/if}" />
                     </div>
                 {/block}
@@ -86,7 +89,7 @@
                                aria-required="true"
                                placeholder="{s name='RegisterShippingPlaceholderStreet'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
                                id="street2"
-                               value="{$form_data.street|escape}"
+                               value="{$form_data.street|escapeHtml}"
                                class="register--field register--field-street is--required{if isset($error_flags.street)} has--error{/if}" />
                     </div>
                 {/block}
@@ -100,7 +103,7 @@
                                    type="text"{if {config name="requireAdditionAddressLine1"}} required="required" aria-required="true"{/if}
                                    placeholder="{s name='RegisterLabelAdditionalAddressLine1'}{/s}{if {config name="requireAdditionAddressLine1"}}{s name="RequiredField" namespace="frontend/register/index"}{/s}{/if}"
                                    id="additionalAddressLine21"
-                                   value="{$form_data.additionalAddressLine1|escape}"
+                                   value="{$form_data.additionalAddressLine1|escapeHtml}"
                                    class="register--field{if {config name="requireAdditionAddressLine1"}} is--required{/if}{if isset($error_flags.additionalAddressLine1) && {config name="requireAdditionAddressLine1"}} has--error{/if}" />
                         </div>
                     {/if}
@@ -115,7 +118,7 @@
                                    type="text"{if {config name="requireAdditionAddressLine2"}} required="required" aria-required="true"{/if}
                                    placeholder="{s name='RegisterLabelAdditionalAddressLine2'}{/s}{if {config name="requireAdditionAddressLine2"}}{s name="RequiredField" namespace="frontend/register/index"}{/s}{/if}"
                                    id="additionalAddressLine22"
-                                   value="{$form_data.additionalAddressLine2|escape}"
+                                   value="{$form_data.additionalAddressLine2|escapeHtml}"
                                    class="register--field{if {config name="requireAdditionAddressLine2"}} is--required{/if}{if isset($error_flags.additionalAddressLine2) && {config name="requireAdditionAddressLine2"}} has--error{/if}" />
                         </div>
                     {/if}
@@ -132,7 +135,7 @@
                                    aria-required="true"
                                    placeholder="{s name='RegisterShippingPlaceholderZipcode'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
                                    id="zipcode2"
-                                   value="{$form_data.zipcode|escape}"
+                                   value="{$form_data.zipcode|escapeHtml}"
                                    class="register--field register--spacer register--field-zipcode is--required{if isset($error_flags.zipcode)} has--error{/if}" />
 
                             <input autocomplete="section-shipping shipping address-level2"
@@ -142,7 +145,7 @@
                                    aria-required="true"
                                    placeholder="{s name='RegisterShippingPlaceholderCity'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
                                    id="city2"
-                                   value="{$form_data.city|escape}"
+                                   value="{$form_data.city|escapeHtml}"
                                    size="25"
                                    class="register--field register--field-city is--required{if isset($error_flags.city)} has--error{/if}" />
                         {else}
@@ -153,7 +156,7 @@
                                    aria-required="true"
                                    placeholder="{s name='RegisterShippingPlaceholderCity'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
                                    id="city2"
-                                   value="{$form_data.city|escape}"
+                                   value="{$form_data.city|escapeHtml}"
                                    size="25"
                                    class="register--field register--spacer register--field-city is--required{if isset($error_flags.city)} has--error{/if}" />
 
@@ -164,7 +167,7 @@
                                    aria-required="true"
                                    placeholder="{s name='RegisterShippingPlaceholderZipcode'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
                                    id="zipcode2"
-                                   value="{$form_data.zipcode|escape}"
+                                   value="{$form_data.zipcode|escapeHtml}"
                                    class="register--field register--field-zipcode is--required{if isset($error_flags.zipcode)} has--error{/if}" />
                         {/if}
                     </div>

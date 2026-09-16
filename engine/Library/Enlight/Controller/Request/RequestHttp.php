@@ -17,6 +17,7 @@
  * @license    http://enlight.de/license     New BSD License
  */
 
+use Shopware\Components\DispatchFormatHelper;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -100,7 +101,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
     protected $_params = [];
 
     /**
-     * @var \Shopware\Components\DispatchFormatHelper
+     * @var DispatchFormatHelper
      */
     private $nameFormatter;
 
@@ -129,7 +130,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
     }
 
     /**
-     * @return \Shopware\Components\DispatchFormatHelper
+     * @return DispatchFormatHelper
      */
     public function getNameFormatter()
     {
@@ -643,7 +644,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
                 parse_str($query, $result);
 
                 foreach ($result as $key => $value) {
-                    $this->setQuery($key, $value);
+                    $this->setQuery((string) $key, $value);
                 }
             }
 
@@ -724,7 +725,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
      */
     public function setParamSources(array $paramSources = [])
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return $this;
     }
@@ -734,7 +735,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
      */
     public function getParamSources()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return ['_GET', '_POST'];
     }
@@ -840,10 +841,10 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
      */
     public function isFlashRequest()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $userAgent = $this->getHeader('USER_AGENT');
-        if ($userAgent === false) {
+        if (empty($userAgent)) {
             return false;
         }
         $header = strtolower($userAgent);
@@ -869,7 +870,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
             return $this->server->get('HTTP_' . $temp);
         }
 
-        if (strpos($temp, 'CONTENT_') === 0 && $this->server->has($temp)) {
+        if (str_starts_with($temp, 'CONTENT_') && $this->server->has($temp)) {
             return $this->server->get($temp);
         }
 

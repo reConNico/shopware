@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Customer;
@@ -49,7 +49,7 @@ class PriceGroup extends ModelEntity
     /**
      * INVERSE SIDE
      *
-     * @var \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\Customer\Customer>
+     * @var \Doctrine\Common\Collections\ArrayCollection<Customer>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Customer\Customer", mappedBy="priceGroup")
      */
@@ -143,7 +143,7 @@ class PriceGroup extends ModelEntity
      * the Customer.group property (OWNING SIDE) and the Group.customers (INVERSE SIDE) property.
      * The customer data is joined over the s_user.groupkey field.
      *
-     * @return \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\Customer\Customer>
+     * @return \Doctrine\Common\Collections\ArrayCollection<Customer>
      */
     public function getCustomers()
     {
@@ -156,7 +156,7 @@ class PriceGroup extends ModelEntity
      * the Customer.group property (OWNING SIDE) and the Group.customers (INVERSE SIDE) property.
      * The customer data is joined over the s_user.groupkey field.
      *
-     * @param \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\Customer\Customer> $customers
+     * @param \Doctrine\Common\Collections\ArrayCollection<Customer> $customers
      */
     public function setCustomers($customers)
     {
@@ -174,7 +174,7 @@ class PriceGroup extends ModelEntity
     /**
      * @param int $netto
      *
-     * @return \Shopware\Models\Customer\PriceGroup
+     * @return PriceGroup
      */
     public function setNetto($netto)
     {
@@ -194,7 +194,7 @@ class PriceGroup extends ModelEntity
     /**
      * @param int $active
      *
-     * @return \Shopware\Models\Customer\PriceGroup
+     * @return PriceGroup
      */
     public function setActive($active)
     {

@@ -1,78 +1,78 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\ContentTypeBundle\FieldResolver;
 
-use PDO;
+use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\TestCase;
 use Shopware\Bundle\ContentTypeBundle\Field\Shopware\ProductField;
 use Shopware\Bundle\ContentTypeBundle\Field\Shopware\ProductGrid;
-use Shopware\Bundle\ContentTypeBundle\FieldResolver\AbstractResolver;
 use Shopware\Bundle\ContentTypeBundle\FieldResolver\ProductResolver;
 use Shopware\Bundle\ContentTypeBundle\Structs\Field;
+use Shopware\Tests\Functional\Traits\ContainerTrait;
 
 class ProductResolverTest extends TestCase
 {
-    /**
-     * @var AbstractResolver
-     */
-    private $service;
+    use ContainerTrait;
 
-    /**
-     * @var Field
-     */
-    private $field;
+    private ProductResolver $productResolver;
+
+    private Connection $connection;
+
+    private Field $field;
 
     protected function setUp(): void
     {
-        $this->service = Shopware()->Container()->get(ProductResolver::class);
+        $this->productResolver = $this->getContainer()->get(ProductResolver::class);
+        $this->connection = $this->getContainer()->get(Connection::class);
         $this->field = new Field();
         $this->field->setType(new ProductField());
     }
 
     public function testResolve(): void
     {
-        $id = Shopware()->Models()->getConnection()->fetchColumn('SELECT ordernumber from s_articles_details LIMIT 1');
+        $id = $this->connection->fetchOne('SELECT ordernumber FROM s_articles_details ORDER BY id LIMIT 1');
 
-        $this->service->add($id, $this->field);
-        $this->service->resolve();
+        $this->productResolver->add($id, $this->field);
+        $this->productResolver->resolve();
 
-        $product = $this->service->get($id, $this->field);
+        $product = $this->productResolver->get($id, $this->field);
         static::assertIsArray($product);
         static::assertEquals($id, $product['ordernumber']);
     }
 
     public function testMultiResolve(): void
     {
-        $idsArray = Shopware()->Models()->getConnection()->executeQuery('SELECT ordernumber from s_articles_details LIMIT 5')->fetchAll(PDO::FETCH_COLUMN);
+        $idsArray = $this->connection->executeQuery('SELECT ordernumber FROM s_articles_details ORDER BY id LIMIT 5')->fetchFirstColumn();
         $ids = implode('|', $idsArray);
         $this->field->setType(new ProductGrid());
 
-        $this->service->add($ids, $this->field);
-        $this->service->resolve();
+        $this->productResolver->add($ids, $this->field);
+        $this->productResolver->resolve();
 
-        $products = $this->service->get($ids, $this->field);
+        $products = $this->productResolver->get($ids, $this->field);
         static::assertCount(\count($idsArray), $products);
     }
 }

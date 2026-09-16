@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Theme;
@@ -42,90 +43,72 @@ use Shopware\Themes\TestResponsive\Theme;
 class Base extends Enlight_Components_Test_TestCase
 {
     /**
-     * @return MockObject
+     * @return ModelManager&MockObject
      */
-    protected function getEntityManager()
+    protected function getEntityManager(): ModelManager
     {
         return $this->createMock(ModelManager::class);
     }
 
     /**
-     * @return MockObject
+     * @return Enlight_Event_EventManager&MockObject
      */
-    protected function getEventManager()
+    protected function getEventManager(): Enlight_Event_EventManager
     {
         return $this->createMock(Enlight_Event_EventManager::class);
     }
 
     /**
-     * @return MockObject
+     * @return PathResolver&MockObject
      */
-    protected function getPathResolver()
+    protected function getPathResolver(): PathResolver
     {
         return $this->createMock(PathResolver::class);
     }
 
     /**
-     * @return MockObject
+     * @return Util&MockObject
      */
-    protected function getUtilClass()
+    protected function getUtilClass(): Util
     {
         return $this->createMock(Util::class);
     }
 
-    /**
-     * @return MockObject
-     */
-    protected function getConfigurator()
+    protected function getConfigurator(): Configurator
     {
         return $this->createMock(Configurator::class);
     }
 
-    /**
-     * @return MockObject
-     */
-    protected function getFormPersister()
+    protected function getFormPersister(): ThemePersister
     {
         return $this->createMock(ThemePersister::class);
     }
 
-    /**
-     * @return TestBareTheme
-     */
-    protected function getBareTheme()
+    protected function getBareTheme(): TestBareTheme
     {
         require_once __DIR__ . '/Themes/TestBare/Theme.php';
 
         return new TestBareTheme();
     }
 
-    /**
-     * @return Theme
-     */
-    protected function getResponsiveTheme()
+    protected function getResponsiveTheme(): Theme
     {
         require_once __DIR__ . '/Themes/TestResponsive/Theme.php';
 
         return new Theme();
     }
 
-    /**
-     * @return Template
-     */
-    protected function getTemplate()
+    protected function getTemplate(): Template
     {
         return $this->createMock(Template::class);
     }
 
-    /**
-     * @return MockObject
-     */
-    protected function getShopRepository()
+    protected function getShopRepository(): Repository
     {
         return $this->createMock(Repository::class);
     }
 
-    protected function getSnippetHandler()
+    protected function getSnippetHandler(): DatabaseHandler
     {
         return $this->createMock(DatabaseHandler::class);
     }
@@ -133,9 +116,9 @@ class Base extends Enlight_Components_Test_TestCase
     /**
      * Call protected/private method of a class.
      *
-     * @param object $object     Instantiated object that we will run method on
-     * @param string $methodName Method name to call
-     * @param array  $parameters array of parameters to pass into method
+     * @param object      $object     Instantiated object that we will run method on
+     * @param string      $methodName Method name to call
+     * @param list<mixed> $parameters array of parameters to pass into method
      *
      * @return mixed method return
      */

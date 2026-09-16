@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\LegacyRequestWrapper;
@@ -30,15 +31,9 @@ use sSystem;
 
 class PostWrapperTest extends TestCase
 {
-    /**
-     * @var Enlight_Controller_Request_RequestTestCase
-     */
-    private $request;
+    private Enlight_Controller_Request_RequestTestCase $request;
 
-    /**
-     * @var sSystem
-     */
-    private $system;
+    private sSystem $system;
 
     public function setUp(): void
     {
@@ -51,7 +46,7 @@ class PostWrapperTest extends TestCase
         $this->request->clearAll();
     }
 
-    public function testSet()
+    public function testSet(): void
     {
         $this->system->_POST->offsetSet('foo', 'bar');
         static::assertEquals('bar', $this->request->getPost('foo'));
@@ -60,11 +55,11 @@ class PostWrapperTest extends TestCase
         static::assertNull($this->request->getPost('bar'));
 
         $this->system->_POST->offsetSet('foo', []);
-        static::assertEmpty($this->request->getPost('bar'));
+        static::assertNull($this->request->getPost('bar'));
         static::assertIsArray($this->request->getPost('foo'));
     }
 
-    public function testGet()
+    public function testGet(): void
     {
         $this->request->setPost('foo', 'bar');
         static::assertEquals('bar', $this->system->_POST->offsetGet('foo'));
@@ -73,11 +68,11 @@ class PostWrapperTest extends TestCase
         static::assertNull($this->system->_POST->offsetGet('bar'));
 
         $this->request->setPost('foo', []);
-        static::assertEmpty($this->system->_POST->offsetGet('bar'));
+        static::assertNull($this->system->_POST->offsetGet('bar'));
         static::assertIsArray($this->system->_POST->offsetGet('foo'));
     }
 
-    public function testUnset()
+    public function testUnset(): void
     {
         $this->system->_POST->offsetSet('foo', 'bar');
         static::assertEquals('bar', $this->request->getPost('foo'));
@@ -85,7 +80,7 @@ class PostWrapperTest extends TestCase
         static::assertNull($this->request->getPost('foo'));
     }
 
-    public function testSetAll()
+    public function testSetAll(): void
     {
         $this->system->_POST->offsetSet('foo', 'bar');
         static::assertEquals('bar', $this->request->getPost('foo'));
@@ -95,7 +90,7 @@ class PostWrapperTest extends TestCase
         static::assertEquals('too', $this->request->getPost('foo'));
     }
 
-    public function testToArray()
+    public function testToArray(): void
     {
         $this->request->setPost('foo', 'bar');
         static::assertEquals(['foo' => 'bar'], $this->system->_POST->toArray());

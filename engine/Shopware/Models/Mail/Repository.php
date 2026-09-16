@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Mail;
@@ -39,7 +39,7 @@ class Repository extends ModelRepository
      *
      * @param int $mailId
      *
-     * @return Query
+     * @return Query<Mail>
      */
     public function getMailQuery($mailId)
     {
@@ -74,7 +74,7 @@ class Repository extends ModelRepository
      *
      * @param int $mailId
      *
-     * @return Query
+     * @return Query<MailAttribute>
      */
     public function getAttributesQuery($mailId)
     {
@@ -109,7 +109,7 @@ class Repository extends ModelRepository
      * @param string   $name
      * @param int|null $mailId
      *
-     * @return Query
+     * @return Query<Mail>
      */
     public function getValidateNameQuery($name, $mailId = null)
     {
@@ -149,9 +149,9 @@ class Repository extends ModelRepository
      * @param int|null     $offset
      * @param int|null     $limit
      *
-     * @return Query
+     * @return Query<Mail>
      */
-    public function getMailListQuery(array $filter = [], array $order = null, $offset = null, $limit = null)
+    public function getMailListQuery(array $filter = [], ?array $order = null, $offset = null, $limit = null)
     {
         return $this->getMailsListQueryBuilder($filter, $order, $offset, $limit)->getQuery();
     }
@@ -162,7 +162,7 @@ class Repository extends ModelRepository
      *
      * @return QueryBuilder
      */
-    public function getMailsListQueryBuilder(array $filter = [], array $order = null, $offset = null, $limit = null)
+    public function getMailsListQueryBuilder(array $filter = [], ?array $order = null, $offset = null, $limit = null)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder

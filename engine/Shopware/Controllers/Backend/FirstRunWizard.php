@@ -1,28 +1,27 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-use Shopware\Bundle\PluginInstallerBundle\Service\AccountManagerService;
 use Shopware\Bundle\PluginInstallerBundle\StoreClient;
 use Shopware\Bundle\PluginInstallerBundle\Struct\AccessTokenStruct;
 use Shopware\Bundle\PluginInstallerBundle\Struct\LocaleStruct;
@@ -156,7 +155,7 @@ class Shopware_Controllers_Backend_FirstRunWizard extends Shopware_Controllers_B
                     continue;
                 }
 
-                $configValue = sprintf(
+                $configValue = \sprintf(
                     "<div>\n<img src=\"{media path='%s'}\" style=\"max-height: 20mm\" alt=\"Logo\"><br />",
                     $configValue
                 );
@@ -201,7 +200,7 @@ class Shopware_Controllers_Backend_FirstRunWizard extends Shopware_Controllers_B
 
             if ($key === 'logo') {
                 $hash = Random::getAlphanumericString(16);
-                $value = sprintf(
+                $value = \sprintf(
                     '<p><img id="tinymce-editor-image-%s" class="tinymce-editor-image tinymce-editor-image-%s" src="{media path=\'%s\'}" style="max-height: 20mm;" data-src="%s" /></p>',
                     $hash,
                     $hash,
@@ -388,7 +387,6 @@ class Shopware_Controllers_Backend_FirstRunWizard extends Shopware_Controllers_B
         $password = $this->Request()->getParam('password');
         $email = $this->Request()->getParam('email');
 
-        /** @var AccountManagerService $accountManagerService */
         $accountManagerService = $this->container->get('shopware_plugininstaller.account_manager_service');
 
         try {
@@ -566,7 +564,7 @@ class Shopware_Controllers_Backend_FirstRunWizard extends Shopware_Controllers_B
         $this->get('plugins')->Controller()->ViewRenderer()->setNoRender(false);
         $this->Front()->Plugins()->Json()->setRenderer(false);
 
-        $this->View()->loadTemplate(sprintf('backend/first_run_wizard/template/%s.tpl', $view));
+        $this->View()->loadTemplate(\sprintf('backend/first_run_wizard/template/%s.tpl', $view));
     }
 
     private function getVersion(): string
@@ -590,16 +588,14 @@ class Shopware_Controllers_Backend_FirstRunWizard extends Shopware_Controllers_B
      *
      * @return LocaleStruct|null Information about the current locale
      */
-    private function getCurrentLocale()
+    private function getCurrentLocale(): ?LocaleStruct
     {
         static $locales;
 
-        if (empty($locales)) {
-            /** @var AccountManagerService $accountManagerService */
+        if (\is_array($locales) && empty($locales)) {
             $accountManagerService = $this->container->get('shopware_plugininstaller.account_manager_service');
 
             try {
-                /** @var LocaleStruct[] $serverLocales */
                 $serverLocales = $accountManagerService->getLocales();
             } catch (Exception $e) {
                 $this->View()->assign([
@@ -615,12 +611,9 @@ class Shopware_Controllers_Backend_FirstRunWizard extends Shopware_Controllers_B
             }
         }
 
-        $user = Shopware()->Container()->get('auth')->getIdentity();
-        /** @var \Shopware\Models\Shop\Locale $locale */
-        $locale = $user->locale;
-        $localeCode = $locale->getLocale();
+        $localeCode = Shopware()->Container()->get('auth')->getIdentity()->locale->getLocale();
 
-        return \array_key_exists($localeCode, $locales) ? $locales[$localeCode] : null;
+        return $locales[$localeCode] ?? null;
     }
 
     /**

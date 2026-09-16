@@ -1,28 +1,26 @@
 <?php
 
 declare(strict_types=1);
-
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
@@ -33,11 +31,14 @@ use Shopware\Bundle\AttributeBundle\Repository\OrderRepository as AttributeOrder
 use Shopware\Bundle\AttributeBundle\Repository\SearchCriteria;
 use Shopware\Bundle\MailBundle\Service\LogEntryBuilder;
 use Shopware\Bundle\OrderBundle\Service\CalculationServiceInterface;
+use Shopware\Bundle\OrderBundle\Service\OrderListProductServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Tax as TaxStruct;
 use Shopware\Components\CSRFWhitelistAware;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Model\QueryBuilder;
 use Shopware\Components\Random;
+use Shopware\Components\ShopRegistrationServiceInterface;
 use Shopware\Components\StateTranslatorService;
 use Shopware\Models\Article\Detail as ProductVariant;
 use Shopware\Models\Article\Unit;
@@ -69,6 +70,8 @@ use Shopware\Models\Tax\Tax;
 
 class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_ExtJs implements CSRFWhitelistAware
 {
+    private const DEFAULT_CUSTOMER_GROUP = 'EK';
+
     /**
      * @deprecated - Will be private and an instance property in Shopware 5.8
      *
@@ -114,7 +117,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
 
     /**
      * @deprecated - Will be removed in Shopware 5.8 without a replacement
-     * Contains the dynamic receipt repository
+     * Contains the order document repository
      *
      * @var OrderDocumentRepository
      */
@@ -213,7 +216,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
      * @param int[]  $orderIds
      * @param string $docType
      *
-     * @return Query
+     * @return Query<Order>
      */
     public function getOrderDocumentsQuery($orderIds, $docType)
     {
@@ -242,7 +245,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
      * @param int|null                                                               $offset
      * @param int|null                                                               $limit
      *
-     * @return Query
+     * @return Query<Status>
      */
     public function getOrderStatusQuery($filter = null, $order = null, $offset = null, $limit = null)
     {
@@ -419,7 +422,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
 
         $namespace = $this->get('snippets')->getNamespace('backend/order');
 
-        //the backend order module have no function to create a new order so an order id must be passed.
+        // the backend order module have no function to create a new order so an order id must be passed.
         if (empty($orderId)) {
             $this->View()->assign([
                 'success' => false,
@@ -578,7 +581,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
             try {
                 $mail = $this->getMailForOrder($order->getId(), $status->getId());
             } catch (Exception $e) {
-                $warning = sprintf(
+                $warning = \sprintf(
                     $namespace->get('warning/mail_creation_failed'),
                     $status->getName(),
                     $e->getMessage()
@@ -895,7 +898,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
                 $modelManager->flush($order);
             } catch (Exception $e) {
                 $data['success'] = false;
-                $data['errorMessage'] = sprintf(
+                $data['errorMessage'] = \sprintf(
                     $namespace->get('save_order_failed', 'Error when saving the order. Error: %s'),
                     $e->getMessage()
                 );
@@ -927,7 +930,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
             } catch (Exception $e) {
                 $data['mail'] = null;
                 $data['success'] = false;
-                $data['errorMessage'] = sprintf(
+                $data['errorMessage'] = \sprintf(
                     $namespace->get('send_mail_failed', 'Error when sending mail. Error: %s'),
                     $e->getMessage()
                 );
@@ -981,7 +984,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
         $models = $this->getOrderDocumentsQuery($data->orders, $data->docType)->getResult();
         foreach ($models as $model) {
             foreach ($model->getDocuments() as $document) {
-                $file = $this->downloadFileFromFilesystem(sprintf('documents/%s.pdf', $document->getHash()));
+                $file = $this->downloadFileFromFilesystem(\sprintf('documents/%s.pdf', $document->getHash()));
                 if ($file !== null) {
                     $files[] = $file;
                 }
@@ -1106,7 +1109,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
                 ->setParameter('documentId', $documentId)
                 ->execute();
 
-            $file = sprintf('documents/%s.pdf', $documentHash);
+            $file = \sprintf('documents/%s.pdf', $documentHash);
             if ($filesystem->has($file)) {
                 $filesystem->delete($file);
             }
@@ -1226,7 +1229,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
 
         $query = $this->getRepository()->getOrdersQuery([['property' => 'orders.id', 'value' => $orderId]], null, 0, 1);
         $query->setHydrationMode(AbstractQuery::HYDRATE_ARRAY);
-        $order = $this->getModelManager()->createPaginator($query)->getIterator()->getArrayCopy();
+        $order = iterator_to_array($this->getModelManager()->createPaginator($query));
 
         $order = $translationComponent->translateOrders($order);
 
@@ -1245,7 +1248,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
     public function openPdfAction()
     {
         $filesystem = $this->container->get('shopware.filesystem.private');
-        $file = sprintf('documents/%s.pdf', basename($this->Request()->getParam('id')));
+        $file = \sprintf('documents/%s.pdf', basename($this->Request()->getParam('id')));
 
         if ($filesystem->has($file) === false) {
             $this->View()->assign([
@@ -1283,7 +1286,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
             $this->View()->assign([
                 'success' => false,
                 'data' => $this->Request()->getParams(),
-                'message' => sprintf('Could not open file: %s', $file),
+                'message' => \sprintf('Could not open file: %s', $file),
             ]);
 
             return;
@@ -1433,7 +1436,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
      */
     protected function getDocumentRepository()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         if (self::$documentRepository === null) {
             self::$documentRepository = $this->getManager()->getRepository(Document::class);
@@ -1503,10 +1506,10 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
             $order['locale'] = $order['languageSubShop']['locale'];
 
             // Deprecated: use payment instance
-            $order['debit'] = $order['customer']['debit'];
+            $order['debit'] = $order['customer']['debit'] ?? null;
             $order['customerEmail'] = $order['customer']['email'];
-            $order['billing']['salutationSnippet'] = $namespace->get($order['billing']['salutation']);
-            $order['shipping']['salutationSnippet'] = $namespace->get($order['shipping']['salutation']);
+            $order['billing']['salutationSnippet'] = $namespace->get($order['billing']['salutation'] ?? '');
+            $order['shipping']['salutationSnippet'] = $namespace->get($order['shipping']['salutation'] ?? '');
 
             foreach ($order['details'] as &$orderDetail) {
                 $number = $orderDetail['articleNumber'];
@@ -1577,19 +1580,19 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
                     $resolved[] = ['property' => 'customer.email', 'direction' => $direction];
                     break;
 
-                // Custom sort field for customer name
+                    // Custom sort field for customer name
                 case $sort['property'] === 'customerName':
                     $resolved[] = ['property' => 'billing.lastName', 'direction' => $direction];
                     $resolved[] = ['property' => 'billing.firstName', 'direction' => $direction];
                     $resolved[] = ['property' => 'billing.company', 'direction' => $direction];
                     break;
 
-                // Contains no sql prefix? add orders as default prefix
+                    // Contains no sql prefix? add orders as default prefix
                 case !str_contains($sort['property'], '.'):
                     $resolved[] = ['property' => 'orders.' . $sort['property'], 'direction' => $direction];
                     break;
 
-                // Already prefixed with an alias?
+                    // Already prefixed with an alias?
                 default:
                     $resolved[] = $sort;
             }
@@ -1809,7 +1812,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
         $filesystem = $this->container->get('shopware.filesystem.private');
 
         foreach ($attachments as $attachment) {
-            $filePath = sprintf('documents/%s.pdf', $attachment['hash']);
+            $filePath = \sprintf('documents/%s.pdf', $attachment['hash']);
             $fileName = $this->getFileName($orderId, (int) $attachment['type'][0]['id']);
 
             if ($filesystem->has($filePath) === false) {
@@ -1945,13 +1948,28 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
             unset($data['status']);
         }
 
-        $data = $this->checkTaxRule($data, $order);
+        $shopContext = $this->createShopContext($order);
+        $data = $this->checkTaxRule($data, $shopContext);
+        $orderPosition = null;
+        foreach ($order->getDetails() as $position) {
+            if ($position->getId() === (int) $data['id']) {
+                $orderPosition = $position;
+                break;
+            }
+        }
+        // Only get graduated price if a new position should be added or quantity has changed
+        if (($orderPosition === null || $orderPosition->getQuantity() !== (int) $data['quantity'])
+            && $this->hasProductGraduatedPrices($data['articleNumber'], $order)
+        ) {
+            $data = $this->checkPrice($data, $order, $shopContext);
+        }
 
         $variant = $this->getManager()->getRepository(ProductVariant::class)
             ->findOneBy(['number' => $data['articleNumber']]);
 
-        // Load ean, unit and pack unit (translate if needed)
+        // Load articleDetailId, ean, unit and pack unit (translate if needed)
         if ($variant instanceof ProductVariant) {
+            $data['articleDetail'] = $variant;
             $mainVariant = $variant->getArticle()->getMainDetail();
             $data['ean'] = $variant->getEan();
             if (!\is_string($data['ean']) && $mainVariant instanceof ProductVariant) {
@@ -2025,12 +2043,59 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
         return $data;
     }
 
+    private function createShopContext(Order $order): ShopContextInterface
+    {
+        $customerGroupKey = $this->getCustomerGroupKey($order);
+        $areaId = null;
+        $countryId = null;
+        $stateId = null;
+
+        $currencyId = (int) $this->container->get(Connection::class)->fetchOne(
+            'SELECT `id` FROM `s_core_currencies` WHERE `currency` = :currency',
+            ['currency' => $order->getCurrency()]
+        );
+
+        $shippingAddress = $order->getShipping();
+        if ($shippingAddress instanceof Shipping) {
+            $countryId = $shippingAddress->getCountry()->getId();
+
+            $area = $shippingAddress->getCountry()->getArea();
+            if ($area instanceof Area) {
+                $areaId = $area->getId();
+            }
+
+            $state = $shippingAddress->getState();
+            if ($state instanceof State) {
+                $stateId = $state->getId();
+            }
+        }
+
+        $shop = $order->getShop();
+
+        return $this->container->get('shopware_storefront.shop_context_factory')->create(
+            $shop->getBaseUrl() ?? '',
+            $shop->getId(),
+            $currencyId,
+            $customerGroupKey,
+            $areaId,
+            $countryId,
+            $stateId
+        );
+    }
+
+    private function getCustomerGroupKey(Order $order): string
+    {
+        $customer = $order->getCustomer();
+
+        return $customer instanceof Customer ? $customer->getGroupKey() : self::DEFAULT_CUSTOMER_GROUP;
+    }
+
     /**
      * @param array<string, mixed> $data
      *
      * @return array<string, mixed>
      */
-    private function checkTaxRule(array $data, Order $order): array
+    private function checkTaxRule(array $data, ShopContextInterface $shopContext): array
     {
         $taxId = $data['taxId'];
         if (empty($taxId)) {
@@ -2044,32 +2109,68 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
             $data['taxRate'] = (float) $tax->getTax();
         }
 
-        $shop = $order->getShop();
-        $areaId = null;
-        $countryId = null;
-        $billingAddress = $order->getBilling();
-        if ($billingAddress instanceof Billing) {
-            $countryId = $billingAddress->getCountry()->getId();
-
-            $area = $billingAddress->getCountry()->getArea();
-            if ($area instanceof Area) {
-                $areaId = $area->getId();
-            }
-        }
-        $shopContext = $this->get('shopware_storefront.shop_context_factory')->create(
-            $shop->getBaseUrl() ?? '',
-            $shop->getId(),
-            null,
-            null,
-            $areaId,
-            $countryId
-        );
         $taxRule = $shopContext->getTaxRule($taxId);
         if ($taxRule instanceof TaxStruct) {
             $data['taxRate'] = (float) $taxRule->getTax();
         }
 
         return $data;
+    }
+
+    private function hasProductGraduatedPrices(string $productNumber, Order $order): bool
+    {
+        $customerGroupKey = $this->getCustomerGroupKey($order);
+
+        $sql = 'SELECT prices.pricegroup, count(*)
+                FROM s_articles_prices AS prices
+                INNER JOIN s_articles_details ON prices.articledetailsID = s_articles_details.id
+                WHERE s_articles_details.ordernumber = :productNumber
+                GROUP BY prices.pricegroup;';
+
+        $result = $this->container->get(Connection::class)->executeQuery($sql, ['productNumber' => $productNumber])->fetchAllKeyValue();
+
+        return (isset($result[$customerGroupKey]) && $result[$customerGroupKey] > 1) || $result[self::DEFAULT_CUSTOMER_GROUP] > 1;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    private function checkPrice(array $data, Order $order, ShopContextInterface $shopContext): array
+    {
+        $orderListProductService = $this->container->get(OrderListProductServiceInterface::class);
+
+        if (!$orderListProductService instanceof OrderListProductServiceInterface) {
+            return $data;
+        }
+
+        $shopRegistrationService = $this->container->get(ShopRegistrationServiceInterface::class);
+        $shop = $order->getShop();
+        $shopRegistrationService->registerShop($shop);
+
+        $listProduct = $orderListProductService->getList([$data['articleNumber']], $shopContext);
+        if (empty($listProduct)) {
+            return $data;
+        }
+
+        $prices = $listProduct[$data['articleNumber']]['prices'];
+        if (\is_array($prices)) {
+            foreach ($prices as $graduatedPrice) {
+                if ($data['quantity'] >= $graduatedPrice['valFrom'] && ($data['quantity'] <= $graduatedPrice['valTo'] || $graduatedPrice['valTo'] === null)) {
+                    $data['price'] = $graduatedPrice['price_numeric'];
+                    break;
+                }
+            }
+            $data['total'] = $this->calculateTotal($data['price'], $data['quantity']);
+        }
+
+        return $data;
+    }
+
+    private function calculateTotal(float $price, int $quantity): float
+    {
+        return $price * $quantity;
     }
 
     /**
@@ -2085,7 +2186,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
         if (!empty($data['customerId'])) {
             $data['customer'] = $this->getManager()->find(Customer::class, $data['customerId']);
         } else {
-            //if no customer id passed, we have to unset the array element, otherwise the existing customer model would be overwritten
+            // if no customer id passed, we have to unset the array element, otherwise the existing customer model would be overwritten
             unset($data['customer']);
         }
 
@@ -2212,7 +2313,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
         if (!\is_resource($source)) {
             $this->View()->assign([
                 'success' => false,
-                'message' => sprintf('Could not read from path: %s', $path),
+                'message' => \sprintf('Could not read from path: %s', $path),
             ]);
 
             return null;
@@ -2221,7 +2322,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
         if (!\is_resource($downstream)) {
             $this->View()->assign([
                 'success' => false,
-                'message' => sprintf('Could not read from path: %s', $tmpFile),
+                'message' => \sprintf('Could not read from path: %s', $tmpFile),
             ]);
 
             return null;
@@ -2325,7 +2426,7 @@ class Shopware_Controllers_Backend_Order extends Shopware_Controllers_Backend_Ex
 
     private function getCurrentLocale(): ?ShopLocale
     {
-        return $this->get('auth')->getIdentity()->locale;
+        return $this->get('auth')->getIdentity()->locale ?? null;
     }
 
     private function checkIfOrderHasBeenModifiedSince(DateTime $lastOrderChange, Order $order, Enlight_Components_Snippet_Namespace $namespace): bool

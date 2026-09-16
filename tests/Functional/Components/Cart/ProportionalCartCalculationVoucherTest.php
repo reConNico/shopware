@@ -1,46 +1,48 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Cart;
 
-use Shopware\Tests\Functional\Components\CheckoutTest;
+use Doctrine\DBAL\Connection;
+use Shopware\Tests\Functional\Components\CheckoutTestCase;
 
 /**
  * @group Basket
  */
-class ProportionalCartCalculationVoucherTest extends CheckoutTest
+class ProportionalCartCalculationVoucherTest extends CheckoutTestCase
 {
     public function setUp(): void
     {
         parent::setUp();
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->beginTransaction();
+        Shopware()->Container()->get(Connection::class)->beginTransaction();
         $this->setConfig('proportionalTaxCalculation', true);
 
         $this->setPaymentSurcharge(0);
         $this->setCustomerGroupSurcharge(0, 0);
 
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->executeQuery('UPDATE s_premium_dispatch SET active = 0 WHERE id = 12');
+        Shopware()->Container()->get(Connection::class)->executeQuery('UPDATE s_premium_dispatch SET active = 0 WHERE id = 12');
     }
 
     protected function tearDown(): void
@@ -50,13 +52,13 @@ class ProportionalCartCalculationVoucherTest extends CheckoutTest
         $this->clearCustomerGroupDiscount('EK');
         $this->setConfig('proportionalTaxCalculation', false);
 
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->rollBack();
+        Shopware()->Container()->get(Connection::class)->rollBack();
     }
 
-    public function testAbsoluteVoucher()
+    public function testAbsoluteVoucher(): void
     {
         $this->setVoucherTax('absolut', 'default');
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 19.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 19.00));
         Shopware()->Modules()->Basket()->sAddVoucher('absolut');
 
         $this->dispatch('/checkout/cart');
@@ -82,12 +84,12 @@ class ProportionalCartCalculationVoucherTest extends CheckoutTest
         $this->hasBasketItem($sBasket['content'], 'Gutschein', -5, -4.2016806722689, 'GUTABS');
     }
 
-    public function testAbsoluteVoucherMultipleTaxesWithMaxTax()
+    public function testAbsoluteVoucherMultipleTaxesWithMaxTax(): void
     {
         $this->setVoucherTax('GUTABS', 'default');
 
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 19.00), 1);
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 7.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 19.00));
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 7.00));
         Shopware()->Modules()->Basket()->sAddVoucher('absolut');
 
         $this->dispatch('/checkout/cart');
@@ -103,7 +105,7 @@ class ProportionalCartCalculationVoucherTest extends CheckoutTest
         static::assertEquals(3.9, $sBasket['sShippingcosts']);
         static::assertEquals(3.9, $sBasket['sShippingcostsWithTax']);
         static::assertEquals(19.0, $sBasket['sShippingcostsTax']);
-        static::assertEquals(3.4708433038255415, $sBasket['sShippingcostsNet']);
+        static::assertEquals(3.470843303825543, $sBasket['sShippingcostsNet']);
 
         static::assertTrue(isset($sBasket['sShippingcostsTaxProportional']));
         static::assertCount(2, $sBasket['sTaxRates']);
@@ -113,12 +115,12 @@ class ProportionalCartCalculationVoucherTest extends CheckoutTest
         $this->hasBasketItem($sBasket['content'], 'Gutschein', -5, -4.202, 'GUTABS');
     }
 
-    public function testAbsoluteVoucherMultipleTaxes()
+    public function testAbsoluteVoucherMultipleTaxes(): void
     {
         $this->setVoucherTax('GUTABS', 'auto');
 
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 19.00), 1);
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 7.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 19.00));
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 7.00));
         Shopware()->Modules()->Basket()->sAddVoucher('absolut');
 
         $this->dispatch('/checkout/cart');
@@ -134,7 +136,7 @@ class ProportionalCartCalculationVoucherTest extends CheckoutTest
         static::assertEquals(3.9, $sBasket['sShippingcosts']);
         static::assertEquals(3.9, $sBasket['sShippingcostsWithTax']);
         static::assertEquals(19.0, $sBasket['sShippingcostsTax']);
-        static::assertEquals(3.4708433038255415, $sBasket['sShippingcostsNet']);
+        static::assertEquals(3.470843303825543, $sBasket['sShippingcostsNet']);
 
         static::assertTrue(isset($sBasket['sShippingcostsTaxProportional']));
         static::assertCount(2, $sBasket['sTaxRates']);
@@ -145,11 +147,11 @@ class ProportionalCartCalculationVoucherTest extends CheckoutTest
         $this->hasBasketItem($sBasket['content'], 'Gutschein (19%)', -2.37, -1.9892912917379, 'GUTABS');
     }
 
-    public function testPercentVoucher()
+    public function testPercentVoucher(): void
     {
         $this->setVoucherTax('GUTPROZ', 'default');
 
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(100, 19.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(100, 19.00));
         Shopware()->Modules()->Basket()->sAddVoucher('prozentual');
 
         $this->dispatch('/checkout/cart');
@@ -175,11 +177,11 @@ class ProportionalCartCalculationVoucherTest extends CheckoutTest
         $this->hasBasketItem($sBasket['content'], 'Gutschein 10 %', -10, -8.403, 'GUTPROZ');
     }
 
-    public function testPercentVoucherProportionalWithOneTax()
+    public function testPercentVoucherProportionalWithOneTax(): void
     {
         $this->setVoucherTax('GUTPROZ', 'auto');
 
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(100, 19.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(100, 19.00));
         Shopware()->Modules()->Basket()->sAddVoucher('prozentual');
 
         $this->dispatch('/checkout/cart');
@@ -205,12 +207,12 @@ class ProportionalCartCalculationVoucherTest extends CheckoutTest
         $this->hasBasketItem($sBasket['content'], 'Gutschein 10 %', -10, -8.4033613445378, 'GUTPROZ');
     }
 
-    public function testPercentVoucherProportionalWithMultipleTaxes()
+    public function testPercentVoucherProportionalWithMultipleTaxes(): void
     {
         $this->setVoucherTax('GUTPROZ', 'auto');
 
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 19.00), 1);
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 7.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 19.00));
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 7.00));
         Shopware()->Modules()->Basket()->sAddVoucher('prozentual');
 
         $this->dispatch('/checkout/cart');
@@ -226,7 +228,7 @@ class ProportionalCartCalculationVoucherTest extends CheckoutTest
         static::assertEquals(3.9, $sBasket['sShippingcosts']);
         static::assertEquals(3.9, $sBasket['sShippingcostsWithTax']);
         static::assertEquals(19.0, $sBasket['sShippingcostsTax']);
-        static::assertEquals(3.4708433038255415, $sBasket['sShippingcostsNet']);
+        static::assertEquals(3.470843303825543, $sBasket['sShippingcostsNet']);
 
         static::assertTrue(isset($sBasket['sShippingcostsTaxProportional']));
         static::assertCount(2, $sBasket['sTaxRates']);
@@ -237,12 +239,12 @@ class ProportionalCartCalculationVoucherTest extends CheckoutTest
         $this->hasBasketItem($sBasket['content'], 'Gutschein 10 % (19%)', -5, -4.2016806722689, 'GUTPROZ');
     }
 
-    public function testProportionalBasketView()
+    public function testProportionalBasketView(): void
     {
         $this->setVoucherTax('GUTABS', 'auto');
 
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 19.00), 1);
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 7.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 19.00));
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 7.00));
         Shopware()->Modules()->Basket()->sAddVoucher('absolut');
 
         $this->dispatch('/checkout/cart');

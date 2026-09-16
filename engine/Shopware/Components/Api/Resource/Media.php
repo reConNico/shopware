@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Api\Resource;
 
 use DateTime;
 use Doctrine\ORM\ORMException;
+use Doctrine\ORM\Query;
 use Exception;
 use InvalidArgumentException;
 use RuntimeException;
@@ -82,7 +83,7 @@ class Media extends Resource
         $media = $query->getOneOrNullResult($this->getResultMode());
 
         if (!$media) {
-            throw new NotFoundException(sprintf('Media by id %d not found', $id));
+            throw new NotFoundException(\sprintf('Media by id %d not found', $id));
         }
 
         $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
@@ -105,6 +106,7 @@ class Media extends Resource
     {
         $this->checkPrivilege('read');
 
+        /** @var Query<MediaModel|array<string, mixed>> $query */
         $query = $this->getRepository()->getMediaListQuery($criteria, $orderBy, $limit, $offset);
         $query->setHydrationMode($this->resultMode);
 
@@ -114,11 +116,13 @@ class Media extends Resource
         $totalResult = $paginator->count();
 
         // Returns the category data
-        $media = $paginator->getIterator()->getArrayCopy();
+        $media = iterator_to_array($paginator);
 
         $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
         array_walk($media, function (&$item) use ($mediaService) {
-            $item['path'] = $mediaService->getUrl($item['path']);
+            if (\is_array($item)) {
+                $item['path'] = $mediaService->getUrl($item['path']);
+            }
         });
 
         return ['data' => $media, 'total' => $totalResult];
@@ -188,7 +192,7 @@ class Media extends Resource
         $media = $this->getRepository()->find($id);
 
         if (!$media) {
-            throw new NotFoundException(sprintf('Media by id "%d" not found', $id));
+            throw new NotFoundException(\sprintf('Media by id "%d" not found', $id));
         }
 
         if (!empty($params['file'])) {
@@ -236,7 +240,7 @@ class Media extends Resource
         $media = $this->getRepository()->find($id);
 
         if (!$media) {
-            throw new NotFoundException(sprintf('Media by id %d not found', $id));
+            throw new NotFoundException(\sprintf('Media by id %d not found', $id));
         }
 
         $this->getManager()->remove($media);
@@ -279,7 +283,7 @@ class Media extends Resource
         if (!$album) {
             // Cleanup temporary file
             $this->deleteTmpFile($file);
-            throw new CustomValidationException(sprintf('Album by id %s not found', $albumId));
+            throw new CustomValidationException(\sprintf('Album by id %s not found', $albumId));
         }
 
         $media->setAlbum($album);
@@ -288,7 +292,7 @@ class Media extends Resource
             // Persist the model into the model manager this uploads and resizes the image
             $this->getManager()->persist($media);
         } catch (ORMException $e) {
-            throw new CustomValidationException(sprintf('Some error occurred while persisting your media'));
+            throw new CustomValidationException(\sprintf('Some error occurred while persisting your media'));
         } finally {
             // Cleanup temporary file
             $this->deleteTmpFile($file);
@@ -319,7 +323,7 @@ class Media extends Resource
         unlink($destPath);
 
         if (!\is_string($destPath) || (!@mkdir($destPath) && !is_dir($destPath))) {
-            throw new RuntimeException(sprintf('Could not create temp directory "%s"', $destPath));
+            throw new RuntimeException(\sprintf('Could not create temp directory "%s"', $destPath));
         }
 
         $this->getContainer()->get('shopware.components.stream_protocol_validator')->validate($url);
@@ -329,16 +333,16 @@ class Media extends Resource
         }
 
         $filename = $this->getUniqueFileName($destPath, $baseFilename);
-        $filePath = sprintf('%s/%s', $destPath, $filename);
+        $filePath = \sprintf('%s/%s', $destPath, $filename);
 
         $put_handle = fopen($filePath, 'wb+');
         if (!\is_resource($put_handle)) {
-            throw new Exception(sprintf('Could not open %s for writing', $filePath));
+            throw new Exception(\sprintf('Could not open %s for writing', $filePath));
         }
 
         $get_handle = fopen($url, 'rb');
         if (!\is_resource($get_handle)) {
-            throw new Exception(sprintf('Could not open %s for reading', $url));
+            throw new Exception(\sprintf('Could not open %s for reading', $url));
         }
 
         while (!feof($get_handle)) {
@@ -352,7 +356,7 @@ class Media extends Resource
         fclose($get_handle);
         fclose($put_handle);
 
-        return sprintf('%s/%s', $destPath, $filename);
+        return \sprintf('%s/%s', $destPath, $filename);
     }
 
     /**
@@ -415,17 +419,17 @@ class Media extends Resource
     {
         $get_handle = fopen($url, 'r');
         if (!\is_resource($get_handle)) {
-            throw new Exception(sprintf('Could not open %s for reading', $url));
+            throw new Exception(\sprintf('Could not open %s for reading', $url));
         }
 
         $meta = stream_get_meta_data($get_handle);
         if (!\array_key_exists('mediatype', $meta) || !str_contains($meta['mediatype'], 'image/')) {
-            throw new CustomValidationException(sprintf('No valid media type passed for the product image: %s', $url));
+            throw new CustomValidationException(\sprintf('No valid media type passed for the product image: %s', $url));
         }
 
         $extension = str_replace('image/', '', $meta['mediatype']);
         $filename = $this->getUniqueFileName($destinationPath, $baseFilename) . '.' . $extension;
-        $destinationFilePath = sprintf('%s/%s', $destinationPath, $filename);
+        $destinationFilePath = \sprintf('%s/%s', $destinationPath, $filename);
 
         $put_handle = fopen("$destinationPath/$filename", 'wb+');
         if (!\is_resource($put_handle)) {
@@ -482,7 +486,7 @@ class Media extends Resource
         if (isset($params['album'])) {
             $album = Shopware()->Models()->find(Album::class, $params['album']);
             if (!$album) {
-                throw new CustomValidationException(sprintf('Album by id %s not found', $params['album']));
+                throw new CustomValidationException(\sprintf('Album by id %s not found', $params['album']));
             }
             $params['album'] = $album;
         }
@@ -504,7 +508,7 @@ class Media extends Resource
                         $originalName = $params['name'];
                     }
                 } catch (Exception $e) {
-                    throw new Exception(sprintf('Could not load image %s', $params['file']), $e->getCode(), $e);
+                    throw new Exception(\sprintf('Could not load image %s', $params['file']), $e->getCode(), $e);
                 }
             } else {
                 $path = str_replace('file://', '', $params['file']);

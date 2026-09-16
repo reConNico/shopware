@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\ORM\AbstractQuery;
@@ -90,7 +90,7 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
         }
 
         $data['country'] = $data['countryId'];
-        $data['state'] = $data['stateId'];
+        $data['state'] = $data['stateId'] ?? null;
 
         $form = $this->get('shopware.form.factory')->create(AddressFormType::class, $model);
         $form->submit($data);
@@ -146,7 +146,7 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
 
         try {
             $this->addressService->delete($model);
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             return ['success' => false, 'error' => $ex->getMessage()];
         }
 
@@ -161,7 +161,7 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
         $customerId = (int) $this->Request()->get('customerId');
 
         if (!$customerId) {
-            throw new \RuntimeException('You have to provide a valid customerId.');
+            throw new RuntimeException('You have to provide a valid customerId.');
         }
 
         $query = parent::getListQuery();
@@ -177,6 +177,7 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
      */
     protected function getQueryPaginator(QueryBuilder $builder, $hydrationMode = AbstractQuery::HYDRATE_ARRAY)
     {
+        /** @var Query<AddressModel|array<string, mixed>> $query */
         $query = $builder->getQuery();
         $query->setHydrationMode($hydrationMode);
         $query->setHint(Query::HINT_INCLUDE_META_COLUMNS, true);
@@ -190,15 +191,13 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
     protected function getDetailQuery($id)
     {
         $query = parent::getDetailQuery($id);
-        $query = $this->addAssociations($query);
 
-        return $query;
+        return $this->addAssociations($query);
     }
 
     private function addAssociations(QueryBuilder $query): QueryBuilder
     {
-        $query
-            ->addSelect(['country', 'state', 'PARTIAL customer.{id,email}'])
+        $query->addSelect(['country', 'state', 'PARTIAL customer.{id,email}'])
             ->join('address.customer', 'customer')
             ->join('address.country', 'country')
             ->leftJoin('address.state', 'state');

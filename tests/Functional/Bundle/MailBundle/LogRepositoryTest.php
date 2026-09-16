@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\MailBundle;
@@ -74,7 +73,7 @@ class LogRepositoryTest extends TestCase
         $this->builder = new LogEntryBuilder($this->entityManager);
         $this->repository = $this->entityManager->getRepository(Log::class);
 
-        $oneDay = new DateInterval(sprintf('P%dD', 1));
+        $oneDay = new DateInterval(\sprintf('P%dD', 1));
         $this->pastDate = new DateTime(self::PAST_DATE);
         $this->pastDatePlusOneDay = (new DateTime(self::PAST_DATE))->add($oneDay);
         $this->currentDate = new DateTime('now');
@@ -126,21 +125,20 @@ class LogRepositoryTest extends TestCase
      * upper case/lower case, do not lead to problems when they're persisted.
      *
      * This is a regression test for SW-24564.
-     *
-     * @doesNotPerformAssertions
      */
     public function testUniqueConstraintIsCaseSensitive(): void
     {
         $firstMail = $this->createSimpleMail();
         $secondMail = new Enlight_Components_Mail('UTF-8');
 
+        static::assertIsString($firstMail->getSubject());
         $secondMail->setSubject($firstMail->getSubject());
         $secondMail->setFrom(ucfirst($firstMail->getFrom()));
         $secondMail->setBodyText($firstMail->getBodyText()->getRawContent());
 
         // Try to create log entries with addresses the MySQL UNIQUE-constraint would treat as equal.
-        $secondMail->addTo(sprintf('%s ', $firstMail->getRecipients()[0]));
-        $secondMail->addTo(sprintf('    %s     ', $firstMail->getRecipients()[0]));
+        $secondMail->addTo(\sprintf('%s ', $firstMail->getRecipients()[0]));
+        $secondMail->addTo(\sprintf('    %s     ', $firstMail->getRecipients()[0]));
         $secondMail->addTo(ucfirst($firstMail->getRecipients()[0]));
 
         $first = $this->builder->build($firstMail);

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Enlight_Controller_Request_Request as Request;
@@ -89,7 +89,7 @@ class Shopware_Plugins_Core_Router_Bootstrap extends Shopware_Components_Plugin_
                 $shop->setBasePath('');
             }
 
-            $request->setSecure();
+            $request->setSecure($shop->getSecure());
             $request->setBasePath($shop->getBasePath());
             $request->setBaseUrl($shop->getBaseUrl());
             $request->setHttpHost($shop->getHost());
@@ -237,11 +237,11 @@ class Shopware_Plugins_Core_Router_Bootstrap extends Shopware_Components_Plugin_
             }
         }
 
-        //currency switch
+        // currency switch
         if ($cookieKey === 'currency') {
             $path = rtrim((string) $shop->getBasePath(), '/') . '/';
             $response->headers->setCookie(new Cookie($cookieKey, $cookieValue, 0, $path, null, $request->isSecure()));
-            $url = sprintf(
+            $url = \sprintf(
                 '%s://%s%s',
                 $request->getScheme(),
                 $request->getHttpHost(),
@@ -389,8 +389,8 @@ class Shopware_Plugins_Core_Router_Bootstrap extends Shopware_Components_Plugin_
             $url = '/' . $url;
         }
 
-        //build full redirect url to allow host switches
-        return sprintf(
+        // build full redirect url to allow host switches
+        return \sprintf(
             '%s://%s%s%s',
             $request->getScheme(),
             $host,
@@ -406,13 +406,13 @@ class Shopware_Plugins_Core_Router_Bootstrap extends Shopware_Components_Plugin_
      */
     protected function shouldRedirect(Request $request, Shop $shop)
     {
-        return //for example: template preview, direct shop selection via url
+        return // for example: template preview, direct shop selection via url
             (
                 $request->isGet()
                 && $request->getQuery('__shop') !== null
                 && (int) $request->getQuery('__shop') !== (int) $shop->getId()
             )
-            //for example: shop language switch
+            // for example: shop language switch
             || (
                 $request->isPost()
                 && $request->getPost('__shop') !== null
@@ -476,7 +476,7 @@ class Shopware_Plugins_Core_Router_Bootstrap extends Shopware_Components_Plugin_
     private function validateShop(Shop $shop): void
     {
         if (!$shop->getCustomerGroup() instanceof CustomerGroup) {
-            throw new RuntimeException(sprintf("Shop '%s (id: %s)' has no customer group.", $shop->getName(), $shop->getId()));
+            throw new RuntimeException(\sprintf("Shop '%s (id: %s)' has no customer group.", $shop->getName(), $shop->getId()));
         }
 
         $shop->getCurrency();
@@ -484,11 +484,11 @@ class Shopware_Plugins_Core_Router_Bootstrap extends Shopware_Components_Plugin_
 
         $mainShop = $shop->getMain() ?? $shop;
         if (!$mainShop->getTemplate()) {
-            throw new RuntimeException(sprintf("Shop '%s (id: %s)' has no template.", $shop->getName(), $shop->getId()));
+            throw new RuntimeException(\sprintf("Shop '%s (id: %s)' has no template.", $shop->getName(), $shop->getId()));
         }
 
         if (!$mainShop->getDocumentTemplate()) {
-            throw new RuntimeException(sprintf("Shop '%s (id: %s)' has no document template.", $shop->getName(), $shop->getId()));
+            throw new RuntimeException(\sprintf("Shop '%s (id: %s)' has no document template.", $shop->getName(), $shop->getId()));
         }
     }
 

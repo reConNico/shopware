@@ -1,28 +1,26 @@
 <?php
 
 declare(strict_types=1);
-
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Migrations;
@@ -38,15 +36,9 @@ use Shopware\Components\Plugin;
 
 class PluginMigrationManager extends Manager
 {
-    /**
-     * @var Plugin
-     */
-    private $plugin;
+    private Plugin $plugin;
 
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
+    private LoggerInterface $logger;
 
     public function __construct(PDO $connection, Plugin $plugin, LoggerInterface $logger)
     {
@@ -85,6 +77,9 @@ ENGINE=InnoDB
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * @param AbstractPluginMigration::MODUS_* $modus
+     */
     public function apply(AbstractMigration $migration, $modus = AbstractMigration::MODUS_INSTALL, bool $keepUserData = false): void
     {
         if ($modus === AbstractPluginMigration::MODUS_UNINSTALL) {
@@ -128,6 +123,9 @@ ENGINE=InnoDB
         return $migrations;
     }
 
+    /**
+     * @param AbstractPluginMigration::MODUS_* $modus
+     */
     public function run($modus = AbstractMigration::MODUS_INSTALL, bool $keepUserData = false): void
     {
         if ($modus !== AbstractPluginMigration::MODUS_UNINSTALL) {
@@ -137,14 +135,14 @@ ENGINE=InnoDB
         }
 
         $currentVersion = $this->getCurrentVersion();
-        $this->log(sprintf('Current MigrationNumber: %s', $currentVersion));
+        $this->log(\sprintf('Current MigrationNumber: %s', $currentVersion));
 
         $migrations = $this->getMigrationsForDowngrade($currentVersion);
 
-        $this->log(sprintf('Found %s migrations to apply', \count($migrations)));
+        $this->log(\sprintf('Found %s migrations to apply', \count($migrations)));
 
         foreach ($migrations as $migration) {
-            $this->log(sprintf('Revert MigrationNumber: %s - %s', $migration->getVersion(), $migration->getLabel()));
+            $this->log(\sprintf('Revert MigrationNumber: %s - %s', $migration->getVersion(), $migration->getLabel()));
             try {
                 $this->apply($migration, $modus, $keepUserData);
             } catch (Exception $e) {
@@ -156,12 +154,12 @@ ENGINE=InnoDB
 
     public function log($str): void
     {
-        $this->logger->info(sprintf('[Migration from %s] %s', $this->plugin->getName(), $str));
+        $this->logger->info(\sprintf('[Migration from %s] %s', $this->plugin->getName(), $str));
     }
 
     protected function loadMigration(array $result, string $migrationPath): AbstractMigration
     {
-        $migrationClassName = sprintf('%s\\Migrations\\Migration%d', $this->plugin->getName(), $result['1']);
+        $migrationClassName = \sprintf('%s\\Migrations\\Migration%d', $this->plugin->getName(), $result['1']);
         if (!class_exists($migrationClassName, false)) {
             $file = $migrationPath . '/' . $result['0'];
             require $file;
@@ -234,7 +232,7 @@ ENGINE=InnoDB
         } catch (Exception $e) {
             $this->markMigrationAsFailed($migration, $e);
 
-            throw new RuntimeException(sprintf('Could not revert migration (%s). Error: %s ', \get_class($migration), $e->getMessage()));
+            throw new RuntimeException(\sprintf('Could not revert migration (%s). Error: %s ', \get_class($migration), $e->getMessage()));
         }
 
         $this->removeMigration($migration);

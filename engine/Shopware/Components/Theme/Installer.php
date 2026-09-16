@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Theme;
@@ -32,7 +32,6 @@ use Shopware\Components\Model\ModelRepository;
 use Shopware\Components\Snippet\DatabaseHandler;
 use Shopware\Components\Theme;
 use Shopware\Models\Plugin\Plugin;
-use Shopware\Models\Shop;
 use Shopware\Models\Shop\Template;
 
 /**
@@ -164,14 +163,12 @@ class Installer
      * Helper function which iterates the engine\Shopware\Themes directory
      * and registers all stored themes within the directory as \Shopware\Models\Shop\Template.
      *
-     * @param \Shopware\Models\Plugin\Plugin $plugin
-     *
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\ORMInvalidArgumentException
      *
      * @return Theme[]
      */
-    private function synchronizeThemeDirectories(DirectoryIterator $directories, Plugin $plugin = null)
+    private function synchronizeThemeDirectories(DirectoryIterator $directories, ?Plugin $plugin = null)
     {
         $themes = [];
 
@@ -267,7 +264,7 @@ class Installer
                 continue;
             }
 
-            //merge the plugin themes into the already detected plugin themes.
+            // merge the plugin themes into the already detected plugin themes.
             $themes = array_merge($themes, $pluginThemes);
 
             $this->entityManager->flush();
@@ -365,14 +362,14 @@ class Installer
                 'template' => $theme->getTemplate(),
             ]);
             if (!$template instanceof Template) {
-                throw new Exception(sprintf('Template of theme %s not found', $theme->getTemplate()));
+                throw new Exception(\sprintf('Template of theme %s not found', $theme->getTemplate()));
             }
 
             $parent = $this->repository->findOneBy([
                 'template' => $theme->getExtend(),
             ]);
             if (!$parent instanceof Template) {
-                throw new Exception(sprintf('Parent %s of theme %s not found', $theme->getExtend(), $theme->getTemplate()));
+                throw new Exception(\sprintf('Parent %s of theme %s not found', $theme->getExtend(), $theme->getTemplate()));
             }
 
             $template->setParent($parent);

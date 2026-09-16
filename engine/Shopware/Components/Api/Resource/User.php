@@ -1,35 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Api\Resource;
 
+use Doctrine\ORM\Query;
 use Shopware\Components\Api\Exception as ApiException;
 use Shopware\Components\Api\Exception\NotFoundException;
 use Shopware\Components\Api\Exception\ParameterMissingException;
 use Shopware\Components\Auth\Validator\UserValidator;
 use Shopware\Components\Model\ModelRepository;
-use Shopware\Components\Model\QueryBuilder;
 use Shopware\Components\Password\Manager;
 use Shopware\Models\Config\Element;
 use Shopware\Models\Shop\Locale;
@@ -40,7 +40,7 @@ use Zend_Acl_Resource_Interface;
 
 /**
  * User API Resource
-` */
+ * ` */
 class User extends Resource
 {
     /**
@@ -86,7 +86,7 @@ class User extends Resource
         $user = $builder->getQuery()->getOneOrNullResult($this->getResultMode());
 
         if (!$user) {
-            throw new NotFoundException(sprintf('User by id %s not found', $id));
+            throw new NotFoundException(\sprintf('User by id %s not found', $id));
         }
 
         if (!$this->hasPrivilege('create', 'usermanager')
@@ -116,29 +116,29 @@ class User extends Resource
     {
         $this->checkPrivilege('read', 'usermanager');
 
-        /** @var QueryBuilder $builder */
         $builder = $this->getRepository()->createQueryBuilder('user')
-            ->join('user.role', 'role');
-
-        $builder->addSelect(['attribute'])
-            ->leftJoin('user.attribute', 'attribute');
-
-        $builder->addFilter($criteria)
+            ->join('user.role', 'role')
+            ->addSelect(['attribute'])
+            ->leftJoin('user.attribute', 'attribute')
+            ->addFilter($criteria)
             ->addOrderBy($orderBy)
             ->setFirstResult($offset)
             ->setMaxResults($limit);
 
+        /** @var Query<UserModel|array<string, mixed>> $query */
         $query = $builder->getQuery();
         $query->setHydrationMode($this->getResultMode());
 
         $paginator = $this->getManager()->createPaginator($query);
 
-        $users = $paginator->getIterator()->getArrayCopy();
+        $users = iterator_to_array($paginator);
 
         if (!$this->hasPrivilege('create', 'usermanager')
             && !$this->hasPrivilege('update', 'usermanager')) {
             foreach ($users as &$user) {
-                unset($user['apiKey'], $user['sessionId'], $user['password'], $user['encoder']);
+                if (\is_array($user)) {
+                    unset($user['apiKey'], $user['sessionId'], $user['password'], $user['encoder']);
+                }
             }
         }
 
@@ -202,7 +202,7 @@ class User extends Resource
         $user = $builder->getQuery()->getOneOrNullResult(self::HYDRATE_OBJECT);
 
         if (!$user) {
-            throw new NotFoundException(sprintf('User by id %s not found', $id));
+            throw new NotFoundException(\sprintf('User by id %s not found', $id));
         }
 
         $params = $this->prepareAssociatedData($params, $user);
@@ -238,7 +238,7 @@ class User extends Resource
         $user = $this->getRepository()->find($id);
 
         if (!$user) {
-            throw new NotFoundException(sprintf('User by id %s not found', $id));
+            throw new NotFoundException(\sprintf('User by id %s not found', $id));
         }
 
         $this->getManager()->remove($user);
@@ -266,13 +266,13 @@ class User extends Resource
         }
 
         if (!$this->getAcl()->has($resource)) {
-            throw new ApiException\PrivilegeException(sprintf('No resource "%s" found', $resource));
+            throw new ApiException\PrivilegeException(\sprintf('No resource "%s" found', $resource));
         }
 
         $role = $this->getRole();
 
         if (!$this->getAcl()->isAllowed($role, $resource, $privilege)) {
-            throw new ApiException\PrivilegeException(sprintf('Role "%s" is not allowed to "%s" on resource "%s"', \is_string($role) ? $role : $role->getRoleId(), $privilege, \is_string($resource) ? $resource : $resource->getResourceId()));
+            throw new ApiException\PrivilegeException(\sprintf('Role "%s" is not allowed to "%s" on resource "%s"', \is_string($role) ? $role : $role->getRoleId(), $privilege, \is_string($resource) ? $resource : $resource->getResourceId()));
         }
     }
 
@@ -305,13 +305,13 @@ class User extends Resource
             $data['role'] = $this->getManager()->find(Role::class, $data['roleId']);
 
             if (empty($data['role'])) {
-                throw new ApiException\CustomValidationException(sprintf('Role by id %s not found', $data['roleId']));
+                throw new ApiException\CustomValidationException(\sprintf('Role by id %s not found', $data['roleId']));
             }
         } elseif (isset($data['role']) && ($data['role'] >= 0)) {
             $role = $this->getManager()->getRepository(Role::class)->findOneBy(['name' => $data['role']]);
 
             if (!$role) {
-                throw new ApiException\CustomValidationException(sprintf('Role by name %s not found', $data['role']));
+                throw new ApiException\CustomValidationException(\sprintf('Role by name %s not found', $data['role']));
             }
             $data['role'] = $role;
         } else {
@@ -321,12 +321,12 @@ class User extends Resource
         // Check if a locale id or name is passed.
         if (!empty($data['localeId'])) {
             if (!$this->isLocaleId((int) $data['localeId'])) {
-                throw new ApiException\CustomValidationException(sprintf('Locale by id %s not found', $data['localeId']));
+                throw new ApiException\CustomValidationException(\sprintf('Locale by id %s not found', $data['localeId']));
             }
         } elseif (!empty($data['locale'])) {
             $localeId = $this->getLocaleIdFromLocale($data['locale']);
             if (!$localeId) {
-                throw new ApiException\CustomValidationException(sprintf('Locale by name %s not found', $data['locale']));
+                throw new ApiException\CustomValidationException(\sprintf('Locale by name %s not found', $data['locale']));
             }
             $data['localeId'] = $localeId;
         } else {
@@ -361,7 +361,7 @@ class User extends Resource
         $defaultEncoderName = $passwordEncoderRegistry->getDefaultPasswordEncoderName();
         $encoder = $passwordEncoderRegistry->getEncoderByName($defaultEncoderName);
 
-        $data['password'] = $encoder->encodePassword($data['password']);
+        $data['password'] = $encoder->encodePassword($data['password'] ?? '');
         $data['encoder'] = $encoder->getName();
 
         return $data;

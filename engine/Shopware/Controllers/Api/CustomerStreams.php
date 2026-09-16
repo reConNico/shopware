@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Components\Api\Resource\CustomerStream;
@@ -27,7 +28,7 @@ use Shopware\Components\Api\Resource\CustomerStream;
 class Shopware_Controllers_Api_CustomerStreams extends Shopware_Controllers_Api_Rest
 {
     /**
-     * @var Shopware\Components\Api\Resource\CustomerStream
+     * @var CustomerStream
      */
     protected $resource;
 
@@ -42,15 +43,16 @@ class Shopware_Controllers_Api_CustomerStreams extends Shopware_Controllers_Api_
      */
     public function indexAction(): void
     {
-        $limit = (int) $this->Request()->getParam('limit', 100);
-        $offset = (int) $this->Request()->getParam('start', 0);
-        $sort = $this->Request()->getParam('sort', []);
-        $filter = $this->Request()->getParam('filter', []);
+        $request = $this->Request();
+
+        $limit = (int) $request->getParam('limit', 100);
+        $offset = (int) $request->getParam('start', 0);
+        $sort = $request->getParam('sort', []);
+        $filter = $request->getParam('filter', []);
 
         $result = $this->resource->getList($offset, $limit, $filter, $sort);
 
         $this->View()->assign($result);
-        $this->View()->assign('success', true);
     }
 
     /**
@@ -59,16 +61,22 @@ class Shopware_Controllers_Api_CustomerStreams extends Shopware_Controllers_Api_
      */
     public function getAction(): void
     {
-        $customers = $this->resource->getOne(
-            $this->Request()->getParam('id'),
-            (int) $this->Request()->getParam('offset', 0),
-            $this->Request()->getParam('limit'),
-            $this->Request()->getParam('conditions'),
-            $this->Request()->getParam('sortings')
+        $request = $this->Request();
+
+        $streamId = $request->getParam('id');
+        if ($streamId !== null) {
+            $streamId = (int) $streamId;
+        }
+        $customerNumberSearchResult = $this->resource->getOne(
+            $streamId,
+            (int) $request->getParam('offset', 0),
+            (int) $request->getParam('limit', 50),
+            $request->getParam('conditions', ''),
+            $request->getParam('sortings', '')
         );
 
-        $this->View()->assign('data', $customers->getCustomers());
-        $this->View()->assign('total', $customers->getTotal());
+        $this->View()->assign('data', $customerNumberSearchResult->getCustomers());
+        $this->View()->assign('total', $customerNumberSearchResult->getTotal());
         $this->View()->assign('success', true);
     }
 
@@ -78,7 +86,9 @@ class Shopware_Controllers_Api_CustomerStreams extends Shopware_Controllers_Api_
      */
     public function postAction(): void
     {
-        if ($this->Request()->has('buildSearchIndex')) {
+        $request = $this->Request();
+
+        if ($request->has('buildSearchIndex')) {
             $this->resource->buildSearchIndex(0, true);
             $this->resource->cleanupIndexSearchIndex();
             $this->View()->assign(['success' => true]);
@@ -87,8 +97,8 @@ class Shopware_Controllers_Api_CustomerStreams extends Shopware_Controllers_Api_
         }
 
         $stream = $this->resource->create(
-            $this->Request()->getPost(),
-            $this->Request()->getParam('indexStream')
+            $request->getPost(),
+            $request->getParam('indexStream')
         );
 
         $location = $this->apiBaseUrl . 'customer_streams/' . $stream->getId();
@@ -106,15 +116,17 @@ class Shopware_Controllers_Api_CustomerStreams extends Shopware_Controllers_Api_
      */
     public function putAction(): void
     {
-        $customer = $this->resource->update(
-            $this->Request()->getParam('id'),
-            $this->Request()->getPost(),
-            $this->Request()->getParam('indexStream')
+        $request = $this->Request();
+
+        $customerStream = $this->resource->update(
+            (int) $request->getParam('id'),
+            $request->getPost(),
+            $request->getParam('indexStream')
         );
 
-        $location = $this->apiBaseUrl . 'customer_streams/' . $customer->getId();
+        $location = $this->apiBaseUrl . 'customer_streams/' . $customerStream->getId();
         $data = [
-            'id' => $customer->getId(),
+            'id' => $customerStream->getId(),
             'location' => $location,
         ];
 
@@ -126,9 +138,8 @@ class Shopware_Controllers_Api_CustomerStreams extends Shopware_Controllers_Api_
      */
     public function deleteAction(): void
     {
-        $this->resource->delete(
-            $this->Request()->getParam('id')
-        );
+        $streamId = (int) $this->Request()->getParam('id');
+        $this->resource->delete($streamId);
 
         $this->View()->assign(['success' => true]);
     }

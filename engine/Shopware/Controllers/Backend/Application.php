@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\Proxy;
 use Shopware\Components\Model\ModelEntity;
@@ -369,8 +370,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
     {
         $builder = $this->getDetailQuery($id);
 
-        $paginator = $this->getQueryPaginator($builder);
-        $data = $paginator->getIterator()->current();
+        $data = iterator_to_array($this->getQueryPaginator($builder))[0] ?? [];
         if (!\is_array($data)) {
             $data = [];
         }
@@ -440,7 +440,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
         $this->getManager()->flush();
 
         if (!method_exists($model, 'getId')) {
-            throw new RuntimeException(sprintf('Model "%s" has no "getId" method', $this->model));
+            throw new RuntimeException(\sprintf('Model "%s" has no "getId" method', $this->model));
         }
 
         $detail = $this->getDetail($model->getId());
@@ -547,7 +547,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
 
         $paginator = $this->getQueryPaginator($builder);
 
-        $data = $paginator->getIterator()->getArrayCopy();
+        $data = iterator_to_array($paginator);
 
         return [
             'success' => true,
@@ -614,7 +614,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
         }
 
         $paginator = $this->getQueryPaginator($builder);
-        $data = $paginator->getIterator()->getArrayCopy();
+        $data = iterator_to_array($paginator);
 
         return [
             'success' => true,
@@ -683,7 +683,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
         }
 
         $paginator = $this->getQueryPaginator($builder);
-        $data = $paginator->getIterator()->getArrayCopy();
+        $data = iterator_to_array($paginator);
         $count = $paginator->count();
 
         return ['success' => true, 'data' => $data, 'total' => $count];
@@ -802,14 +802,12 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
      *      => array('billing' => array( 0 => array('id' => ...) ))
      *      => The function removes the first level of the array to have to model data directly in the association property.
      *      => array('billing' => array('id' => ...))
-     *
      * @ORM\ManyToOne() associations
      *      => @ORM\ManyToOne() requires the related doctrine model in the association key property.
      *      => But Ext JS sends only the foreign key property.
      *      => 'article' => array('id' => 1, ... , 'shopId' => 1, 'shop' => null)
      *      => This function resolves the foreign key, removes the foreign key property from the data array and sets the founded doctrine model into the association property.
      *      => 'article' => array('id' => 1, ... , 'shop' => $this->getManager()->find(Model, $data['shopId']);
-     *
      * @ORM\ManyToMany() associations
      *      => @ORM\ManyToMany() requires like the @ORM\ManyToOne() associations the resolved doctrine models in the association property.
      *      => But Ext JS sends only an array of foreign keys.
@@ -864,7 +862,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
                 continue;
             }
 
-            if ($mapping['type'] === ClassMetadataInfo::MANY_TO_ONE) {
+            if ($mapping['type'] === ClassMetadataInfo::MANY_TO_ONE && \array_key_exists('joinColumns', $mapping)) {
                 /**
                  * @ORM\ManyToOne associations.
                  *
@@ -879,16 +877,16 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
                 $column = $mapping['joinColumns'][0]['name'];
                 $field = $metaData->getFieldForColumn($column);
 
-                if ($data[$field]) {
+                if (isset($data[$field])) {
                     $associationModel = $this->getManager()->find($mapping['targetEntity'], $data[$field]);
 
-                    //proxies need to be loaded, otherwise the validation will be failed.
-                    if ($associationModel instanceof Proxy && method_exists($associationModel, '__load')) {
+                    // proxies need to be loaded, otherwise the validation will be failed.
+                    if ($associationModel instanceof Proxy) {
                         $associationModel->__load();
                     }
                     $data[$mapping['fieldName']] = $associationModel;
 
-                    //remove the foreign key data.
+                    // remove the foreign key data.
                     if ($field !== $mapping['fieldName']) {
                         unset($data[$field]);
                     }
@@ -1029,12 +1027,12 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
         $fields = $this->getModelFields($model, $alias);
         $conditions = [];
         foreach ($sort as $condition) {
-            //check if the passed field is a valid doctrine model field of the configured model.
+            // check if the passed field is a valid doctrine model field of the configured model.
             if (!\array_key_exists($condition['property'], $fields)) {
                 continue;
             }
 
-            //check if the developer limited the sortable fields and the passed property defined in the sort fields parameter.
+            // check if the developer limited the sortable fields and the passed property defined in the sort fields parameter.
             if (!empty($whiteList) && !\in_array($condition['property'], $whiteList, true)) {
                 continue;
             }
@@ -1089,39 +1087,41 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
         $conditions = [];
 
         foreach ($filters as $condition) {
-            if ($condition['property'] === 'search') {
-                foreach ($fields as $name => $field) {
-                    //check if the developer limited the filterable fields and the passed property defined in the filter fields parameter.
-                    if (!empty($whiteList) && !\in_array($name, $whiteList, true)) {
+            if (isset($condition['property'])) {
+                if ($condition['property'] === 'search') {
+                    foreach ($fields as $name => $field) {
+                        // check if the developer limited the filterable fields and the passed property defined in the filter fields parameter.
+                        if (!empty($whiteList) && !\in_array($name, $whiteList, true)) {
+                            continue;
+                        }
+
+                        $value = $this->formatSearchValue($condition['value'], $field);
+
+                        $conditions[] = [
+                            'property' => $field['alias'],
+                            'operator' => 'OR',
+                            'value' => $value,
+                        ];
+                    }
+                } elseif (\array_key_exists($condition['property'], $fields)) {
+                    // check if the developer limited the filterable fields and the passed property defined in the filter fields parameter.
+                    if (!empty($whiteList) && !\in_array($condition['property'], $whiteList, true)) {
                         continue;
                     }
 
-                    $value = $this->formatSearchValue($condition['value'], $field);
+                    $field = $fields[$condition['property']];
+                    $value = $this->formatSearchValue($condition['value'], $field, $condition['expression'] ?? null);
 
-                    $conditions[] = [
+                    $tmpCondition = [
                         'property' => $field['alias'],
-                        'operator' => 'OR',
+                        'operator' => $condition['operator'] ?? null,
                         'value' => $value,
                     ];
+                    if (isset($condition['expression'])) {
+                        $tmpCondition['expression'] = $condition['expression'];
+                    }
+                    $conditions[] = $tmpCondition;
                 }
-            } elseif (\array_key_exists($condition['property'], $fields)) {
-                //check if the developer limited the filterable fields and the passed property defined in the filter fields parameter.
-                if (!empty($whiteList) && !\in_array($condition['property'], $whiteList, true)) {
-                    continue;
-                }
-
-                $field = $fields[$condition['property']];
-                $value = $this->formatSearchValue($condition['value'], $field, $condition['expression'] ?? null);
-
-                $tmpCondition = [
-                    'property' => $field['alias'],
-                    'operator' => $condition['operator'] ?? null,
-                    'value' => $value,
-                ];
-                if (isset($condition['expression'])) {
-                    $tmpCondition['expression'] = $condition['expression'];
-                }
-                $conditions[] = $tmpCondition;
             }
         }
 
@@ -1139,6 +1139,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
      */
     protected function getQueryPaginator(QueryBuilder $builder, $hydrationMode = AbstractQuery::HYDRATE_ARRAY)
     {
+        /** @var Query<TEntityClass|array<string, mixed>> $query */
         $query = $builder->getQuery();
         $query->setHydrationMode($hydrationMode);
 
@@ -1166,7 +1167,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
                 break;
             case 'date':
             case 'datetime':
-                //validates the date value. If the value is no date value, return
+                // validates the date value. If the value is no date value, return
                 $date = date_parse($value);
 
                 if ($date['error_count'] > 0 || !checkdate((int) $date['month'], (int) $date['day'], (int) $date['year'])) {
@@ -1179,7 +1180,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
                     return $value;
                 }
 
-                //search values for date time should added the % wildcards to search for time values.
+                // search values for date time should added the % wildcards to search for time values.
                 if ($field['type'] === 'datetime') {
                     $value = '%' . $value . '%';
                 }

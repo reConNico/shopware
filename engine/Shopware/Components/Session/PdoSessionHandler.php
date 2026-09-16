@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Session;
@@ -29,6 +29,7 @@ use InvalidArgumentException;
 use PDO;
 use PDOException;
 use PDOStatement;
+use ReturnTypeWillChange;
 use SessionHandlerInterface;
 
 /**
@@ -193,7 +194,7 @@ class PdoSessionHandler implements SessionHandlerInterface
     {
         if ($pdoOrDsn instanceof PDO) {
             if ($pdoOrDsn->getAttribute(PDO::ATTR_ERRMODE) !== PDO::ERRMODE_EXCEPTION) {
-                throw new InvalidArgumentException(sprintf('"%s" requires PDO error mode attribute be set to throw Exceptions (i.e. $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION))', __CLASS__));
+                throw new InvalidArgumentException(\sprintf('"%s" requires PDO error mode attribute be set to throw Exceptions (i.e. $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION))', __CLASS__));
             }
 
             $this->pdo = $pdoOrDsn;
@@ -251,7 +252,7 @@ class PdoSessionHandler implements SessionHandlerInterface
                 $sql = "CREATE TABLE $this->table ($this->idCol VARCHAR(128) NOT NULL PRIMARY KEY, $this->dataCol VARBINARY(MAX) NOT NULL, $this->expiryCol INTEGER NOT NULL, $this->timeCol INTEGER NOT NULL)";
                 break;
             default:
-                throw new DomainException(sprintf('Creating the session table is currently not implemented for PDO driver "%s".', $this->driver));
+                throw new DomainException(\sprintf('Creating the session table is currently not implemented for PDO driver "%s".', $this->driver));
         }
 
         try {
@@ -277,7 +278,10 @@ class PdoSessionHandler implements SessionHandlerInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function open($savePath, $sessionName)
     {
         if ($this->pdo === null) {
@@ -289,7 +293,10 @@ class PdoSessionHandler implements SessionHandlerInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function read($sessionId)
     {
         try {
@@ -303,7 +310,10 @@ class PdoSessionHandler implements SessionHandlerInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function gc($maxlifetime)
     {
         // We delay gc() to close() so that it is executed outside the transactional and blocking read-write process.
@@ -315,7 +325,10 @@ class PdoSessionHandler implements SessionHandlerInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function destroy($sessionId)
     {
         // delete the record associated with this id
@@ -336,10 +349,13 @@ class PdoSessionHandler implements SessionHandlerInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function write($sessionId, $data)
     {
-        $maxlifetime = (int) ini_get('session.gc_maxlifetime');
+        $maxlifetime = (int) \ini_get('session.gc_maxlifetime');
 
         try {
             // We use a single MERGE SQL query when supported by the database.
@@ -394,7 +410,10 @@ class PdoSessionHandler implements SessionHandlerInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function close()
     {
         $this->commit();
@@ -429,7 +448,7 @@ class PdoSessionHandler implements SessionHandlerInterface
     protected function getConnection()
     {
         if ($this->pdo === null) {
-            $this->connect($this->dsn ?: ini_get('session.save_path'));
+            $this->connect($this->dsn ?: \ini_get('session.save_path'));
         }
 
         return $this->pdo;
@@ -641,7 +660,7 @@ class PdoSessionHandler implements SessionHandlerInterface
             case 'sqlite':
                 throw new DomainException('SQLite does not support advisory locks.');
             default:
-                throw new DomainException(sprintf('Advisory locks are currently not implemented for PDO driver "%s".', $this->driver));
+                throw new DomainException(\sprintf('Advisory locks are currently not implemented for PDO driver "%s".', $this->driver));
         }
     }
 
@@ -668,7 +687,7 @@ class PdoSessionHandler implements SessionHandlerInterface
                     // we already locked when starting transaction
                     break;
                 default:
-                    throw new DomainException(sprintf('Transactional locks are currently not implemented for PDO driver "%s".', $this->driver));
+                    throw new DomainException(\sprintf('Transactional locks are currently not implemented for PDO driver "%s".', $this->driver));
             }
         }
 

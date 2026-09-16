@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Article\Configurator;
@@ -51,7 +51,7 @@ class Option extends ModelEntity
     protected $articles;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Article\Configurator\Set>
+     * @var ArrayCollection<Set>
      *
      * @ORM\ManyToMany(targetEntity="Shopware\Models\Article\Configurator\Set", mappedBy="options")
      */
@@ -105,14 +105,14 @@ class Option extends ModelEntity
     private $group;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Article\Configurator\Dependency>
+     * @var ArrayCollection<Dependency>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Article\Configurator\Dependency", mappedBy="parentOption", orphanRemoval=true)
      */
     private $dependencyParents;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Article\Configurator\Dependency>
+     * @var ArrayCollection<Dependency>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Article\Configurator\Dependency", mappedBy="childOption", orphanRemoval=true)
      */
@@ -188,7 +188,7 @@ class Option extends ModelEntity
     }
 
     /**
-     * @return ArrayCollection<\Shopware\Models\Article\Configurator\Dependency>
+     * @return ArrayCollection<Dependency>
      */
     public function getDependencyParents()
     {
@@ -196,7 +196,7 @@ class Option extends ModelEntity
     }
 
     /**
-     * @param ArrayCollection<\Shopware\Models\Article\Configurator\Dependency> $dependencyParents
+     * @param ArrayCollection<Dependency> $dependencyParents
      */
     public function setDependencyParents($dependencyParents)
     {
@@ -204,7 +204,7 @@ class Option extends ModelEntity
     }
 
     /**
-     * @return ArrayCollection<\Shopware\Models\Article\Configurator\Dependency>
+     * @return ArrayCollection<Dependency>
      */
     public function getDependencyChildren()
     {
@@ -212,7 +212,7 @@ class Option extends ModelEntity
     }
 
     /**
-     * @param ArrayCollection<\Shopware\Models\Article\Configurator\Dependency> $dependencyChildren
+     * @param ArrayCollection<Dependency> $dependencyChildren
      */
     public function setDependencyChildren($dependencyChildren)
     {

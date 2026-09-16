@@ -1,6 +1,29 @@
 <?php
 
+/**
+ * Shopware 5
+ * Copyright (c) shopware AG
+ *
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
+ *
+ * The texts of the GNU Affero General Public License with an additional
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
+ *
+ * "Shopware" is a registered trademark of shopware AG.
+ * The licensing of the program under the AGPLv3 does not imply a
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
+ */
+
 use PhpCsFixer\Config;
+use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 use PhpCsFixerCustomFixers\Fixer\NoUselessCommentFixer;
 use PhpCsFixerCustomFixers\Fixer\NoUselessDirnameCallFixer;
 use PhpCsFixerCustomFixers\Fixer\NoUselessParenthesisFixer;
@@ -11,10 +34,10 @@ use PhpCsFixerCustomFixers\Fixer\PhpUnitAssertArgumentsOrderFixer;
 use PhpCsFixerCustomFixers\Fixer\PhpUnitDedicatedAssertFixer;
 use PhpCsFixerCustomFixers\Fixer\SingleSpaceAfterStatementFixer;
 use PhpCsFixerCustomFixers\Fixer\SingleSpaceBeforeStatementFixer;
-use PhpCsFixerCustomFixers\Fixer\NoSuperfluousConcatenationFixer;
 use PhpCsFixerCustomFixers\Fixers;
 
 $finder = PhpCsFixer\Finder::create()
+    ->in(__DIR__ . '/_sql/migrations')
     ->in(__DIR__ . '/engine/Shopware')
     ->in(__DIR__ . '/tests')
     ->in(__DIR__ . '/recovery')
@@ -30,29 +53,29 @@ $header = <<<EOF
 Shopware 5
 Copyright (c) shopware AG
 
-According to our dual licensing model, this program can be used either
-under the terms of the GNU Affero General Public License, version 3,
-or under a proprietary license.
+According to our licensing model, this program can be used
+under the terms of the GNU Affero General Public License, version 3.
 
 The texts of the GNU Affero General Public License with an additional
-permission and of our proprietary license can be found at and
-in the LICENSE file you have received along with this program.
+permission can be found at and in the LICENSE file you have received
+along with this program.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Affero General Public License for more details.
 
 "Shopware" is a registered trademark of shopware AG.
 The licensing of the program under the AGPLv3 does not imply a
-trademark license. Therefore any rights, title and interest in
-our trademarks remain entirely with us.
+trademark license. Therefore, any rights, title and interest in
+our trademarks remain entirely with the shopware AG.
 EOF;
 
 return (new Config())
     ->registerCustomFixers(new Fixers())
     ->setRiskyAllowed(true)
     ->setCacheFile('var/cache/php-cs-fixer')
+    ->setParallelConfig(ParallelConfigFactory::detect())
     ->setRules([
         '@PSR12' => true,
         '@Symfony' => true,
@@ -67,15 +90,17 @@ return (new Config())
         'global_namespace_import' => true,
         'header_comment' => ['header' => $header, 'separate' => 'bottom', 'comment_type' => 'PHPDoc'],
         'modernize_types_casting' => true,
-        'native_function_invocation' => true,
+        'native_function_invocation' => ['exclude' => ['ini_get'], 'strict' => false],
         'no_alias_functions' => true,
         'no_useless_else' => true,
         'no_useless_return' => true,
         'no_superfluous_phpdoc_tags' => true,
+        'nullable_type_declaration_for_default_null_value' => true,
         'operator_linebreak' => ['only_booleans' => true],
         'ordered_class_elements' => true,
         'phpdoc_line_span' => true,
         'phpdoc_order' => true,
+        'phpdoc_separation' => ['groups' => [['ORM\*', 'Assert\*', 'ShopwareAssert\*'], ['deprecated', 'link', 'see', 'since'], ['author', 'copyright', 'license'], ['category', 'package', 'subpackage'], ['property', 'property-read', 'property-write']]],
         'phpdoc_summary' => false,
         'phpdoc_var_annotation_correct_order' => true,
         'php_unit_dedicate_assert' => true,
@@ -91,7 +116,6 @@ return (new Config())
         SingleSpaceAfterStatementFixer::name() => true,
         SingleSpaceBeforeStatementFixer::name() => true,
         PhpdocParamTypeFixer::name() => true,
-        NoSuperfluousConcatenationFixer::name() => true,
         NoUselessStrlenFixer::name() => true,
         NoUselessParenthesisFixer::name() => true,
         PhpUnitDedicatedAssertFixer::name() => true,

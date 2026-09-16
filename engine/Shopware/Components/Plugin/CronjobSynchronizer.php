@@ -1,25 +1,27 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Plugin;
@@ -31,10 +33,7 @@ use Shopware\Models\Plugin\Plugin;
 
 class CronjobSynchronizer
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(Connection $connection)
     {
@@ -42,7 +41,11 @@ class CronjobSynchronizer
     }
 
     /**
+     * @param array<array<string, mixed>> $cronjobs
+     *
      * @throws InvalidArgumentException
+     *
+     * @return void
      */
     public function synchronize(Plugin $plugin, array $cronjobs)
     {
@@ -54,9 +57,9 @@ class CronjobSynchronizer
     }
 
     /**
-     * @param array $cronjob
+     * @param array<string, mixed> $cronjob
      */
-    private function addCronjob(Plugin $plugin, $cronjob)
+    private function addCronjob(Plugin $plugin, array $cronjob): void
     {
         $cronjob['pluginID'] = $plugin->getId();
 
@@ -73,16 +76,16 @@ class CronjobSynchronizer
             $plugin->getId(),
         ];
 
-        $id = $this->connection->fetchColumn($selectStatement, $params);
+        $id = (int) $this->connection->fetchOne($selectStatement, $params);
 
         /*
          * Check if this cronjob's action is named without a preceding 'Shopware_CronJob_',
          * which is valid but after first run, every cronjob gets prefixed with that, so we might not have gotten
          * the id because we were asking for the wrong action.
          */
-        if (!$id && strpos($action, 'Shopware_CronJob_') !== 0) {
+        if (!$id && !str_starts_with($action, 'Shopware_CronJob_')) {
             $params[0] = 'Shopware_CronJob_' . $action;
-            $id = $this->connection->fetchColumn($selectStatement, $params);
+            $id = (int) $this->connection->fetchOne($selectStatement, $params);
         }
 
         if ($id) {
@@ -98,9 +101,9 @@ class CronjobSynchronizer
     }
 
     /**
-     * @param int $pluginId
+     * @param list<string> $cronjobActions
      */
-    private function removeNotExistingEntries($pluginId, array $cronjobActions)
+    private function removeNotExistingEntries(int $pluginId, array $cronjobActions): void
     {
         $builder = $this->connection->createQueryBuilder();
         $builder->delete('s_crontab');

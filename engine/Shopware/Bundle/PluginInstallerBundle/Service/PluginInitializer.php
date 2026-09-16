@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\PluginInstallerBundle\Service;
@@ -74,12 +74,9 @@ class PluginInitializer
         $classLoader = new ClassLoader();
         $classLoader->register(true);
 
-        $stmt = $this->connection->query('SELECT `name`, `version`, `namespace` FROM s_core_plugins WHERE `active` = 1 AND `installation_date` IS NOT NULL;');
-        if ($stmt === false) {
-            throw new RuntimeException('Could not load plugins from database');
-        }
-
-        $activePlugins = $stmt->fetchAll(PDO::FETCH_UNIQUE);
+        $activePlugins = $this->connection->query(
+            'SELECT `name`, `version`, `namespace` FROM s_core_plugins WHERE `active` = 1 AND `installation_date` IS NOT NULL;'
+        )->fetchAll(PDO::FETCH_UNIQUE);
         if (!\is_array($activePlugins)) {
             throw new RuntimeException('Could not load plugins from database');
         }
@@ -120,13 +117,13 @@ class PluginInitializer
 
         foreach ($pluginsAvailable as $pluginName => $pluginDetails) {
             if (!class_exists($pluginDetails['className'])) {
-                throw new RuntimeException(sprintf('Unable to load class %s for plugin %s in file %s', $pluginDetails['className'], $pluginName, $pluginDetails['pluginFile']));
+                throw new RuntimeException(\sprintf('Unable to load class %s for plugin %s in file %s', $pluginDetails['className'], $pluginName, $pluginDetails['pluginFile']));
             }
 
             $plugin = new $pluginDetails['className']($pluginDetails['isActive'], $pluginDetails['pluginNamespace']);
 
             if (!$plugin instanceof Plugin) {
-                throw new RuntimeException(sprintf('Class %s must extend %s in file %s', \get_class($plugin), Plugin::class, $pluginDetails['pluginFile']));
+                throw new RuntimeException(\sprintf('Class %s must extend %s in file %s', \get_class($plugin), Plugin::class, $pluginDetails['pluginFile']));
             }
 
             $plugins[$plugin->getName()] = $plugin;

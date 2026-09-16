@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Order;
@@ -109,7 +109,6 @@ class Order extends ModelEntity
      *
      * @ORM\OneToOne(targetEntity="\Shopware\Models\Dispatch\Dispatch")
      * @ORM\JoinColumn(name="dispatchID", referencedColumnName="id", nullable=false)
-     *
      * @Assert\NotBlank()
      */
     protected $dispatch;
@@ -122,7 +121,6 @@ class Order extends ModelEntity
      *
      * @ORM\OneToOne(targetEntity="\Shopware\Models\Shop\Shop")
      * @ORM\JoinColumn(name="subshopID", referencedColumnName="id", nullable=false)
-     *
      * @Assert\NotBlank()
      */
     protected $shop;
@@ -148,7 +146,6 @@ class Order extends ModelEntity
      * @var Status
      *
      * @Assert\NotBlank()
-     *
      * @ORM\OneToOne(targetEntity="\Shopware\Models\Order\Status")
      * @ORM\JoinColumn(name="cleared", referencedColumnName="id", nullable=false)
      */
@@ -310,7 +307,6 @@ class Order extends ModelEntity
      * @var float
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="invoice_amount", type="float", nullable=false)
      */
     private $invoiceAmount;
@@ -319,7 +315,6 @@ class Order extends ModelEntity
      * @var float
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="invoice_amount_net", type="float", nullable=false)
      */
     private $invoiceAmountNet;
@@ -328,7 +323,6 @@ class Order extends ModelEntity
      * @var float
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="invoice_shipping", type="float", nullable=false)
      */
     private $invoiceShipping;
@@ -337,7 +331,6 @@ class Order extends ModelEntity
      * @var float
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="invoice_shipping_net", type="float", nullable=false)
      */
     private $invoiceShippingNet;
@@ -354,7 +347,7 @@ class Order extends ModelEntity
      *
      * @ORM\Column(name="ordertime", type="datetime", nullable=false)
      */
-    private $orderTime = null;
+    private $orderTime;
 
     /**
      * @var string
@@ -397,7 +390,6 @@ class Order extends ModelEntity
      * @var int
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="taxfree", type="integer", nullable=false)
      */
     private $taxFree;
@@ -421,7 +413,7 @@ class Order extends ModelEntity
      *
      * @ORM\Column(name="cleareddate", type="datetime", nullable=true)
      */
-    private $clearedDate = null;
+    private $clearedDate;
 
     /**
      * @var string
@@ -434,7 +426,6 @@ class Order extends ModelEntity
      * @var string
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="language", type="string", length=10, nullable=false)
      */
     private $languageIso;
@@ -1129,7 +1120,7 @@ class Order extends ModelEntity
      */
     public function calculateInvoiceAmount()
     {
-        trigger_error(sprintf(
+        trigger_error(\sprintf(
             '%s:%s is deprecated since Shopware 5.7 and will be removed with 5.8. Please use the service with id `%s` instead',
             __CLASS__,
             __METHOD__,

@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Api;
@@ -198,7 +197,7 @@ class CustomerTest extends TestCase
         static::assertEquals($customer->getDefaultBillingAddress()->getAttribute()->getText1(), $testData['billing']['attribute']['text1']);
         static::assertEquals($customer->getDefaultShippingAddress()->getAttribute()->getText1(), $testData['shipping']['attribute']['text1']);
 
-        //test additional address lines
+        // test additional address lines
         static::assertEquals($customer->getDefaultShippingAddress()->getAdditionalAddressLine1(), $testData['shipping']['additionalAddressLine1']);
         static::assertEquals($customer->getDefaultShippingAddress()->getAdditionalAddressLine2(), $testData['shipping']['additionalAddressLine2']);
         static::assertEquals($customer->getDefaultBillingAddress()->getAdditionalAddressLine1(), $testData['billing']['additionalAddressLine1']);
@@ -342,7 +341,7 @@ class CustomerTest extends TestCase
         static::assertInstanceOf(Address::class, $customer->getDefaultShippingAddress());
         static::assertEquals($customer->getDefaultBillingAddress()->getFirstname(), $testData['billing']['firstname']);
 
-        //test additional fields
+        // test additional fields
         static::assertEquals($customer->getDefaultBillingAddress()->getAdditionalAddressLine1(), $testData['billing']['additionalAddressLine1']);
         static::assertEquals($customer->getDefaultBillingAddress()->getAdditionalAddressLine2(), $testData['billing']['additionalAddressLine2']);
 

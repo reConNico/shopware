@@ -25,6 +25,8 @@ interface Enlight_Controller_Response_Response
     /**
      * Sets a cookie method
      *
+     * @see http://www.php.net/manual/de/function.setcookie.php
+     *
      * @param string $name
      * @param string $value
      * @param int    $expire
@@ -33,7 +35,7 @@ interface Enlight_Controller_Response_Response
      * @param bool   $secure
      * @param bool   $httpOnly
      *
-     * @return \Enlight_Controller_Response_Response* @see http://www.php.net/manual/de/function.setcookie.php
+     * @return Enlight_Controller_Response_Response
      */
     public function setCookie($name, $value = null, $expire = 0, $path = null, $domain = null, $secure = false, $httpOnly = false);
 
@@ -57,7 +59,7 @@ interface Enlight_Controller_Response_Response
      * @param string $value
      * @param bool   $replace
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function setHeader($name, $value, $replace = false);
 
@@ -70,7 +72,7 @@ interface Enlight_Controller_Response_Response
      * @param string $url
      * @param int    $code
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function setRedirect($url, $code = 302);
 
@@ -91,7 +93,7 @@ interface Enlight_Controller_Response_Response
     /**
      * Clear headers
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function clearHeaders();
 
@@ -100,14 +102,14 @@ interface Enlight_Controller_Response_Response
      *
      * @param string $name
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function clearHeader($name);
 
     /**
      * Clear all headers, normal and raw
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function clearAllHeaders();
 
@@ -116,7 +118,7 @@ interface Enlight_Controller_Response_Response
      *
      * @param int $code
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function setHttpResponseCode($code);
 
@@ -144,7 +146,7 @@ interface Enlight_Controller_Response_Response
      * Sends any headers specified. If an {@link setHttpResponseCode() HTTP response code}
      * has been specified, it is sent with the first header.
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function sendHeaders();
 
@@ -159,7 +161,7 @@ interface Enlight_Controller_Response_Response
      *
      * @param string|null $name
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function setBody($content, $name = null);
 
@@ -169,7 +171,7 @@ interface Enlight_Controller_Response_Response
      * @param string      $content
      * @param string|null $name
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function appendBody($content, $name = null);
 
@@ -209,7 +211,7 @@ interface Enlight_Controller_Response_Response
      * @param string $name
      * @param string $content
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function append($name, $content);
 
@@ -227,14 +229,14 @@ interface Enlight_Controller_Response_Response
     /**
      * Register an exception with the response
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function setException(Exception $e);
 
     /**
      * Retrieve the exception stack
      *
-     * @return \Exception[]
+     * @return Exception[]
      */
     public function getException();
 

@@ -15,7 +15,7 @@
                 {* Customer type *}
                 {block name='frontend_register_personal_fieldset_customer_type'}
                     {if $form_data.sValidation}
-                        <input type="hidden" name="register[personal][sValidation]" value="{$form_data.sValidation|escape}" />
+                        <input type="hidden" name="register[personal][sValidation]" value="{$form_data.sValidation|escapeHtml}" />
                     {else}
                         <div class="register--customertype">
                             {if {config name="showCompanySelectField"} == 0}
@@ -60,27 +60,28 @@
 
                 {* Salutation *}
                 {block name='frontend_register_personal_fieldset_salutation'}
+                    {if {config name="shopSalutationRequired"}}
+                        {getSalutations variable="salutations"}
 
-                    {getSalutations variable="salutations"}
+                        <div class="register--salutation field--select select-field">
+                            <select name="register[personal][salutation]"
+                                    id="salutation"
+                                    required="required"
+                                    aria-required="true"
+                                    class="is--required{if isset($error_flags.salutation)} has--error{/if}">
 
-                    <div class="register--salutation field--select select-field">
-                        <select name="register[personal][salutation]"
-                                id="salutation"
-                                required="required"
-                                aria-required="true"
-                                class="is--required{if isset($error_flags.salutation)} has--error{/if}">
+                                <option value=""
+                                        disabled="disabled"
+                                        {if $form_data.salutation eq ""} selected="selected"{/if}>
+                                    {s name='RegisterPlaceholderSalutation'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}
+                                </option>
 
-                            <option value=""
-                                    disabled="disabled"
-                                    {if $form_data.salutation eq ""} selected="selected"{/if}>
-                                {s name='RegisterPlaceholderSalutation'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}
-                            </option>
-
-                            {foreach $salutations as $key => $label}
-                                <option value="{$key}"{if $form_data.salutation eq $key} selected="selected"{/if}>{$label}</option>
-                            {/foreach}
-                        </select>
-                    </div>
+                                {foreach $salutations as $key => $label}
+                                    <option value="{$key}"{if $form_data.salutation eq $key} selected="selected"{/if}>{$label}</option>
+                                {/foreach}
+                            </select>
+                        </div>
+                    {/if}
                 {/block}
 
                 {* Title *}
@@ -92,7 +93,7 @@
                                    type="text"
                                    placeholder="{s name='RegisterPlaceholderTitle'}{/s}"
                                    id="title"
-                                   value="{$form_data.title|escape}"
+                                   value="{$form_data.title|escapeHtml}"
                                    class="register--field{if isset($error_flags.title)} has--error{/if}" />
                         </div>
                     {/if}
@@ -108,7 +109,7 @@
                                aria-required="true"
                                placeholder="{s name='RegisterPlaceholderFirstname'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
                                id="firstname"
-                               value="{$form_data.firstname|escape}"
+                               value="{$form_data.firstname|escapeHtml}"
                                class="register--field is--required{if isset($error_flags.firstname)} has--error{/if}" />
                     </div>
                 {/block}
@@ -122,7 +123,7 @@
                                required="required"
                                aria-required="true"
                                placeholder="{s name='RegisterPlaceholderLastname'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
-                               id="lastname" value="{$form_data.lastname|escape}"
+                               id="lastname" value="{$form_data.lastname|escapeHtml}"
                                class="register--field is--required{if isset($error_flags.lastname)} has--error{/if}" />
                     </div>
                 {/block}
@@ -161,7 +162,7 @@
                                    aria-required="true"
                                    placeholder="{s name='RegisterPlaceholderMail'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
                                    id="register_personal_email"
-                                   value="{$form_data.email|escape}"
+                                   value="{$form_data.email|escapeHtml}"
                                    class="register--field email is--required{if isset($error_flags.email)} has--error{/if}" />
                         </div>
 
@@ -174,7 +175,7 @@
                                        aria-required="true"
                                        placeholder="{s name='RegisterPlaceholderMailConfirmation'}{/s}{s name="RequiredField" namespace="frontend/register/index"}{/s}"
                                        id="register_personal_emailConfirmation"
-                                       value="{$form_data.emailConfirmation|escape}"
+                                       value="{$form_data.emailConfirmation|escapeHtml}"
                                        class="register--field emailConfirmation is--required{if isset($error_flags.emailConfirmation)} has--error{/if}" />
                             </div>
                         {/if}
@@ -230,7 +231,7 @@
                                    type="tel"{if {config name="requirePhoneField"}} required="required" aria-required="true"{/if}
                                    placeholder="{s name='RegisterPlaceholderPhone'}{/s}{if {config name="requirePhoneField"}}{s name="RequiredField" namespace="frontend/register/index"}{/s}{/if}"
                                    id="phone"
-                                   value="{$form_data.phone|escape}"
+                                   value="{$form_data.phone|escapeHtml}"
                                    class="register--field{if {config name="requirePhoneField"}} is--required{/if}{if isset($error_flags.phone) && {config name="requirePhoneField"}} has--error{/if}" />
                         </div>
                     {/if}

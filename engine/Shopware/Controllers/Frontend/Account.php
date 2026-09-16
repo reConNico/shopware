@@ -1,28 +1,26 @@
 <?php
 
 declare(strict_types=1);
-
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
@@ -37,6 +35,7 @@ use Shopware\Bundle\StaticContentBundle\Exception\EsdNotFoundException;
 use Shopware\Bundle\StoreFrontBundle\Gateway\CountryGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\Captcha\CaptchaValidator;
+use Shopware\Components\Captcha\NoCaptcha;
 use Shopware\Components\Compatibility\LegacyStructConverter;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Random;
@@ -49,8 +48,6 @@ use Symfony\Component\Form\FormInterface;
 
 class Shopware_Controllers_Frontend_Account extends Enlight_Controller_Action
 {
-    private const DEFAULT_CAPTCHA_SETTING = 'nocaptcha';
-
     private const CONFIG_PASSWORD_RESET_CAPTCHA = 'passwordResetCaptcha';
 
     /**
@@ -102,8 +99,11 @@ class Shopware_Controllers_Frontend_Account extends Enlight_Controller_Action
             return;
         }
 
-        $activeBillingAddressId = $customerData['additional']['user']['default_billing_address_id'];
-        $activeShippingAddressId = $customerData['additional']['user']['default_shipping_address_id'];
+        $this->response->headers->addCacheControlDirective('no-store');
+        $this->response->headers->addCacheControlDirective('no-cache');
+
+        $activeBillingAddressId = $customerData['additional']['user']['default_billing_address_id'] ?? null;
+        $activeShippingAddressId = $customerData['additional']['user']['default_shipping_address_id'] ?? null;
 
         if (!empty($customerData['shippingaddress']['country']['id'])) {
             $country = $this->get(CountryGatewayInterface::class)->getCountry($customerData['shippingaddress']['country']['id'], $this->get(ContextServiceInterface::class)->getContext());
@@ -488,7 +488,7 @@ class Shopware_Controllers_Frontend_Account extends Enlight_Controller_Action
     public function sendResetPasswordConfirmationMail($email)
     {
         $snippets = Shopware()->Snippets()->getNamespace('frontend/account/password');
-        if ($this->config->get(self::CONFIG_PASSWORD_RESET_CAPTCHA) !== self::DEFAULT_CAPTCHA_SETTING) {
+        if ($this->config->get(self::CONFIG_PASSWORD_RESET_CAPTCHA) !== NoCaptcha::CAPTCHA_METHOD) {
             if (!empty($this->config->get('CaptchaColor'))) {
                 if (!$this->captchaValidator->validateByName($this->config->get(self::CONFIG_PASSWORD_RESET_CAPTCHA), $this->Request())) {
                     return [
@@ -514,8 +514,8 @@ class Shopware_Controllers_Frontend_Account extends Enlight_Controller_Action
         $hash = Random::getAlphanumericString(32);
 
         $context = [
-            'sUrlReset' => $this->Front()->Router()->assemble(['controller' => 'account', 'action' => 'resetPassword', 'hash' => $hash]),
-            'sUrl' => $this->Front()->Router()->assemble(['controller' => 'account', 'action' => 'resetPassword']),
+            'sUrlReset' => $this->Front()->ensureRouter()->assemble(['controller' => 'account', 'action' => 'resetPassword', 'hash' => $hash]),
+            'sUrl' => $this->Front()->ensureRouter()->assemble(['controller' => 'account', 'action' => 'resetPassword']),
             'sKey' => $hash,
         ];
 
@@ -557,17 +557,7 @@ class Shopware_Controllers_Frontend_Account extends Enlight_Controller_Action
         $mail->addTo($email);
         $mail->send();
 
-        // Invalidate existing hashes
-        $connection->update(
-            's_core_optin',
-            [
-                'datum' => (new DateTimeImmutable('-1 day'))->format(DATE_ATOM),
-            ],
-            [
-                'type' => 'swPassword',
-                'data' => $customerId,
-            ]
-        );
+        $this->invalidateExistingPasswordLinkHashes($customerId);
 
         // Add the hash to the optin table
         $sql = "INSERT INTO `s_core_optin` (`type`, `datum`, `hash`, `data`) VALUES ('swPassword', NOW(), ?, ?)";
@@ -733,6 +723,7 @@ class Shopware_Controllers_Frontend_Account extends Enlight_Controller_Action
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->customerService->update($customer);
+            $this->invalidateExistingPasswordLinkHashes($customer->getId());
             $this->get('session')->offsetSet('sUserMail', $customer->getEmail());
             $this->get('session')->offsetSet('userInfo', null);
             $this->redirect(['controller' => 'account', 'action' => 'profile', 'success' => true, 'section' => 'email']);
@@ -827,6 +818,22 @@ class Shopware_Controllers_Frontend_Account extends Enlight_Controller_Action
         return preg_replace($regEx, $trackingCode, $link);
     }
 
+    private function invalidateExistingPasswordLinkHashes(int $customerId): void
+    {
+        /* @var Connection $connection */
+        $connection = $this->get(Connection::class);
+        $connection->update(
+            's_core_optin',
+            [
+                'datum' => (new DateTimeImmutable('-1 day'))->format(DATE_ATOM),
+            ],
+            [
+                'type' => 'swPassword',
+                'data' => $customerId,
+            ]
+        );
+    }
+
     /**
      * Delete old expired password-hashes after two hours
      */
@@ -890,7 +897,12 @@ class Shopware_Controllers_Frontend_Account extends Enlight_Controller_Action
 
     private function isOneTimeAccount(): bool
     {
-        return $this->container->get('session')->offsetGet('sOneTimeAccount')
-            || (int) $this->View()->getAssign('sUserData')['additional']['user']['accountmode'] === Customer::ACCOUNT_MODE_FAST_LOGIN;
+        $customerData = $this->View()->getAssign('sUserData');
+        if (!isset($customerData['additional']['user'])) {
+            return false;
+        }
+
+        return $this->container->get('session')->get('sOneTimeAccount')
+            || (int) $customerData['additional']['user']['accountmode'] === Customer::ACCOUNT_MODE_FAST_LOGIN;
     }
 }

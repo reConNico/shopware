@@ -33,7 +33,7 @@ abstract class Enlight_Class
     /**
      * Contains all initialized Enlight instances.
      *
-     * @var array
+     * @var array<class-string<Enlight_Class|object>, Enlight_Class|object>
      */
     protected static $instances = [];
 
@@ -43,7 +43,7 @@ abstract class Enlight_Class
      * If an hook proxy exist for the class, the constructor will prevent the initialization and throw an exception
      * that the instance method should be used.
      *
-     * @throws \Enlight_Exception
+     * @throws Enlight_Exception
      */
     public function __construct()
     {
@@ -59,7 +59,8 @@ abstract class Enlight_Class
         }
         if ($this instanceof Enlight_Hook
           && !$this instanceof Enlight_Hook_Proxy
-          && Shopware()->Hooks()->hasProxy($class)) {
+          && Shopware()->Hooks()->hasProxy($class)
+        ) {
             throw new Enlight_Exception(
                 'Class "' . \get_class($this) . '" has hooks, please use the instance method'
             );
@@ -79,7 +80,7 @@ abstract class Enlight_Class
      * @param string $name
      * @param array  $args
      *
-     * @throws \Enlight_Exception
+     * @throws Enlight_Exception
      */
     public function __call($name, $args = null)
     {
@@ -95,7 +96,7 @@ abstract class Enlight_Class
      * @param string $name
      * @param array  $args
      *
-     * @throws \Enlight_Exception
+     * @throws Enlight_Exception
      */
     public static function __callStatic($name, $args = null)
     {
@@ -110,7 +111,7 @@ abstract class Enlight_Class
      *
      * @param string $name
      *
-     * @throws \Enlight_Exception
+     * @throws Enlight_Exception
      */
     public function __get($name)
     {
@@ -122,7 +123,7 @@ abstract class Enlight_Class
      *
      * @param string $name
      *
-     * @throws \Enlight_Exception
+     * @throws Enlight_Exception
      */
     public function __set($name, $value = null)
     {
@@ -133,7 +134,7 @@ abstract class Enlight_Class
      * Returns the class name of the given class. If no class is given, the class will drawn by
      * get_called_class(). If the given class has an hook proxy the function will return the proxy class.
      *
-     * @throws \Enlight_Exception
+     * @throws Enlight_Exception
      *
      * @return class-string
      */
@@ -146,7 +147,7 @@ abstract class Enlight_Class
         if (\is_object($class)) {
             $class = \get_class($class);
         } elseif (!class_exists($class)) {
-            throw new Enlight_Exception(sprintf('Class "%s" does not exist and could not be loaded', $class));
+            throw new Enlight_Exception(\sprintf('Class "%s" does not exist and could not be loaded', $class));
         }
 
         $classImplements = class_implements($class);
@@ -161,12 +162,14 @@ abstract class Enlight_Class
      * Returns a class instance. If the class is already initialed the existing instance will returned.
      * Otherwise the class will be initialed with the given arguments.
      *
-     * @param class-string $class
-     * @param array        $args
+     * @template TClass of (Enlight_Class|object)
      *
-     * @throws \ReflectionException
+     * @param class-string<TClass>|null $class
+     * @param array<mixed>|null         $args
      *
-     * @return Enlight_Class
+     * @throws ReflectionException
+     *
+     * @return TClass
      */
     public static function Instance($class = null, $args = null)
     {

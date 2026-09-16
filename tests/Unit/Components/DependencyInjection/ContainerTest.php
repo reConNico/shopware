@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\DependencyInjection;
@@ -28,8 +28,6 @@ use Enlight_Event_EventArgs;
 use Enlight_Event_EventManager;
 use Exception;
 use PHPUnit\Framework\TestCase;
-use Prophecy\Argument;
-use Prophecy\PhpUnit\ProphecyTrait;
 use Shopware\Components\ContainerAwareEventManager;
 use Shopware\Components\DependencyInjection\Container;
 use stdClass;
@@ -38,12 +36,7 @@ use Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceExce
 
 class ContainerTest extends TestCase
 {
-    use ProphecyTrait;
-
-    /**
-     * @var Container
-     */
-    private $container;
+    private Container $container;
 
     protected function setUp(): void
     {
@@ -96,48 +89,63 @@ class ContainerTest extends TestCase
         );
     }
 
-    public function testEventsAreEmitedDuringServiceInitialisation(): void
+    public function testEventsAreEmittedDuringServiceInitialisation(): void
     {
-        $service = $this->prophesize(Enlight_Event_EventManager::class);
+        $eventManager = $this->createMock(Enlight_Event_EventManager::class);
+        $eventManager->expects(static::exactly(2))
+            ->method('notify')
+            ->with(static::logicalOr(
+                'Enlight_Bootstrap_AfterRegisterResource_events',
+                'Enlight_Bootstrap_AfterInitResource_bar'
+            ));
+        $eventManager->expects(static::once())
+            ->method('notifyUntil')
+            ->with('Enlight_Bootstrap_InitResource_bar');
 
-        $service->notify('Enlight_Bootstrap_AfterRegisterResource_events', Argument::any())->shouldBeCalled();
-        $service->notifyUntil('Enlight_Bootstrap_InitResource_bar', Argument::any())->shouldBeCalled();
-        $service->notify('Enlight_Bootstrap_AfterInitResource_bar', Argument::any())->shouldBeCalled();
-
-        $service = $service->reveal();
-        $this->container->set('events', $service);
+        $this->container->set('events', $eventManager);
 
         static::assertInstanceOf('stdClass', $this->container->get('bar'));
     }
 
     public function testEventsAreEmitedDuringServiceInitialisationWhenUsingAlias(): void
     {
-        $service = $this->prophesize(Enlight_Event_EventManager::class);
+        $eventManager = $this->createMock(Enlight_Event_EventManager::class);
+        $eventManager->expects(static::exactly(3))
+            ->method('notify')
+            ->with(static::logicalOr(
+                'Enlight_Bootstrap_AfterRegisterResource_events',
+                'Enlight_Bootstrap_AfterInitResource_bar',
+                'Enlight_Bootstrap_AfterInitResource_alias'
+            ));
+        $eventManager->expects(static::exactly(2))
+            ->method('notifyUntil')
+            ->with(static::logicalOr(
+                'Enlight_Bootstrap_InitResource_bar',
+                'Enlight_Bootstrap_InitResource_alias'
+            ));
 
-        $service->notify('Enlight_Bootstrap_AfterRegisterResource_events', Argument::any())->shouldBeCalled();
-        $service->notifyUntil('Enlight_Bootstrap_InitResource_bar', Argument::any())->shouldBeCalled();
-        $service->notifyUntil('Enlight_Bootstrap_InitResource_alias', Argument::any())->shouldBeCalled();
-        $service->notify('Enlight_Bootstrap_AfterInitResource_bar', Argument::any())->shouldBeCalled();
-        $service->notify('Enlight_Bootstrap_AfterInitResource_alias', Argument::any())->shouldBeCalled();
-
-        $service = $service->reveal();
-        $this->container->set('events', $service);
+        $this->container->set('events', $eventManager);
 
         static::assertInstanceOf('stdClass', $this->container->get('alias'));
     }
 
     public function testEventsAreEmitedDuringServiceInitialisationWhenUsingUnknownServices(): void
     {
-        $service = $this->prophesize(Enlight_Event_EventManager::class);
+        $eventManager = $this->createMock(Enlight_Event_EventManager::class);
+        $eventManager->expects(static::exactly(2))
+            ->method('notify')
+            ->with(static::logicalOr(
+                'Enlight_Bootstrap_AfterRegisterResource_events',
+                'Enlight_Bootstrap_AfterInitResource_foo'
+            ));
+        $eventManager->expects(static::once())
+            ->method('notifyUntil')
+            ->with('Enlight_Bootstrap_InitResource_foo');
 
-        $service->notify('Enlight_Bootstrap_AfterRegisterResource_events', Argument::any())->shouldBeCalled();
-        $service->notifyUntil('Enlight_Bootstrap_InitResource_foo', Argument::any())->shouldBeCalled();
-        $service->notify('Enlight_Bootstrap_AfterInitResource_foo', Argument::any())->shouldBeCalled();
-
-        $service = $service->reveal();
-        $this->container->set('events', $service);
+        $this->container->set('events', $eventManager);
 
         $this->expectException(Exception::class);
+        $this->expectExceptionMessage('You have requested a non-existent service "foo".');
 
         $this->container->get('foo');
     }
@@ -154,8 +162,9 @@ class ContainerTest extends TestCase
         $this->container->get('events')->addListener(
             'Enlight_Bootstrap_AfterInitResource_bar',
             function (Enlight_Event_EventArgs $e) use ($class) {
-                /** @var ProjectServiceContainer $container */
-                $container = $e->getSubject();
+                $container = $e->get('subject');
+                self::assertInstanceOf(ProjectServiceContainer::class, $container);
+
                 $container->set('bar', $class);
             }
         );
@@ -191,8 +200,8 @@ class ContainerTest extends TestCase
         $this->container->get('events')->addListener(
             'Enlight_Bootstrap_InitResource_child',
             function (Enlight_Event_EventArgs $e) {
-                /** @var ProjectServiceContainer $container */
-                $container = $e->getSubject();
+                $container = $e->get('subject');
+                self::assertInstanceOf(ProjectServiceContainer::class, $container);
 
                 // Cause circular reference
                 $container->get('parent');
@@ -202,8 +211,8 @@ class ContainerTest extends TestCase
         $this->container->get('events')->addListener(
             'Enlight_Bootstrap_AfterInitResource_parent',
             function (Enlight_Event_EventArgs $e) {
-                /** @var ProjectServiceContainer $container */
-                $container = $e->getSubject();
+                $container = $e->get('subject');
+                self::assertInstanceOf(ProjectServiceContainer::class, $container);
 
                 $coreParent = $container->get('parent');
 

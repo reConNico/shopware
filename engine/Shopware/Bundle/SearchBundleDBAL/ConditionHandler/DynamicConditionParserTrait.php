@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\ConditionHandler;
@@ -68,7 +68,7 @@ trait DynamicConditionParserTrait
             ->listTableColumns($table);
 
         if (empty($columns)) {
-            throw new RuntimeException(sprintf('Could not retrieve columns from "%s".', $table));
+            throw new RuntimeException(\sprintf('Could not retrieve columns from "%s".', $table));
         }
 
         $names = array_map(function (Column $column) {
@@ -76,7 +76,7 @@ trait DynamicConditionParserTrait
         }, $columns);
 
         if (!\array_key_exists(strtolower($field), $names)) {
-            throw new InvalidArgumentException(sprintf('Invalid column name "%s" specified.', $field), 1);
+            throw new InvalidArgumentException(\sprintf('Invalid column name "%s" specified.', $field), 1);
         }
 
         $validOperators = [
@@ -103,12 +103,12 @@ trait DynamicConditionParserTrait
          * When an operator is not specified, by default, return all results that are not null
          */
         if (empty($operator)) {
-            throw new InvalidArgumentException(sprintf('Must specify an operator, please use one of: %s', implode(', ', $validOperators)), 3);
+            throw new InvalidArgumentException(\sprintf('Must specify an operator, please use one of: %s', implode(', ', $validOperators)), 3);
         }
 
-        //Identify each field placeholder value with table alias and a hash of condition properties
-        $boundParamName = sprintf(':%s_%s', $tableAlias, md5($field . $operator . json_encode($value)));
-        $field = sprintf('%s.%s', $tableAlias, $field);
+        // Identify each field placeholder value with table alias and a hash of condition properties
+        $boundParamName = \sprintf(':%s_%s', $tableAlias, md5($field . $operator . json_encode($value)));
+        $field = \sprintf('%s.%s', $tableAlias, $field);
 
         switch (true) {
             case $operator === Condition::OPERATOR_EQ:
@@ -187,23 +187,23 @@ trait DynamicConditionParserTrait
                 }
                 break;
 
-            case $operator === Condition::OPERATOR_STARTS_WITH && is_scalar($value):
+            case $operator === Condition::OPERATOR_STARTS_WITH && \is_scalar($value):
                 $query->andWhere($query->expr()->like($field, $boundParamName));
                 $query->setParameter($boundParamName, $value . '%');
                 break;
 
-            case $operator === Condition::OPERATOR_ENDS_WITH && is_scalar($value):
+            case $operator === Condition::OPERATOR_ENDS_WITH && \is_scalar($value):
                 $query->andWhere($query->expr()->like($field, $boundParamName));
                 $query->setParameter($boundParamName, '%' . $value);
                 break;
 
-            case $operator === Condition::OPERATOR_CONTAINS && is_scalar($value):
+            case $operator === Condition::OPERATOR_CONTAINS && \is_scalar($value):
                 $query->andWhere($query->expr()->like($field, $boundParamName));
                 $query->setParameter($boundParamName, '%' . $value . '%');
                 break;
 
             default:
-                throw new InvalidArgumentException(sprintf('Invalid operator specified, please use one of: %s', implode(', ', $validOperators)), 3);
+                throw new InvalidArgumentException(\sprintf('Invalid operator specified, please use one of: %s', implode(', ', $validOperators)), 3);
         }
     }
 }

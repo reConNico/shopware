@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Shop;
@@ -45,7 +45,7 @@ class Repository extends ModelRepository
      * @param int|null          $offset
      * @param int|null          $limit
      *
-     * @return Query
+     * @return Query<Locale>
      */
     public function getLocalesListQuery($filter = null, $order = null, $offset = null, $limit = null)
     {
@@ -74,7 +74,7 @@ class Repository extends ModelRepository
             'locale',
         ];
         $builder->select($fields);
-        $builder->from(\Shopware\Models\Shop\Locale::class, 'locale');
+        $builder->from(Locale::class, 'locale');
         if ($filter !== null) {
             $builder->addFilter($filter);
         }
@@ -94,7 +94,7 @@ class Repository extends ModelRepository
      * @param int|null          $limit
      * @param bool              $orderByShopPositionAsDefault Deprecated since 5.6.3, will be default starting with Shopware 5.8.
      *
-     * @return Query
+     * @return Query<Shop>
      */
     public function getBaseListQuery($filter = null, $order = null, $offset = null, $limit = null, bool $orderByShopPositionAsDefault = false)
     {
@@ -115,7 +115,7 @@ class Repository extends ModelRepository
      * @param int               $offset
      * @param int               $limit
      *
-     * @return Query
+     * @return Query<Shop>
      */
     public function getShopsWithThemes($filter = null, $order = null, $offset = null, $limit = null)
     {
@@ -186,7 +186,7 @@ class Repository extends ModelRepository
     /**
      * Returns the \Doctrine\ORM\Query to select all categories for example for the backend tree
      *
-     * @return Query
+     * @return Query<Shop>
      */
     public function getListQuery(array $filterBy, array $orderBy, $limit = null, $offset = null)
     {
@@ -256,7 +256,7 @@ class Repository extends ModelRepository
      * Returns an instance of \Doctrine\ORM\Query object which selects a list of
      * sub shops. Used for the shop combo box on the article detail page in the article backend module.
      *
-     * @return Query
+     * @return Query<Shop>
      */
     public function getMainListQuery()
     {
@@ -402,7 +402,7 @@ class Repository extends ModelRepository
 
         $shops = $this->getShopsArrayByHost($host);
 
-        //returns the right shop depending on the url
+        // returns the right shop depending on the url
         $shop = $this->findShopForRequest($shops, $requestPath);
 
         if ($shop !== null) {
@@ -413,7 +413,7 @@ class Repository extends ModelRepository
     }
 
     /**
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getQueryBuilder()
     {
@@ -450,7 +450,7 @@ class Repository extends ModelRepository
     }
 
     /**
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getActiveQueryBuilder()
     {
@@ -494,7 +494,7 @@ class Repository extends ModelRepository
     {
         $shop = null;
         foreach ($shops as $currentShop) {
-            //if the base url matches exactly the basePath we have found the main shop but the loop will continue
+            // if the base url matches exactly the basePath we have found the main shop but the loop will continue
             if ($currentShop['base_url'] === $currentShop['base_path']) {
                 if ($shop === null) {
                     $shop = $currentShop;
@@ -551,20 +551,15 @@ class Repository extends ModelRepository
         return $this->fixActive($shop);
     }
 
-    /**
-     * @param string $host
-     *
-     * @return array
-     */
-    private function getShopsArrayByHost($host)
+    private function getShopsArrayByHost(string $host): array
     {
         $query = $this->getDbalShopsQuery();
         $query->andWhere('shop.active = 1');
         $query->andWhere('(shop.host = :host OR (shop.host IS NULL AND main_shop.host = :host))');
         $query->setParameter(':host', $host);
-        $shops = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
+        $shops = $query->execute()->fetchAllAssociative();
 
-        usort($shops, function ($a, $b) {
+        usort($shops, function (array $a, array $b): int {
             if ($a['is_main'] && !$b['is_main']) {
                 return -1;
             }
@@ -574,7 +569,7 @@ class Repository extends ModelRepository
             }
 
             if ($a['is_main'] === $b['is_main']) {
-                return $a['position'] > $b['position'];
+                return $a['position'] <=> $b['position'];
             }
 
             return 0;
@@ -634,7 +629,7 @@ class Repository extends ModelRepository
     }
 
     /**
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     private function getActiveMainShopQueryBuilder()
     {
@@ -663,7 +658,7 @@ class Repository extends ModelRepository
     }
 
     /**
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     private function getActiveSubShopQueryBuilder()
     {

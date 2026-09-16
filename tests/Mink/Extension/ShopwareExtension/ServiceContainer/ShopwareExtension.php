@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Behat\ShopwareExtension\ServiceContainer;
@@ -28,6 +29,9 @@ use Behat\Behat\Context\ServiceContainer\ContextExtension;
 use Behat\Testwork\EventDispatcher\ServiceContainer\EventDispatcherExtension;
 use Behat\Testwork\ServiceContainer\Extension as ExtensionInterface;
 use Behat\Testwork\ServiceContainer\ExtensionManager;
+use Shopware\Behat\ShopwareExtension\Context\Initializer\KernelAwareInitializer;
+use Shopware\Kernel;
+use Shopware\Tests\Mink\Tests\General\Helpers\Helper;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -39,27 +43,25 @@ class ShopwareExtension implements ExtensionInterface
 
     /**
      * Returns the extension config key.
-     *
-     * @return string
      */
-    public function getConfigKey()
+    public function getConfigKey(): string
     {
         return 'shopware';
     }
 
-    public function initialize(ExtensionManager $extensionManager)
+    public function initialize(ExtensionManager $extensionManager): void
     {
     }
 
     /**
      * Setups configuration for the extension.
      */
-    public function configure(ArrayNodeDefinition $builder)
+    public function configure(ArrayNodeDefinition $builder): void
     {
         $boolFilter = function ($v) {
             $filtered = filter_var($v, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
-            return ($filtered === null) ? $v : $filtered;
+            return $filtered ?? $v;
         };
 
         $builder
@@ -75,7 +77,7 @@ class ShopwareExtension implements ExtensionInterface
                             ->defaultValue('engine/Shopware/Kernel.php')
                         ->end()
                         ->scalarNode('class')
-                            ->defaultValue('Shopware\Kernel')
+                            ->defaultValue(Kernel::class)
                         ->end()
                         ->scalarNode('env')
                             ->defaultValue('production')
@@ -94,8 +96,10 @@ class ShopwareExtension implements ExtensionInterface
 
     /**
      * Loads extension services into temporary container.
+     *
+     * @param array<string, mixed> $config
      */
-    public function load(ContainerBuilder $container, array $config)
+    public function load(ContainerBuilder $container, array $config): void
     {
         $this->loadContextInitializer($container);
         $this->loadKernel($container, $config['kernel']);
@@ -106,18 +110,19 @@ class ShopwareExtension implements ExtensionInterface
      *
      * @api
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         // get base path
-        /** @var string $basePath */
         $basePath = $container->getParameter('paths.base');
+        if (!\is_string($basePath)) {
+            Helper::throwException('Invalid container parameter "paths.base"');
+        }
 
         // find and require bootstrap
-        /** @var string $bootstrapPath */
         $bootstrapPath = $container->getParameter('shopware_extension.kernel.bootstrap');
-
-        if ($bootstrapPath) {
-            if (file_exists($bootstrap = $basePath . '/' . $bootstrapPath)) {
+        if (\is_string($bootstrapPath)) {
+            $bootstrap = $basePath . '/' . $bootstrapPath;
+            if (file_exists($bootstrap)) {
                 require_once $bootstrap;
             } elseif (file_exists($bootstrapPath)) {
                 require_once $bootstrapPath;
@@ -125,18 +130,22 @@ class ShopwareExtension implements ExtensionInterface
         }
 
         // find and require kernel
-        /** @var string $kernelPath */
         $kernelPath = $container->getParameter('shopware_extension.kernel.path');
-        if (file_exists($kernel = $basePath . '/' . $kernelPath)) {
+        if (!\is_string($kernelPath)) {
+            Helper::throwException('Invalid container parameter "shopware_extension.kernel.path"');
+        }
+
+        $kernel = $basePath . '/' . $kernelPath;
+        if (file_exists($kernel)) {
             $container->getDefinition(self::KERNEL_ID)->setFile($kernel);
         } elseif (file_exists($kernelPath)) {
             $container->getDefinition(self::KERNEL_ID)->setFile($kernelPath);
         }
     }
 
-    private function loadContextInitializer(ContainerBuilder $container)
+    private function loadContextInitializer(ContainerBuilder $container): void
     {
-        $definition = new Definition('Shopware\Behat\ShopwareExtension\Context\Initializer\KernelAwareInitializer', [
+        $definition = new Definition(KernelAwareInitializer::class, [
             new Reference(self::KERNEL_ID),
         ]);
         $definition->addTag(ContextExtension::INITIALIZER_TAG, ['priority' => 0]);
@@ -144,7 +153,10 @@ class ShopwareExtension implements ExtensionInterface
         $container->setDefinition('shopware_extension.context_initializer.kernel_aware', $definition);
     }
 
-    private function loadKernel(ContainerBuilder $container, array $config)
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function loadKernel(ContainerBuilder $container, array $config): void
     {
         $definition = new Definition($config['class'], [
             $config['env'],

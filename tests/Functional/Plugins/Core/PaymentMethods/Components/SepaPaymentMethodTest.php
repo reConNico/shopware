@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Plugins\Core\PaymentMethods\Components;
@@ -53,7 +52,7 @@ class SepaPaymentMethodTest extends Enlight_Components_Test_Plugin_TestCase
             $pluginDir . '/Components/'
         );
 
-        //SEPA needs to be active for this. Also, we need to save existing status to later restore it
+        // SEPA needs to be active for this. Also, we need to save existing status to later restore it
         $sepaPaymentMean = Shopware()->Models()->getRepository(Payment::class)->findOneBy(['name' => 'Sepa']);
         static::assertNotNull($sepaPaymentMean);
 
@@ -147,7 +146,7 @@ class SepaPaymentMethodTest extends Enlight_Components_Test_Plugin_TestCase
         $paymentId = 6;
         Shopware()->Session()->set('sUserId', $userId);
 
-        //for now, don't test email
+        // for now, don't test email
         Shopware()->Config()->offsetSet('sepaSendEmail', false);
 
         self::$sepaPaymentMethod->createPaymentInstance($orderId, $userId, $paymentId);
@@ -218,7 +217,7 @@ class SepaPaymentMethodTest extends Enlight_Components_Test_Plugin_TestCase
         $paymentId = 6;
         Shopware()->Session()->set('sUserId', $userId);
 
-        //for now, don't test email
+        // for now, don't test email
         Shopware()->Config()->offsetSet('sepaSendEmail', false);
 
         self::$sepaPaymentMethod->createPaymentInstance($orderId, $userId, $paymentId);

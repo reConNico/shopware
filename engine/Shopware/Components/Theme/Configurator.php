@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Theme;
@@ -111,18 +111,18 @@ class Configurator
      */
     public function synchronize(Theme $theme)
     {
-        //prevents the theme configuration lazy loading
+        // prevents the theme configuration lazy loading
         $template = $this->getTemplate($theme);
         if (!$template instanceof Template) {
-            $this->logger->error(sprintf('Could not synchronize theme. "%s" instance for theme "%s" not found', Template::class, $theme->getName()));
+            $this->logger->error(\sprintf('Could not synchronize theme. "%s" instance for theme "%s" not found', Template::class, $theme->getName()));
 
             return;
         }
 
-        //static main container which generated for each theme configuration.
+        // static main container which generated for each theme configuration.
         $container = new TabContainer('main_container');
 
-        //inject the inheritance config container.
+        // inject the inheritance config container.
         $this->injectConfig($theme, $container);
 
         $this->eventManager->notify('Theme_Configurator_Container_Injected', [
@@ -141,7 +141,7 @@ class Configurator
             'container' => $container,
         ]);
 
-        //use the theme persister class to write the Shopware\Components\Form elements into the database
+        // use the theme persister class to write the Shopware\Components\Form elements into the database
         $this->persister->save($container, $template);
 
         $this->eventManager->notify('Theme_Configurator_Theme_Config_Saved', [
@@ -172,17 +172,17 @@ class Configurator
      */
     private function validateConfig(Container $container): void
     {
-        //check if the container implements the validation interface
+        // check if the container implements the validation interface
         if ($container instanceof Validate) {
             $container->validate();
         }
 
         foreach ($container->getElements() as $element) {
-            //check recursive validation.
+            // check recursive validation.
             if ($element instanceof Container) {
                 $this->validateConfig($element);
 
-            //check Form\Field validation
+            // check Form\Field validation
             } elseif ($element instanceof Validate) {
                 $element->validate();
             }
@@ -206,7 +206,7 @@ class Configurator
         // Iterates all configurations sets of the file system
         foreach ($collection as $item) {
             if (!$item instanceof ConfigSet) {
-                throw new Exception(sprintf("Theme %s adds a configuration set which isn't an instance of Shopware\Components\Theme\ConfigSet.", $theme->getTemplate()));
+                throw new Exception(\sprintf("Theme %s adds a configuration set which isn't an instance of Shopware\Components\Theme\ConfigSet.", $theme->getTemplate()));
             }
 
             $item->validate();
@@ -239,9 +239,9 @@ class Configurator
             $synchronized[] = $existing;
         }
 
-        //iterates all sets of the template, file system and database
+        // iterates all sets of the template, file system and database
         foreach ($template->getConfigSets() as $existing) {
-            //check if the current set was synchronized in the foreach before
+            // check if the current set was synchronized in the foreach before
             $defined = $this->getExistingConfigSet(
                 new ArrayCollection($synchronized),
                 $existing->getName()
@@ -251,7 +251,7 @@ class Configurator
                 continue;
             }
 
-            //if it wasn't synchronized, the file system theme want to remove the set.
+            // if it wasn't synchronized, the file system theme want to remove the set.
             $this->entityManager->remove($existing);
         }
 
@@ -436,7 +436,7 @@ class Configurator
             return;
         }
 
-        //get Theme.php instance of the parent template
+        // get Theme.php instance of the parent template
         $parent = $this->util->getThemeByTemplate(
             $template->getParent()
         );

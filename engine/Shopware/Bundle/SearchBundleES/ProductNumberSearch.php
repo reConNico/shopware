@@ -4,23 +4,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleES;
@@ -152,7 +151,7 @@ class ProductNumberSearch implements ProductNumberSearchInterface
     /**
      * @param array[] $data
      *
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct[]
+     * @return BaseProduct[]
      */
     private function createProducts(array $data): array
     {
@@ -191,7 +190,7 @@ class ProductNumberSearch implements ProductNumberSearchInterface
             if ($handler instanceof PartialConditionHandlerInterface) {
                 $handler->handleFilter($condition, $criteria, $search, $context);
             } else {
-                trigger_error(sprintf("Condition handler %s doesn't support new filter mode. Class has to implement \\Shopware\\Bundle\\SearchBundleES\\PartialConditionHandlerInterface.", \get_class($handler)), E_USER_DEPRECATED);
+                trigger_error(\sprintf("Condition handler %s doesn't support new filter mode. Class has to implement \\Shopware\\Bundle\\SearchBundleES\\PartialConditionHandlerInterface.", \get_class($handler)), E_USER_DEPRECATED);
                 $handler->handle($condition, $criteria, $search, $context);
             }
         }
@@ -201,12 +200,12 @@ class ProductNumberSearch implements ProductNumberSearchInterface
 
             // Trigger error when new interface isn't implemented
             if (!$handler instanceof PartialConditionHandlerInterface) {
-                trigger_error(sprintf('Condition handler "%s" doesn\'t support new filter mode. Class has to implement "%s".', \get_class($handler), PartialConditionHandlerInterface::class), E_USER_DEPRECATED);
+                trigger_error(\sprintf('Condition handler "%s" doesn\'t support new filter mode. Class has to implement "%s".', \get_class($handler), PartialConditionHandlerInterface::class), E_USER_DEPRECATED);
             }
 
             // Filter mode active and handler doesn't supports the filter mode?
             if (!$handler instanceof PartialConditionHandlerInterface && $criteria->generatePartialFacets()) {
-                throw new Exception(sprintf('New filter mode activated, handler class %s doesn\'t support this mode', \get_class($handler)));
+                throw new Exception(\sprintf('New filter mode activated, handler class %s doesn\'t support this mode', \get_class($handler)));
             }
 
             // Filter mode active and handler supports new filter mode?

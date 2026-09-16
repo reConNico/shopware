@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components;
@@ -33,7 +33,7 @@ class MemoryLimit
      */
     public static function setMinimumMemoryLimit($bytes)
     {
-        $currentLimit = self::convertToBytes(@ini_get('memory_limit'));
+        $currentLimit = self::convertToBytes((string) @ini_get('memory_limit'));
         if ($currentLimit === -1) {
             return;
         }
@@ -46,7 +46,7 @@ class MemoryLimit
     /**
      * @param string $memoryLimit
      *
-     * @return int|string
+     * @return int
      */
     public static function convertToBytes($memoryLimit)
     {
@@ -66,11 +66,11 @@ class MemoryLimit
 
         switch (substr($memoryLimit, -1)) {
             case 't': $max *= 1024;
-            // no break
+                // no break
             case 'g': $max *= 1024;
-            // no break
+                // no break
             case 'm': $max *= 1024;
-            // no break
+                // no break
             case 'k': $max *= 1024;
         }
 

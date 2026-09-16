@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace ShopwarePlugins\SwagUpdate\Components;
 
 use Exception;
+use RuntimeException;
 use SplFileObject;
 
 class Download
@@ -91,12 +92,17 @@ class Download
      */
     public function downloadFile($sourceUri, $destinationUri, $totalSize, $hash)
     {
-        if (($destination = fopen($destinationUri, 'a+')) === false) {
-            throw new Exception(sprintf('Destination "%s" is invalid.', $destinationUri));
+        if (!\is_string($sourceUri) || $sourceUri === '') {
+            throw new RuntimeException('Invalid sourceUri given');
+        }
+
+        $destination = fopen($destinationUri, 'a+');
+        if (!\is_resource($destination)) {
+            throw new Exception(\sprintf('Destination "%s" is invalid.', $destinationUri));
         }
 
         if (filesize($destinationUri) > 0) {
-            throw new Exception(sprintf('File on destination %s does already exist.', $destinationUri));
+            throw new Exception(\sprintf('File on destination %s does already exist.', $destinationUri));
         }
 
         $partFile = $destinationUri . '.part';
@@ -163,12 +169,8 @@ class Download
         $error = curl_error($ch);
         curl_close($ch);
 
-        if ($isError && !$isHalted) {
-            throw new Exception('Wrong http code');
-        }
-
-        if ($result === false && !$isHalted) {
-            throw new Exception($error);
+        if (($result === false || $isError) && !$isHalted) {
+            throw new Exception($error ?: 'Unknown error');
         }
 
         clearstatcache(false, $partFile->getPathname());
@@ -179,16 +181,12 @@ class Download
             // close local file connections before move for windows
             $partFilePath = $partFile->getPathname();
 
-            if (\is_resource($destination)) {
-                fclose($destination);
-            }
+            fclose($destination);
 
             unset($partFile);
             $this->moveFile($partFilePath, $destinationUri);
-        }
-
-        // close local file
-        if (\is_resource($destination)) {
+        } else {
+            // close local file
             fclose($destination);
         }
 

@@ -1,26 +1,29 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
+
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+use Shopware\Models\Shop\Shop;
 
 class Shopware_Controllers_Backend_Seo extends Shopware_Controllers_Backend_ExtJs
 {
@@ -33,7 +36,7 @@ class Shopware_Controllers_Backend_Seo extends Shopware_Controllers_Backend_ExtJ
      */
     public function SeoIndex()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.7.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.7.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return Shopware()->Container()->get('seoindex');
     }
@@ -47,7 +50,7 @@ class Shopware_Controllers_Backend_Seo extends Shopware_Controllers_Backend_ExtJ
      */
     public function RewriteTable()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.7.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.7.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return Shopware()->Modules()->RewriteTable();
     }
@@ -166,7 +169,7 @@ class Shopware_Controllers_Backend_Seo extends Shopware_Controllers_Backend_ExtJ
         $shop = $this->SeoIndex()->registerShop($shopId);
 
         $this->RewriteTable()->baseSetup();
-        $context = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->createShopContext($shopId);
+        $context = $this->get(ContextServiceInterface::class)->createShopContext($shopId);
         $this->RewriteTable()->sCreateRewriteTableBlog($offset, $limit, $context);
 
         $this->View()->assign([
@@ -267,7 +270,7 @@ class Shopware_Controllers_Backend_Seo extends Shopware_Controllers_Backend_ExtJ
 
         // Create shop
         $this->SeoIndex()->registerShop($shopId);
-        $context = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->createShopContext($shopId);
+        $context = $this->get(ContextServiceInterface::class)->createShopContext($shopId);
 
         // Make sure a template is available
         $this->RewriteTable()->baseSetup();
@@ -285,7 +288,7 @@ class Shopware_Controllers_Backend_Seo extends Shopware_Controllers_Backend_ExtJ
 
         // Create shop
         $this->SeoIndex()->registerShop($shopId);
-        $context = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->createShopContext($shopId);
+        $context = $this->get(ContextServiceInterface::class)->createShopContext($shopId);
 
         // Make sure a template is available
         $this->RewriteTable()->baseSetup();
@@ -301,9 +304,9 @@ class Shopware_Controllers_Backend_Seo extends Shopware_Controllers_Backend_ExtJ
      * passed shop id. The offset and limit parameter are used
      * to update only an offset of article urls.
      *
-     * @param int                        $offset
-     * @param int                        $limit
-     * @param \Shopware\Models\Shop\Shop $shop
+     * @param int  $offset
+     * @param int  $limit
+     * @param Shop $shop
      */
     protected function seoArticle($offset, $limit, $shop)
     {
@@ -318,7 +321,7 @@ class Shopware_Controllers_Backend_Seo extends Shopware_Controllers_Backend_ExtJ
         $sql = $this->RewriteTable()->getSeoArticleQuery();
         $sql = Shopware()->Db()->limit($sql, $limit, $offset);
 
-        $shopFallbackId = ($shop->getFallback() instanceof \Shopware\Models\Shop\Shop) ? $shop->getFallback()->getId() : null;
+        $shopFallbackId = ($shop->getFallback() instanceof Shop) ? $shop->getFallback()->getId() : null;
 
         $articles = Shopware()->Db()->fetchAll($sql, [
             $shop->get('parentID'),

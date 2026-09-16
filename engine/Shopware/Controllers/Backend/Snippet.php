@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Enlight_Components_Db_Adapter_Pdo_Mysql as PdoConnection;
@@ -416,7 +416,7 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
         if ($destPath === false || !file_exists($destPath)) {
             echo json_encode([
                 'success' => false,
-                'message' => sprintf("Destination directory '%s' does not exist.", $destPath),
+                'message' => \sprintf("Destination directory '%s' does not exist.", $destPath),
             ]);
 
             return;
@@ -425,7 +425,7 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
         if (!is_writable($destPath)) {
             echo json_encode([
                 'success' => false,
-                'message' => sprintf("Destination directory '%s' does not have write permissions.", $destPath),
+                'message' => \sprintf("Destination directory '%s' does not have write permissions.", $destPath),
             ]);
 
             return;
@@ -435,7 +435,7 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
         if ($filePath === false) {
             echo json_encode([
                 'success' => false,
-                'message' => sprintf('Could not create a tmp file for %s', $filePath),
+                'message' => \sprintf('Could not create a tmp file for %s', $filePath),
             ]);
 
             return;
@@ -444,7 +444,7 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
         if (move_uploaded_file($_FILES['file']['tmp_name'], $filePath) === false) {
             echo json_encode([
                 'success' => false,
-                'message' => sprintf('Could not move %s to %s.', $_FILES['file']['tmp_name'], $filePath),
+                'message' => \sprintf('Could not move %s to %s.', $_FILES['file']['tmp_name'], $filePath),
             ]);
 
             return;
@@ -515,7 +515,7 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
                     $translation['shopID'],
                     $value,
                     $dirty,
-                 ]);
+                ]);
 
                 ++$counter;
             }
@@ -619,7 +619,7 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
                 $value = $this->database->quote($row['value']);
                 $value = str_replace("\n", '\\n', $value);
 
-                $rows[] = sprintf(
+                $rows[] = \sprintf(
                     "(%s, %s, %s, '%s', '%s', '%s', NOW(), %d)",
                     $this->database->quote($row['namespace']),
                     $this->database->quote($row['name']),
@@ -669,10 +669,7 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
             return;
         }
 
-        /** @var \Doctrine\ORM\QueryBuilder $builder */
-        $builder = $this->get('models')
-                             ->getRepository('Shopware\Models\Snippet\Snippet')
-                             ->createQueryBuilder('snippet');
+        $builder = $this->get('models')->getRepository(Snippet::class)->createQueryBuilder('snippet');
 
         $builder->select('snippet.namespace, count(snippet.id) as snippetCount')
                 ->groupBy('snippet.namespace')
@@ -683,9 +680,9 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
         $result = $this->prepareNamespaceTree($result);
 
         $this->View()->assign([
-           'success' => true,
-           'data' => $result,
-           'total' => \count($result),
+            'success' => true,
+            'data' => $result,
+            'total' => \count($result),
         ]);
     }
 
@@ -700,10 +697,9 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
             return;
         }
 
-        /** @var \Doctrine\ORM\QueryBuilder $builder */
         $builder = $this->get('models')->createQueryBuilder();
 
-        $builder->delete('Shopware\Models\Snippet\Snippet', 's')
+        $builder->delete(Snippet::class, 's')
                 ->andWhere('s.namespace LIKE :namespace')
                 ->orWhere('s.namespace LIKE :namespaceWildcard')
                 ->setParameter('namespace', $namespace)
@@ -712,8 +708,8 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
         $result = $result = $builder->getQuery()->execute();
 
         $this->View()->assign([
-           'success' => true,
-           'data' => $result,
+            'success' => true,
+            'data' => $result,
         ]);
     }
 
@@ -870,7 +866,7 @@ class Shopware_Controllers_Backend_Snippet extends Shopware_Controllers_Backend_
      */
     protected function prefixProperties($properties = [], $prefix = '')
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         foreach ($properties as $key => $property) {
             if (isset($property['property'])) {

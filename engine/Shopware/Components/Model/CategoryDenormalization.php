@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Model;
@@ -126,7 +126,7 @@ class CategoryDenormalization
 
         $result = [$parent['id']];
 
-        $parent = $this->getParentCategoryIds($parent['parent']);
+        $parent = $this->getParentCategoryIds((int) $parent['parent']);
         if ($parent) {
             $result = array_merge($result, $parent);
         }
@@ -402,7 +402,7 @@ class CategoryDenormalization
             $assignmentsStmt->execute(['categoryId' => $affectedCategoryId]);
 
             while ($assignment = $assignmentsStmt->fetch()) {
-                $count += $this->insertAssignment($assignment['articleID'], $assignment['categoryID']);
+                $count += $this->insertAssignment((int) $assignment['articleID'], (int) $assignment['categoryID']);
             }
         }
         $this->commit();
@@ -599,12 +599,12 @@ class CategoryDenormalization
     {
         $count = (int) $count;
         if ($count <= 0) {
-            throw new Exception(sprintf('LIMIT argument count=%s is not valid', $count));
+            throw new Exception(\sprintf('LIMIT argument count=%s is not valid', $count));
         }
 
         $offset = (int) $offset;
         if ($offset < 0) {
-            throw new Exception(sprintf('LIMIT argument offset=%s is not valid', $offset));
+            throw new Exception(\sprintf('LIMIT argument offset=%s is not valid', $offset));
         }
 
         $sql .= " LIMIT $count";

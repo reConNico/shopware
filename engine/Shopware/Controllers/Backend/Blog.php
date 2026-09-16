@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\ORM\AbstractQuery;
@@ -30,11 +30,12 @@ use Shopware\Models\Article\Article as Product;
 use Shopware\Models\Article\Repository as ProductRepository;
 use Shopware\Models\Blog\Blog;
 use Shopware\Models\Blog\Comment;
-use Shopware\Models\Blog\Media;
+use Shopware\Models\Blog\Media as BlogMedia;
 use Shopware\Models\Blog\Repository as BlogRepository;
 use Shopware\Models\Blog\Tag;
 use Shopware\Models\Category\Category;
 use Shopware\Models\Category\Repository as CategoryRepository;
+use Shopware\Models\Media\Media;
 use Shopware\Models\User\User;
 
 /**
@@ -76,11 +77,11 @@ class Shopware_Controllers_Backend_Blog extends Shopware_Controllers_Backend_Ext
      *
      * Helper Method to get access to the category repository.
      *
-     * @return Shopware\Models\Category\Repository
+     * @return CategoryRepository
      */
     public function getCategoryRepository()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         if ($this->categoryRepository === null) {
             $this->categoryRepository = $this->getManager()->getRepository(Category::class);
@@ -98,7 +99,7 @@ class Shopware_Controllers_Backend_Blog extends Shopware_Controllers_Backend_Ext
      */
     public function getArticleRepository()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         if ($this->articleRepository === null) {
             $this->articleRepository = $this->getManager()->getRepository(Product::class);
@@ -112,11 +113,11 @@ class Shopware_Controllers_Backend_Blog extends Shopware_Controllers_Backend_Ext
      *
      * Helper Method to get access to the blog repository.
      *
-     * @return Shopware\Models\Blog\Repository
+     * @return BlogRepository
      */
     public function getRepository()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         if ($this->blogRepository === null) {
             $this->blogRepository = $this->getManager()->getRepository(Blog::class);
@@ -134,7 +135,7 @@ class Shopware_Controllers_Backend_Blog extends Shopware_Controllers_Backend_Ext
      */
     public function getBlogCommentRepository()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         if ($this->blogCommentRepository === null) {
             $this->blogCommentRepository = $this->getManager()->getRepository(Comment::class);
@@ -495,8 +496,8 @@ class Shopware_Controllers_Backend_Blog extends Shopware_Controllers_Backend_Ext
     {
         $mediaModels = [];
         foreach ($mediaData as $media) {
-            $mediaModel = new Media();
-            $media['media'] = $this->getManager()->find(\Shopware\Models\Media\Media::class, $media['mediaId']);
+            $mediaModel = new BlogMedia();
+            $media['media'] = $this->getManager()->find(Media::class, $media['mediaId']);
             unset($media['mediaId']);
             $mediaModel->fromArray($media);
             $mediaModels[] = $mediaModel;

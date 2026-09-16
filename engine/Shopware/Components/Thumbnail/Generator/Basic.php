@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Thumbnail\Generator;
@@ -39,24 +39,15 @@ use Shopware_Components_Config;
  */
 class Basic implements GeneratorInterface
 {
-    /**
-     * @var bool
-     */
-    private $fixGdImageBlur;
+    private bool $fixGdImageBlur;
 
-    /**
-     * @var MediaServiceInterface
-     */
-    private $mediaService;
+    private MediaServiceInterface $mediaService;
 
-    /**
-     * @var OptimizerServiceInterface
-     */
-    private $optimizerService;
+    private OptimizerServiceInterface $optimizerService;
 
     public function __construct(Shopware_Components_Config $config, MediaServiceInterface $mediaService, OptimizerServiceInterface $optimizerService)
     {
-        $this->fixGdImageBlur = $config->get('thumbnailNoiseFilter');
+        $this->fixGdImageBlur = (bool) $config->get('thumbnailNoiseFilter');
         $this->mediaService = $mediaService;
         $this->optimizerService = $optimizerService;
     }
@@ -71,12 +62,12 @@ class Basic implements GeneratorInterface
         $quality = (int) $quality;
 
         if (!$this->mediaService->has($imagePath)) {
-            throw new RuntimeException(sprintf('File not found: %s', $imagePath));
+            throw new RuntimeException(\sprintf('File not found: %s', $imagePath));
         }
 
         $content = $this->mediaService->read($imagePath);
         if (!\is_string($content)) {
-            throw new RuntimeException(sprintf('Could not read image from file: %s', $imagePath));
+            throw new RuntimeException(\sprintf('Could not read image from file: %s', $imagePath));
         }
         $image = $this->createImageResource($content, $imagePath);
 
@@ -116,13 +107,13 @@ class Basic implements GeneratorInterface
      *
      * @param resource $imageResource
      *
-     * @return array{width: int, height: int}
+     * @return array{width: int<1, max>, height: int<1, max>}
      */
     private function getOriginalImageSize($imageResource): array
     {
         return [
-            'width' => (int) imagesx($imageResource),
-            'height' => (int) imagesy($imageResource),
+            'width' => imagesx($imageResource),
+            'height' => imagesy($imageResource),
         ];
     }
 
@@ -139,7 +130,7 @@ class Basic implements GeneratorInterface
     {
         $image = imagecreatefromstring($fileContent);
         if ($image === false) {
-            throw new RuntimeException(sprintf('Image is not in a recognized format (%s)', $imagePath));
+            throw new RuntimeException(\sprintf('Image is not in a recognized format (%s)', $imagePath));
         }
 
         return $image;
@@ -156,9 +147,9 @@ class Basic implements GeneratorInterface
     /**
      * Calculate image proportion and set the new resolution
      *
-     * @param array{width: int, height: int} $originalSize
+     * @param array{width: int<1, max>, height: int<1, max>} $originalSize
      *
-     * @return array{width: int, height: int, proportion: float}
+     * @return array{width: int<1, max>, height: int<1, max>, proportion: float}
      */
     private function calculateProportionalThumbnailSize(array $originalSize, int $width, int $height): array
     {
@@ -180,22 +171,25 @@ class Basic implements GeneratorInterface
             $dstHeight = $srcHeight;
             $factor = 1;
         } else {
-            //Get the destination size
+            // Get the destination size
             $dstWidth = round($srcWidth * $factor);
             $dstHeight = round($srcHeight * $factor);
         }
 
+        $dstWidth = max(1, (int) $dstWidth);
+        $dstHeight = max(1, (int) $dstHeight);
+
         return [
-            'width' => (int) $dstWidth,
-            'height' => (int) $dstHeight,
+            'width' => $dstWidth,
+            'height' => $dstHeight,
             'proportion' => $factor,
         ];
     }
 
     /**
-     * @param resource                       $image
-     * @param array{width: int, height: int} $originalSize
-     * @param array{width: int, height: int} $newSize
+     * @param resource                                       $image
+     * @param array{width: int<1, max>, height: int<1, max>} $originalSize
+     * @param array{width: int<1, max>, height: int<1, max>} $newSize
      *
      * @return resource
      */
@@ -308,12 +302,12 @@ class Basic implements GeneratorInterface
         }
         $handle = fopen($tmpFilename, 'wb');
         if (!\is_resource($handle)) {
-            throw new RuntimeException(sprintf('Could not open file at: %s', $tmpFilename));
+            throw new RuntimeException(\sprintf('Could not open file at: %s', $tmpFilename));
         }
 
         $fromHandle = $this->mediaService->readStream($destination);
         if (!\is_resource($fromHandle)) {
-            throw new RuntimeException(sprintf('Could not open file at: %s', $destination));
+            throw new RuntimeException(\sprintf('Could not open file at: %s', $destination));
         }
         stream_copy_to_stream(
             $fromHandle,
@@ -327,7 +321,7 @@ class Basic implements GeneratorInterface
     {
         $fileHandle = fopen($tmpFilename, 'rb');
         if (!\is_resource($fileHandle)) {
-            throw new RuntimeException(sprintf('Could not open file at: %s', $tmpFilename));
+            throw new RuntimeException(\sprintf('Could not open file at: %s', $tmpFilename));
         }
         $this->mediaService->writeStream($destination, $fileHandle);
         fclose($fileHandle);

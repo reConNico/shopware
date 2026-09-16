@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Order;
@@ -63,7 +63,7 @@ class Repository extends ModelRepository
      * @param int|null       $offset
      * @param int|null       $limit
      *
-     * @return Query
+     * @return Query<Status>
      */
     public function getPaymentStatusQuery($filter = null, $order = null, $offset = null, $limit = null)
     {
@@ -117,7 +117,7 @@ class Repository extends ModelRepository
      * @param int|null    $offset
      * @param int|null    $limit
      *
-     * @return Query
+     * @return Query<Status>
      */
     public function getOrderStatusQuery($filter = null, $order = null, $offset = null, $limit = null)
     {
@@ -171,7 +171,7 @@ class Repository extends ModelRepository
      * @param int|null                                                               $offset
      * @param int|null                                                               $limit
      *
-     * @return Query
+     * @return Query<Order>
      */
     public function getOrdersQuery($filters = null, $orderBy = null, $offset = null, $limit = null)
     {
@@ -270,7 +270,7 @@ class Repository extends ModelRepository
     /**
      * Returns an instance of the \Doctrine\ORM\Query object which can be extended for customization
      *
-     * @return Query
+     * @return Query<DetailStatus>
      */
     public function getDetailStatusQuery()
     {
@@ -302,7 +302,7 @@ class Repository extends ModelRepository
      * @param int|null    $offset
      * @param int|null    $limit
      *
-     * @return Query
+     * @return Query<History>
      */
     public function getOrderStatusHistoryListQuery($orderId, $orderBy = null, $offset = null, $limit = null)
     {
@@ -351,7 +351,7 @@ class Repository extends ModelRepository
     /**
      * Returns an instance of the \Doctrine\ORM\Query object which can be extended for customization
      *
-     * @return Query
+     * @return Query<Document>
      */
     public function getDocumentTypesQuery()
     {
@@ -384,7 +384,7 @@ class Repository extends ModelRepository
      *  - voucher.value
      *  - voucher.minimumCharge
      *
-     * @return Query
+     * @return Query<array<string, mixed>>
      */
     public function getVoucherQuery()
     {
@@ -394,12 +394,12 @@ class Repository extends ModelRepository
         $builder = Shopware()->Models()->createQueryBuilder();
 
         return $builder->select([
-                'voucher.id',
-                'voucher.description',
-                'voucher.voucherCode',
-                'voucher.value',
-                'voucher.minimumCharge',
-            ])
+            'voucher.id',
+            'voucher.description',
+            'voucher.voucherCode',
+            'voucher.value',
+            'voucher.minimumCharge',
+        ])
            ->from(Voucher::class, 'voucher')
            ->join('voucher.codes', 'codes')
            ->where('(voucher.validTo>= :today OR voucher.validTo IS NULL)')
@@ -563,14 +563,13 @@ class Repository extends ModelRepository
     public function search($offset = null, $limit = null, $filters = [], $sortings = [])
     {
         $em = $this->getEntityManager();
-        $builder = $em->createQueryBuilder();
-
-        $builder->select(['orders.id']);
-        $builder->from(Order::class, 'orders');
-        $builder->leftJoin('orders.attribute', 'attribute');
-        $builder->andWhere('orders.number IS NOT NULL');
-        $builder->andWhere('orders.status != :cancelStatus');
-        $builder->setParameter(':cancelStatus', -1);
+        $builder = $em->createQueryBuilder()
+            ->select(['orders.id'])
+            ->from(Order::class, 'orders')
+            ->leftJoin('orders.attribute', 'attribute')
+            ->andWhere('orders.number IS NOT NULL')
+            ->andWhere('orders.status != :cancelStatus')
+            ->setParameter(':cancelStatus', -1);
 
         $builder = $this->filterListQuery($builder, $filters);
         $builder = $this->sortListQuery($builder, $sortings);
@@ -581,13 +580,14 @@ class Repository extends ModelRepository
         if ($limit !== null) {
             $builder->setMaxResults($limit);
         }
+        /** @var Query<array{id: int}> $query */
         $query = $builder->getQuery();
         $query->setHydrationMode(AbstractQuery::HYDRATE_ARRAY);
         $paginator = $em->createPaginator($query);
 
         return [
             'total' => $paginator->count(),
-            'orders' => $paginator->getIterator()->getArrayCopy(),
+            'orders' => iterator_to_array($paginator),
         ];
     }
 
@@ -761,11 +761,9 @@ class Repository extends ModelRepository
     }
 
     /**
-     * @param string $term
-     *
      * @return array<int, int|string>
      */
-    private function searchOrderIds($term)
+    private function searchOrderIds(string $term): array
     {
         $orders = $this->searchInOrders($term);
 
@@ -784,12 +782,9 @@ class Repository extends ModelRepository
     }
 
     /**
-     * @param string $term
-     * @param int[]  $excludeOrders
-     *
-     * @return array
+     * @param int[] $excludeOrders
      */
-    private function searchCustomers($term, array $excludeOrders = [])
+    private function searchCustomers(string $term, array $excludeOrders = []): array
     {
         $query = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $query->select(['DISTINCT customer.id']);

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Install;
@@ -47,7 +47,7 @@ class Requirements
     public function __construct($sourceFile, TranslationService $translations)
     {
         if (!is_readable($sourceFile)) {
-            throw new RuntimeException(sprintf('Cannot read requirements file in %s.', $sourceFile));
+            throw new RuntimeException(\sprintf('Cannot read requirements file in %s.', $sourceFile));
         }
 
         $this->sourceFile = $sourceFile;
@@ -160,7 +160,7 @@ class Requirements
             return true;
         } elseif (\function_exists($name)) {
             return true;
-        } elseif (($value = ini_get($name)) !== null) {
+        } elseif (($value = \ini_get($name)) !== null) {
             if (strtolower($value) == 'off' || (is_numeric($value) && $value == 0)) {
                 return false;
             } elseif (strtolower($value) == 'on' || (is_numeric($value) && $value == 1)) {
@@ -235,10 +235,10 @@ class Requirements
             'name' => 'opcache.use_cwd',
             'group' => 'core',
             'required' => 1,
-            'version' => ini_get('opcache.use_cwd'),
-            'result' => ini_get('opcache.use_cwd'),
+            'version' => \ini_get('opcache.use_cwd'),
+            'result' => \ini_get('opcache.use_cwd'),
             'notice' => '',
-            'check' => $this->compare('opcache.use_cwd', ini_get('opcache.use_cwd'), '1'),
+            'check' => $this->compare('opcache.use_cwd', \ini_get('opcache.use_cwd'), '1'),
             'error' => '',
         ]];
 
@@ -248,10 +248,10 @@ class Requirements
                     'name' => 'opcache.validate_root',
                     'group' => 'core',
                     'required' => 1,
-                    'version' => ini_get('opcache.validate_root'),
-                    'result' => ini_get('opcache.validate_root'),
+                    'version' => \ini_get('opcache.validate_root'),
+                    'result' => \ini_get('opcache.validate_root'),
                     'notice' => '',
-                    'check' => $this->compare('opcache.validate_root', ini_get('opcache.validate_root'), '1'),
+                    'check' => $this->compare('opcache.validate_root', \ini_get('opcache.validate_root'), '1'),
                     'error' => '',
                 ];
             }
@@ -358,7 +358,7 @@ class Requirements
     {
         if (\function_exists('session_save_path')) {
             return (bool) session_save_path();
-        } elseif (ini_get('session.save_path')) {
+        } elseif (\ini_get('session.save_path')) {
             return true;
         }
 
@@ -372,7 +372,7 @@ class Requirements
      */
     private function checkSuhosinGetMaxValueLength()
     {
-        $length = (int) ini_get('suhosin.get.max_value_length');
+        $length = (int) \ini_get('suhosin.get.max_value_length');
         if ($length === 0) {
             return 2000;
         }
@@ -426,8 +426,8 @@ class Requirements
             /* @noinspection PhpMissingBreakStatementInspection */
             case 'g':
                 $val *= 1024;
-            /* @noinspection PhpMissingBreakStatementInspection */
-            // no break
+                /* @noinspection PhpMissingBreakStatementInspection */
+                // no break
             case 'm':
                 $val *= 1024;
                 // no break
@@ -497,7 +497,7 @@ class Requirements
             $maxCompatibleVersion = str_replace('.99', '', $check['maxCompatibleVersion']);
             $key = 'requirements_php_max_compatible_version';
 
-            $check['notice'] = sprintf($this->translations->translate($key), $maxCompatibleVersion);
+            $check['notice'] = \sprintf($this->translations->translate($key), $maxCompatibleVersion);
         }
 
         return $check;

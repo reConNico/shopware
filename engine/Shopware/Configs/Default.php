@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Components\Api\Exception\BatchInterfaceNotImplementedException;
@@ -246,6 +246,10 @@ return array_replace_recursive([
     'mail' => [
         'charset' => 'utf-8',
     ],
+    'update' => [
+        'url' => 'https://raw.githubusercontent.com/shopware5/shopware-release-cache/main/releases.json',
+        'prerelease' => false,
+    ],
     'httpcache' => [
         'enabled' => true,
         'lookup_optimization' => true,
@@ -290,12 +294,6 @@ return array_replace_recursive([
             'siteurl',
             '_ga',
             'fbclid',         // Facebook
-        ],
-    ],
-    'bi' => [
-        'endpoint' => [
-            'benchmark' => 'https://bi.shopware.com/benchmark',
-            'statistics' => 'https://bi.shopware.com/statistics',
         ],
     ],
     'session' => [
@@ -375,7 +373,6 @@ return array_replace_recursive([
         // Passed to \Mpdf\Mpdf::__construct:
         'defaultConfig' => [
             'tempDir' => $this->getCacheDir() . '/mpdf/',
-            'fontDir' => $this->DocPath('engine_Library_Mpdf_ttfonts_'),
             'fonttrans' => [
                 'helvetica' => 'arial',
                 'verdana' => 'arial',
@@ -390,38 +387,6 @@ return array_replace_recursive([
                 'ocr-b' => 'ocrb',
                 'ocr-b10bt' => 'ocrb',
                 'damase' => 'mph2bdamase',
-            ],
-            'fontdata' => [
-                'arial' => [
-                    'R' => 'arial.ttf',
-                    'B' => 'arialbd.ttf',
-                    'I' => 'ariali.ttf',
-                    'BI' => 'arialbi.ttf',
-                ],
-                'couriernew' => [
-                    'R' => 'cour.ttf',
-                    'B' => 'courbd.ttf',
-                    'I' => 'couri.ttf',
-                    'BI' => 'courbi.ttf',
-                ],
-                'georgia' => [
-                    'R' => 'georgia.ttf',
-                    'B' => 'georgiab.ttf',
-                    'I' => 'georgiai.ttf',
-                    'BI' => 'georgiaz.ttf',
-                ],
-                'timesnewroman' => [
-                    'R' => 'times.ttf',
-                    'B' => 'timesbd.ttf',
-                    'I' => 'timesi.ttf',
-                    'BI' => 'timesbi.ttf',
-                ],
-                'verdana' => [
-                    'R' => 'verdana.ttf',
-                    'B' => 'verdanab.ttf',
-                    'I' => 'verdanai.ttf',
-                    'BI' => 'verdanaz.ttf',
-                ],
             ],
             'format' => 'A4',
         ],

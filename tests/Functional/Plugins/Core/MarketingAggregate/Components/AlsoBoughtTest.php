@@ -1,44 +1,48 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Plugins\Core\MarketingAggregate\Components;
 
+use Doctrine\DBAL\Connection;
 use Shopware\Tests\Functional\Plugins\Core\MarketingAggregate\AbstractMarketing;
+use Shopware\Tests\Functional\Traits\ContainerTrait;
 use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
 
 class AlsoBoughtTest extends AbstractMarketing
 {
     use DatabaseTransactionBehaviour;
+    use ContainerTrait;
 
     public function setUp(): void
     {
         parent::setUp();
+        $connection = $this->getContainer()->get(Connection::class);
 
-        $this->Db()->query('DELETE FROM s_articles_also_bought_ro ');
-        $this->Db()->query('DELETE FROM s_order_details');
+        $connection->executeQuery('DELETE FROM s_articles_also_bought_ro ');
+        $connection->executeQuery('DELETE FROM s_order_details');
 
-        $this->Db()->query("
+        $connection->executeQuery("
             INSERT INTO `s_order_details` (`id`, `orderID`, `ordernumber`, `articleID`, `articleordernumber`, `price`, `quantity`, `name`, `status`, `shipped`, `shippedgroup`, `releasedate`, `modus`, `esdarticle`, `taxID`, `tax_rate`, `config`) VALUES
             (178, 52, '0', 227, 'SW10002841', 35.99, 31, 'Aufschlag bei Zahlungsarten', 0, 0, 0, NULL, 0, 0, 1, 19, ''),
             (179, 52, '0', 145, 'SW10145', 17.99, 1, 'Mütze Vintage Driver', 0, 0, 0, NULL, 0, 0, 1, 19, ''),

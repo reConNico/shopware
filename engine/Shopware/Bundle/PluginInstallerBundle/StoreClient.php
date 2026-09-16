@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\PluginInstallerBundle;
@@ -287,7 +287,7 @@ class StoreClient
      *
      * @throws Exception
      */
-    private function getRequest(string $resource, array $params, array $headers = [], AccessTokenStruct $token = null): Response
+    private function getRequest(string $resource, array $params, array $headers = [], ?AccessTokenStruct $token = null): Response
     {
         $url = $this->apiEndPoint . $resource;
         if (!empty($params)) {
@@ -315,12 +315,11 @@ class StoreClient
     /**
      * @param array<string, mixed>  $params
      * @param array<string, string> $headers
-     * @param AccessTokenStruct     $token
      *
      * @throws StoreException
      * @throws Exception
      */
-    private function postRequest(string $resource, array $params = [], array $headers = [], AccessTokenStruct $token = null): Response
+    private function postRequest(string $resource, array $params = [], array $headers = [], ?AccessTokenStruct $token = null): Response
     {
         $url = $this->apiEndPoint . $resource;
 
@@ -477,7 +476,7 @@ class StoreClient
                 throw new MissingDoubleOptInConfirmationException($sbpCode, 'missing_doi_confirmation', $httpCode, $requestException);
         }
 
-        $reason = \array_key_exists('reason', $data) ? $data['reason'] : sprintf('Unknown error occurred. (%s)', $sbpCode);
+        $reason = \array_key_exists('reason', $data) ? $data['reason'] : \sprintf('Unknown error occurred. (%s)', $sbpCode);
 
         throw new StoreException($sbpCode, $reason, $httpCode, $requestException);
     }
@@ -488,7 +487,7 @@ class StoreClient
         $signature = $response->getHeader($signatureHeaderName);
 
         if (!\is_string($signature)) {
-            throw new RuntimeException(sprintf('Signature not found in header "%s"', $signatureHeaderName));
+            throw new RuntimeException(\sprintf('Signature not found in header "%s"', $signatureHeaderName));
         }
 
         if (!$this->openSSLVerifier->isSystemSupported()) {

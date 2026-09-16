@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SitemapBundle\Service;
@@ -63,7 +63,7 @@ class SitemapWriter implements SitemapWriterInterface
     public function __construct(
         SitemapNameGenerator $sitemapNameGenerator,
         FilesystemInterface $filesystem,
-        LoggerInterface $logger = null
+        ?LoggerInterface $logger = null
     ) {
         $this->sitemapNameGenerator = $sitemapNameGenerator;
         $this->filesystem = $filesystem;
@@ -123,7 +123,7 @@ class SitemapWriter implements SitemapWriterInterface
     private function closeFile($shopId)
     {
         if (!\array_key_exists($shopId, $this->files)) {
-            throw new UnknownFileException(sprintf('No open file "%s"', $shopId));
+            throw new UnknownFileException(\sprintf('No open file "%s"', $shopId));
         }
 
         $fileHandle = $this->files[$shopId]['fileHandle'];
@@ -156,7 +156,7 @@ class SitemapWriter implements SitemapWriterInterface
             return true;
         }
 
-        $filePath = sprintf(
+        $filePath = \sprintf(
             '%s/sitemap-shop-%d-%s.xml.gz',
             rtrim(sys_get_temp_dir(), '/'),
             $shopId,
@@ -166,7 +166,7 @@ class SitemapWriter implements SitemapWriterInterface
         $fileHandler = gzopen($filePath, 'wb');
 
         if (!$fileHandler) {
-            $this->logger->error(sprintf('Could not generate sitemap file, unable to write to "%s"', $filePath));
+            $this->logger->error(\sprintf('Could not generate sitemap file, unable to write to "%s"', $filePath));
 
             return false;
         }
@@ -200,7 +200,7 @@ class SitemapWriter implements SitemapWriterInterface
         /** @var Sitemap[] $sitemaps */
         foreach ($this->sitemaps as $shopId => $sitemaps) {
             // Delete old sitemaps for this siteId
-            foreach ($this->filesystem->listContents(sprintf('shop-%d', $shopId)) as $file) {
+            foreach ($this->filesystem->listContents(\sprintf('shop-%d', $shopId)) as $file) {
                 $this->filesystem->delete($file['path']);
             }
 
@@ -210,7 +210,7 @@ class SitemapWriter implements SitemapWriterInterface
                 try {
                     $this->filesystem->write($sitemapFileName, file_get_contents($sitemap->getFilename()));
                 } catch (\League\Flysystem\Exception $exception) {
-                    $this->logger->error(sprintf('Could not move sitemap to "%s" in the location for sitemaps', $sitemapFileName));
+                    $this->logger->error(\sprintf('Could not move sitemap to "%s" in the location for sitemaps', $sitemapFileName));
                 } finally {
                     // If we could not move the file to it's target, we remove it here to not clutter tmp dir
                     unlink($sitemap->getFilename());

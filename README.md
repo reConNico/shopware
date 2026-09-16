@@ -1,36 +1,29 @@
-# Shopware 6
+# Repository No Longer Maintained
 
-<a href="https://github.com/shopware/platform"><img src="https://s3.eu-central-1.amazonaws.com/shopware-platform-assets/github-platform/readme/discover_sw6.png" align="right" height="39" /></a>
+⚠️ Please note that this repository is no longer actively monitored or maintained. Updates may occur occasionally, but this cannot be guaranteed.
 
-<p align="center">
-<img src="https://www.shopware.com/media/image/8a/cf/98/open-commerce-platform.png" width=500>
-</p>
+ℹ️ Safefive offers a Shopware 5 version with ongoing infrastructure compatibility updates. You can find this version of Shopware 5 here: https://github.com/safefive/shopware/
 
-
-The completely newly developed successor "Shopware 6" is based entirely on the Symfony Framework and VueJS and is available under MIT licence at https://github.com/shopware/platform
 
 # Shopware 5
 
-![Build Status](https://github.com/shopware/shopware/workflows/PHPUnit/badge.svg)
+![Build Status](https://github.com/shopware5/shopware/workflows/PHPUnit/badge.svg)
 [![Crowdin](https://d322cqt584bo4o.cloudfront.net/shopware/localized.svg)](https://crowdin.com/project/shopware)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/shopware/shopware/badges/quality-score.png?b=5.5)](https://scrutinizer-ci.com/g/shopware/shopware/?branch=5.5)
 [![Latest Stable Version](https://poser.pugx.org/shopware/shopware/v/stable)](https://packagist.org/packages/shopware/shopware)
 [![Total Downloads](https://poser.pugx.org/shopware/shopware/downloads)](https://packagist.org/packages/shopware/shopware)
 [![Slack](https://img.shields.io/badge/chat-on%20slack-%23ECB22E)](http://slack.shopware.com?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-- **License**: Dual license AGPL v3 / Proprietary
-- **GitHub Repository**: <https://github.com/shopware/shopware>
-- **Issue Tracker**: <https://issues.shopware.com>
+- **License**: GNU General Public License v3 (some used parts have different licenses, which can be found in the respective files or directories)
+- **GitHub Repository**: <https://github.com/shopware5/shopware>
+- **Issues**: <https://github.com/shopware5/shopware/issues>
 
 ## Overview
 
 ![Shopware 5 collage](https://assets.shopware.com/media/github/shopware5_readme.png)
 
 Shopware 5 is an open source e-commerce software made in Germany.
-Based on technologies like `Symfony 4`, `Doctrine 2` & `Zend Framework` Shopware comes as the perfect platform for your next e-commerce project.
-Furthermore, Shopware 5 provides an event-driven plugin system and an advanced hook system, giving you the ability to customize every part of the platform.
-
-Visit the forum at <https://forum.shopware.com/>
+Based on technologies like `Symfony 4`, `Doctrine 2` & `Zend Framework` Shopware comes as the perfect platform for your e-commerce project.
+Furthermore, Shopware 5 provides an event-driven plugin system and an advanced hook system, giving you the ability to customize nearly every part of the platform.
 
 ----
 
@@ -46,6 +39,7 @@ Visit the forum at <https://forum.shopware.com/>
 -   <a href="https://php.net/manual/en/book.ctype.php" target="_blank">ctype</a>
 -   <a href="https://php.net/manual/en/book.curl.php" target="_blank">curl</a>
 -   <a href="https://php.net/manual/en/book.dom.php" target="_blank">dom</a>
+-   <a href="https://php.net/manual/en/book.filter.php" target="_blank">filter</a>
 -   <a href="https://php.net/manual/en/book.hash.php" target="_blank">hash</a>
 -   <a href="https://php.net/manual/en/book.iconv.php" target="_blank">iconv</a>
 -   <a href="https://php.net/manual/en/book.image.php" target="_blank">gd</a> (with freetype and libjpeg)
@@ -66,10 +60,10 @@ Follow the instruction below if you want to install Shopware 5 using Git.
 
 1.) Clone the git repository to the desired location using:
 
-    git clone https://github.com/shopware/shopware.git
+    git clone https://github.com/shopware5/shopware.git
 
 In case you wish to contribute to Shopware, fork the `5.7` branch rather than cloning it, and create a pull request via GitHub.
-For further information please read the section "Get involved" of this document.
+For further information please read the section ["Get involved"](#get-involved) of this document.
 
 2.) Set the correct directory permissions:
 
@@ -99,24 +93,19 @@ Some workarounds are in place because of this and place constraints on the funct
 
 Go to the root directory of your shopware system and download the test images:
 
-    wget -O test_images.zip http://releases.s3.shopware.com/test_images_since_5.1.zip
-
-For older Shopware versions < 5.1
-
-    wget -O test_images.zip http://releases.s3.shopware.com/test_images.zip
+    wget -O test_images.zip http://releases.shopware.com/test_images_since_5.1.zip
 
 Unzip the files inside the root directory:
 
     unzip test_images.zip
 
-You can now access your shop
+You can now access your shop.
+The test_images.zip file also includes thumbnails for the responsive theme.
 
 # Backend
 
 The backend is located at `/backend` example `http://your.shop.com/backend`.
 Backend Login: demo/demo
-
-The test_images.zip file includes thumbnails for the new responsive theme and the old deprecated template.
 
 If you want to have full-featured demo data, you should download the respective demo data plugin in the First Run Wizard or in the Plugin Manager.
 
@@ -127,37 +116,32 @@ If you want to have full-featured demo data, you should download the respective 
 
 # Get involved
 
-Shopware is available under dual license (AGPL v3 and proprietary license).
+Shopware is available under GPL v3 license.
 If you want to contribute code (features or bugfixes), you have to create a pull request and include valid license information.
 You can either contribute your code under New BSD or MIT license.
 
 If you want to contribute to the backend part of Shopware, and your changes affect or are based on ExtJS code, they must be licensed under GPL V3, as per license requirements from Sencha Inc.
-
-If you are not sure which license to use, or want more details about available licensing or the contribution agreements we offer, you can contact us at <contact@shopware.com>.
 
 For more information about contributing to Shopware, please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 
 ### How to report bugs / request features?
 
-We've always had a sympathetic ear for our community, so please feel free to submit tickets with bug reports or feature requests.
-In order to have a single issue tracking tool, we've decided to close the GitHub issue panel in favor of our Jira issue tracker, which is directly connected to our development division.
-
-* [Shopware ticket submit form](https://issues.shopware.com/createissue)
+We've always had an ear for our community, so please feel free to submit issues with bug reports or feature requests.
+Just create a new issue [here](https://github.com/shopware5/shopware/issues) using the respective templates.
 
 # Copying / License
 
-Shopware is distributed under a dual license (AGPL v3 and proprietary license). You can find the whole license text in the `license.txt` file.
+Shopware is distributed under the AGPL v3.
+You can find the whole license text in the [license.txt](license.txt) file.
 
 # Changelog
 
-The changelog and all available commits are located under <https://github.com/shopware/shopware>.
+The changelog and all available commits can be found [here](https://github.com/shopware5/shopware/releases).
 
 ## Further reading
 
-* [Shopware AG](https://www.shopware.com) - Homepage of shopware AG
 * [Shopware Developer Documentation](https://developers.shopware.com/)
-* [Shopware Docs](https://docs.shopware.com/) - Shopware documentation
-* [Shopware Forum](https://forum.shopware.com) - Community forum
-* [Shopware Marketplace](https://store.shopware.com) - Shopware Store
-* [Shopware on Crowdin](https://crowdin.com/project/shopware) - Crowdin (Translations)
+* [Shopware User Documentation](https://docs.shopware.com/en/shopware-5-en)
+* [Shopware Community Forum](https://forum.shopware.com/c/shopware-5/7)
+* [Shopware Store](https://store.shopware.com)

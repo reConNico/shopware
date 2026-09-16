@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
 use Exception;
 use RuntimeException;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Shop\Locale;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
@@ -95,7 +96,7 @@ class SettingsLabelsFindMissingCommand extends ShopwareCommand implements Comple
         if (!file_exists($dir) || !is_writable($dir)) {
             $old = umask(0);
             if (!mkdir($dir, 0777, true) && !is_dir($dir)) {
-                throw new RuntimeException(sprintf('Directory "%s" was not created', $dir));
+                throw new RuntimeException(\sprintf('Directory "%s" was not created', $dir));
             }
             chmod($dir, 0777);
             umask($old);
@@ -107,8 +108,8 @@ class SettingsLabelsFindMissingCommand extends ShopwareCommand implements Comple
         }
 
         /** @var Locale|null $locale */
-        $locale = $this->container->get(\Shopware\Components\Model\ModelManager::class)
-            ->getRepository(\Shopware\Models\Shop\Locale::class)
+        $locale = $this->container->get(ModelManager::class)
+            ->getRepository(Locale::class)
             ->findOneByLocale($input->getArgument('locale'));
         if (!$locale) {
             $output->writeln('<error>Provided locale not found</error>');
@@ -126,14 +127,14 @@ class SettingsLabelsFindMissingCommand extends ShopwareCommand implements Comple
     /**
      * Exports form labels from the database into a php file containing an array
      *
-     * @param \Shopware\Models\Shop\Locale $locale
-     * @param string                       $dir
+     * @param Locale $locale
+     * @param string $dir
      *
      * @throws Exception
      */
     protected function exportFormLabels(OutputInterface $output, $locale, $dir)
     {
-        $formQueryBuilder = $this->container->get(\Shopware\Components\Model\ModelManager::class)->getDBALQueryBuilder();
+        $formQueryBuilder = $this->container->get(ModelManager::class)->getDBALQueryBuilder();
         $statement = $formQueryBuilder
             ->select('form.name AS name', 'form.label AS label', 'form.description AS description')
             ->from('s_core_config_forms', 'form')
@@ -170,7 +171,7 @@ class SettingsLabelsFindMissingCommand extends ShopwareCommand implements Comple
      */
     protected function exportElementLabels(OutputInterface $output, $locale, $dir)
     {
-        $elementsQueryBuilder = $this->container->get(\Shopware\Components\Model\ModelManager::class)->getDBALQueryBuilder();
+        $elementsQueryBuilder = $this->container->get(ModelManager::class)->getDBALQueryBuilder();
         $statement = $elementsQueryBuilder
             ->select('form.name AS formName', 'elem.name AS elementName', 'elem.label AS label')
             ->from('s_core_config_forms', 'form')

@@ -1,37 +1,40 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\Query;
 use Shopware\Components\CategoryHandling\CategoryDuplicator;
 use Shopware\Components\Model\CategoryDenormalization;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Article\Article;
-use Shopware\Models\Article\Repository;
 use Shopware\Models\Category\Category;
+use Shopware\Models\Category\Repository as CategoryRepository;
 use Shopware\Models\Customer\Customer;
 use Shopware\Models\Customer\Group;
+use Shopware\Models\Customer\Repository as CustomerRepository;
 use Shopware\Models\Media\Media;
 use Shopware\Models\ProductStream\ProductStream;
 use Shopware_Components_Snippet_Manager as SnippetManager;
@@ -44,12 +47,12 @@ use Shopware_Components_Snippet_Manager as SnippetManager;
 class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend_ExtJs
 {
     /**
-     * @var \Shopware\Models\Category\Repository
+     * @var CategoryRepository
      */
     protected $repository;
 
     /**
-     * @var \Shopware\Models\Customer\Repository
+     * @var CustomerRepository
      */
     protected $customerRepository;
 
@@ -76,12 +79,10 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
      *
      * Helper Method to get access to the category repository.
      *
-     * @return Shopware\Models\Category\Repository
+     * @return CategoryRepository
      */
     public function getRepository()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         if ($this->repository === null) {
             $this->repository = $this->em->getRepository(Category::class);
         }
@@ -96,8 +97,6 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
      */
     public function getCategoryComponent()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         return Shopware()->Container()->get('categorydenormalization');
     }
 
@@ -183,13 +182,14 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
             $node = is_numeric($node) ? (int) $node : 1;
             $filter[] = ['property' => 'c.parentId', 'value' => $node];
         }
+        /** @var Query<array<string, mixed>> $query */
         $query = $this->getRepository()->getBackendDetailQuery($node)->getQuery();
         $query->setHydrationMode(AbstractQuery::HYDRATE_ARRAY);
         $paginator = $this->getModelManager()->createPaginator($query);
-        $data = $paginator->getIterator()->getArrayCopy();
+        $data = iterator_to_array($paginator);
         $data = $data[0];
 
-        $data['imagePath'] = $data['media']['id'];
+        $data['imagePath'] = $data['media']['id'] ?? null;
 
         $this->View()->assign(['success' => true, 'data' => $data]);
     }
@@ -260,7 +260,7 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
      */
     public function getPathByQuery($query = null, $separator = '>', $parents = false)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         if (empty($query)) {
             $where = 'parent=1';
@@ -343,7 +343,7 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
         ];
 
         /** @var QueryBuilder $builder */
-        $builder = $this->get(\Doctrine\DBAL\Connection::class)->createQueryBuilder();
+        $builder = $this->get(Connection::class)->createQueryBuilder();
         $builder->select([
             'SQL_CALC_FOUND_ROWS articles.id as articleId',
             'articles.name',
@@ -366,7 +366,7 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
         $builder->setParameters($params);
         $result = $builder->execute()->fetchAll();
 
-        $count = $this->get(\Doctrine\DBAL\Connection::class)->fetchColumn('SELECT FOUND_ROWS()');
+        $count = $this->get(Connection::class)->fetchColumn('SELECT FOUND_ROWS()');
 
         $this->View()->assign([
             'success' => true,
@@ -414,7 +414,7 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
 
         $paginator = $this->getModelManager()->createPaginator($query);
 
-        $data = $paginator->getIterator()->getArrayCopy();
+        $data = iterator_to_array($paginator);
         $count = $paginator->count();
 
         $this->View()->assign([
@@ -535,10 +535,8 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
      */
     public function saveDetail()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $params = $this->Request()->getParams();
-        $categoryId = (int) $params['id'];
+        $categoryId = (int) ($params['id'] ?? 0);
 
         $repo = $this->em->getRepository(Category::class);
 
@@ -547,7 +545,7 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
             $this->em->persist($categoryModel);
 
             // Find parent for newly created category
-            $params['parentId'] = is_numeric($params['parentId']) ? (int) $params['parentId'] : 1;
+            $params['parentId'] = isset($params['parentId']) && is_numeric($params['parentId']) ? (int) $params['parentId'] : 1;
             /** @var Category $parentCategory */
             $parentCategory = $repo->find($params['parentId']);
             $categoryModel->setParent($parentCategory);
@@ -578,7 +576,7 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
         }
 
         $categoryModel->setStream(null);
-        if ($params['streamId']) {
+        if (isset($params['streamId'])) {
             $params['stream'] = $this->em->find(ProductStream::class, (int) $params['streamId']);
         }
 
@@ -598,12 +596,13 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
         $this->em->flush();
 
         $categoryId = $categoryModel->getId();
+        /** @var Query<array<string, mixed>> $query */
         $query = $repo->getBackendDetailQuery($categoryId)->getQuery();
         $query->setHydrationMode(AbstractQuery::HYDRATE_ARRAY);
         $paginator = $this->em->createPaginator($query);
-        $data = $paginator->getIterator()->getArrayCopy();
+        $data = iterator_to_array($paginator);
         $data = $data[0];
-        $data['imagePath'] = $data['media']['path'];
+        $data['imagePath'] = $data['media']['path'] ?? null;
 
         $this->View()->assign(['success' => true, 'data' => $data, 'total' => \count($data)]);
     }
@@ -906,7 +905,7 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
     protected function prepareMediaAssociatedData($data)
     {
         if (!empty($data['imagePath'])) {
-            $data['media'] = $this->get(\Shopware\Components\Model\ModelManager::class)->find(Media::class, $data['imagePath']);
+            $data['media'] = $this->get(ModelManager::class)->find(Media::class, $data['imagePath']);
         } else {
             $data['media'] = null;
         }
@@ -917,7 +916,7 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
     /**
      * Helper Method to get access to the customer repository.
      *
-     * @return \Shopware\Models\Customer\Repository
+     * @return CustomerRepository
      */
     private function getCustomerRepository()
     {
@@ -930,15 +929,11 @@ class Shopware_Controllers_Backend_Category extends Shopware_Controllers_Backend
 
     /**
      * This method loads the customer group models for the passed ids in the "customerGroups" parameter.
-     *
-     * @param array $data
-     *
-     * @return array
      */
-    private function prepareCustomerGroupsAssociatedData($data)
+    private function prepareCustomerGroupsAssociatedData(array $data): array
     {
         $customerGroups = [];
-        foreach ($data['customerGroups'] as $customerGroupData) {
+        foreach ($data['customerGroups'] ?? [] as $customerGroupData) {
             if (!empty($customerGroupData['id'])) {
                 $model = $this->em->find(Group::class, $customerGroupData['id']);
                 $customerGroups[] = $model;

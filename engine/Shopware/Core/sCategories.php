@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
@@ -275,7 +275,7 @@ class sCategories implements Enlight_Hook
      *
      * @param int $id Id of the category
      *
-     * @return array Array of categories in path
+     * @return array<array{id: int, name: string, blog: bool, link: string}> Array of categories in path
      */
     public function sGetCategoriesByParent($id)
     {
@@ -309,7 +309,7 @@ class sCategories implements Enlight_Hook
      * @param int $depth    Depth to use, defaults to null (unlimited depth)
      * @param int $shopId   Needed for shop limitation
      *
-     * @return array Category tree for the provided args
+     * @return list<array<string, mixed>> Category tree for the provided args
      */
     public function sGetWholeCategoryTree($parentId = null, $depth = null, $shopId = null)
     {
@@ -427,9 +427,9 @@ class sCategories implements Enlight_Hook
     }
 
     /**
-     * @param array $categories
+     * @param list<array<string, mixed>> $categories
      *
-     * @return array
+     * @return list<array<string, mixed>>
      */
     protected function mapCategoryTree($categories)
     {
@@ -438,7 +438,7 @@ class sCategories implements Enlight_Hook
             $category['description'] = $category['name'];
             $category['link'] = $category['external'] ?: $url . $category['id'];
             $category['hidetop'] = $category['hideTop'];
-            if ($category['sub']) {
+            if (isset($category['sub'])) {
                 $category['sub'] = $this->mapCategoryTree($category['sub']);
             }
         }
@@ -465,10 +465,7 @@ class sCategories implements Enlight_Hook
             ->groupBy('parent')
             ->setParameter(':ids', $ids, Connection::PARAM_INT_ARRAY);
 
-        /** @var PDOStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetchAll(PDO::FETCH_KEY_PAIR);
+        return $query->execute()->fetchAllKeyValue();
     }
 
     /**
@@ -495,10 +492,7 @@ class sCategories implements Enlight_Hook
             ->setParameter(':parentId', $ids, Connection::PARAM_INT_ARRAY)
             ->setParameter(':shopId', '%|' . $shopId . '|%');
 
-        /** @var PDOStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetchAll(PDO::FETCH_KEY_PAIR);
+        return $query->execute()->fetchAllKeyValue();
     }
 
     /**
@@ -517,10 +511,7 @@ class sCategories implements Enlight_Hook
             ->where('category.id = :id')
             ->setParameter(':id', $id);
 
-        /** @var PDOStatement $statement */
-        $statement = $query->execute();
-
-        $path = $statement->fetch(PDO::FETCH_COLUMN);
+        $path = $query->execute()->fetchOne();
 
         $ids = [$id];
 

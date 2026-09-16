@@ -1,56 +1,55 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\ORM\AbstractQuery;
 use Shopware\Models\Article\Article;
 
 class Shopware_Controllers_Backend_Notification extends Shopware_Controllers_Backend_ExtJs
 {
     /**
      * returns a JSON string to with all found articles for the backend listing
+     *
+     * @return void
      */
     public function getArticleListAction()
     {
         try {
-            $limit = (int) $this->Request()->limit;
-            $offset = (int) $this->Request()->start;
+            $limit = (int) $this->Request()->get('limit', 20);
+            $offset = (int) $this->Request()->get('start', 0);
+            $filter = (array) $this->Request()->getParam('filter', []);
 
-            /** @var array $filter */
-            $filter = $this->Request()->getParam('filter', []);
-
-            //order data
+            // order data
             $order = (array) $this->Request()->getParam('sort', []);
 
             $repository = $this->get('models')->getRepository(Article::class);
             $dataQuery = $repository->getArticlesWithRegisteredNotificationsQuery($filter, $offset, $limit, $order);
-            $data = $dataQuery->getArrayResult();
 
-            // manually calc the totalAmount cause the paginate($this->get('models')->getQueryCount) doesn't work with this query
-            $dataQuery->setFirstResult(0);
-            $totalCount = \count($dataQuery->getArrayResult());
+            $data = $dataQuery->getResult(AbstractQuery::HYDRATE_ARRAY);
+            $totalCount = (int) $repository->getProductsWithNotificationsCountQuery()->getOneOrNullResult(AbstractQuery::HYDRATE_SINGLE_SCALAR);
 
             $summaryQuery = $repository->getArticlesWithRegisteredNotificationsQuery($filter, $offset, $limit, $order, true);
-            $summaryData = $summaryQuery->getOneOrNullResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+            $summaryData = $summaryQuery->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
 
             $this->View()->assign(
                 [
@@ -68,18 +67,19 @@ class Shopware_Controllers_Backend_Notification extends Shopware_Controllers_Bac
 
     /**
      * returns a JSON string to with all found customers for the backend listing
+     *
+     * @return void
      */
     public function getCustomerListAction()
     {
         try {
-            $limit = (int) $this->Request()->limit;
-            $offset = (int) $this->Request()->start;
-            $productOrderNumber = $this->Request()->orderNumber;
+            $limit = (int) $this->Request()->get('limit', 20);
+            $offset = (int) $this->Request()->get('start', 0);
+            $productOrderNumber = $this->Request()->get('orderNumber');
 
-            /** @var array $filter */
-            $filter = $this->Request()->getParam('filter', []);
+            $filter = (array) $this->Request()->getParam('filter', []);
 
-            //order data
+            // order data
             $order = (array) $this->Request()->getParam('sort', []);
 
             $repository = $this->get('models')->getRepository(Article::class);

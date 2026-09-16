@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Components\Migrations\AbstractMigration;
@@ -42,7 +42,7 @@ EOD;
             VALUE 
                 (@formParent, 'newsletterCaptcha', '%s', 'Captcha in Newslettter  verwenden', 'Wenn diese Option aktiv ist, wird ein Captcha zur Newsletter verwendent. Empfohlen für die Newsletter: Honeypot',  'combo', 1, 0, 1, 'a:5:{s:8:"editable";b:0;s:10:"valueField";s:2:"id";s:12:"displayField";s:11:"displayname";s:13:"triggerAction";s:3:"all";s:5:"store";s:12:"base.Captcha";}');
 EOD;
-        $this->addSql(sprintf($sql, serialize('nocaptcha')));
+        $this->addSql(\sprintf($sql, serialize('nocaptcha')));
 
         $sql = <<<'EOD'
             SET @elementId = (SELECT id FROM `s_core_config_elements` WHERE `name` LIKE 'newsletterShowCaptcha' LIMIT 1);

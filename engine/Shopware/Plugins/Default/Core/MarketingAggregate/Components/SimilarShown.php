@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -33,7 +33,7 @@ class Shopware_Components_SimilarShown extends Enlight_Class
     /**
      * Resets the similar show article data.
      */
-    public function resetSimilarShown(DateTime $validationTime = null)
+    public function resetSimilarShown(?DateTime $validationTime = null)
     {
         if ($validationTime) {
             $sql = 'DELETE FROM s_articles_similar_shown_ro WHERE init_date <= :validationTime';
@@ -85,13 +85,13 @@ class Shopware_Components_SimilarShown extends Enlight_Class
             VALUES (:article_id, :related_article_id, :viewed, :init_date)
         ');
 
-        //iterate all selected articles which has to be initialed
+        // iterate all selected articles which has to be initialed
         foreach ($articles as $articleId) {
-            //now we select all similar articles of the s_emarketing_lastarticles table
+            // now we select all similar articles of the s_emarketing_lastarticles table
             $preparedSelect->execute(['articleId' => $articleId]);
             $combinations = $preparedSelect->fetchAll();
 
-            //at least we have to insert each combination in the aggregate s_articles_similar_shown_ro table.
+            // at least we have to insert each combination in the aggregate s_articles_similar_shown_ro table.
             foreach ($combinations as $combination) {
                 $preparedInsert->execute($combination);
             }
@@ -142,10 +142,10 @@ class Shopware_Components_SimilarShown extends Enlight_Class
      */
     public function getSimilarShownValidationTime()
     {
-        //get similar shown validation time
+        // get similar shown validation time
         $interval = Shopware()->Config()->get('similarValidationTime', 10);
 
-        //create a new date time object to create the current date subtract the configured date interval.
+        // create a new date time object to create the current date subtract the configured date interval.
         $orderTime = new DateTime();
         $orderTime->sub(new DateInterval('P' . $interval . 'D'));
 

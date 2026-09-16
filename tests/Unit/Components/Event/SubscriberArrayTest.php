@@ -1,59 +1,50 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Event;
 
 use Enlight_Event_EventArgs;
 use Enlight_Event_Handler_Default;
-use Enlight_Event_Subscriber;
 use Enlight_Event_Subscriber_Array;
 use PHPUnit\Framework\TestCase;
 
 class SubscriberArrayTest extends TestCase
 {
-    /**
-     * @var Enlight_Event_Subscriber_Array
-     */
-    protected $eventManager;
+    protected Enlight_Event_Subscriber_Array $eventManager;
 
     public function setUp(): void
     {
         $this->eventManager = new Enlight_Event_Subscriber_Array();
     }
 
-    public function testCanCreateInstance()
-    {
-        static::assertInstanceOf(Enlight_Event_Subscriber_Array::class, $this->eventManager);
-        static::assertInstanceOf(Enlight_Event_Subscriber::class, $this->eventManager);
-    }
-
-    public function testAddSubscriber()
+    public function testAddSubscriber(): void
     {
         // Add to subscribers
         $handler0 = new Enlight_Event_Handler_Default(
             'Example',
-            function ($args) {
+            function () {
                 return 'foo';
             }
         );
@@ -61,7 +52,7 @@ class SubscriberArrayTest extends TestCase
 
         $handler1 = new Enlight_Event_Handler_Default(
             'Example',
-            function ($args) {
+            function () {
                 return 'bar';
             }
         );
@@ -74,12 +65,12 @@ class SubscriberArrayTest extends TestCase
         static::assertEquals('bar', $result[1]->execute(new Enlight_Event_EventArgs()));
     }
 
-    public function testRemoveSubscriber()
+    public function testRemoveSubscriber(): void
     {
         // Add to subscribers
         $handler0 = new Enlight_Event_Handler_Default(
             'Example',
-            function ($args) {
+            function () {
                 return 'foo';
             }
         );
@@ -87,7 +78,7 @@ class SubscriberArrayTest extends TestCase
 
         $handler1 = new Enlight_Event_Handler_Default(
             'Example',
-            function ($args) {
+            function () {
                 return 'bar';
             }
         );

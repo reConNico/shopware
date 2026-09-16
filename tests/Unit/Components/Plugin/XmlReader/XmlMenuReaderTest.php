@@ -1,41 +1,39 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Plugin\XmlReader;
 
 use DOMDocument;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use RuntimeException;
 use Shopware\Components\Plugin\XmlReader\XmlMenuReader;
+use Shopware\Tests\TestReflectionHelper;
 
 class XmlMenuReaderTest extends TestCase
 {
-    /**
-     * @var XmlMenuReader
-     */
-    private $menuReader;
+    private XmlMenuReader $menuReader;
 
     protected function setUp(): void
     {
@@ -44,16 +42,12 @@ class XmlMenuReaderTest extends TestCase
 
     public function testThatEmptyEntriesThrowException(): void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Required element "entry" is missing.');
-
         $dom = new DOMDocument();
         $dom->loadXML('<entries></entries>');
+        $method = TestReflectionHelper::getMethod(\get_class($this->menuReader), 'parseFile');
 
-        $reflection = new ReflectionClass(\get_class($this->menuReader));
-        $method = $reflection->getMethod('parseFile');
-        $method->setAccessible(true);
-
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/Required element "entry" is missing in file ".*\/tests\/Unit\/Components\/Plugin\/XmlReader\/examples\/cronjob\/cronjob\.xml"\./');
         $method->invokeArgs($this->menuReader, [$dom]);
     }
 
@@ -61,7 +55,6 @@ class XmlMenuReaderTest extends TestCase
     {
         $result = $this->readFile('menu.xml');
 
-        static::assertIsArray($result);
         static::assertCount(2, $result);
 
         $firstMenu = $result[0];
@@ -107,7 +100,7 @@ class XmlMenuReaderTest extends TestCase
     private function readFile(string $file): array
     {
         return $this->menuReader->read(
-            sprintf('%s/examples/menu/%s', __DIR__, $file)
+            \sprintf('%s/examples/menu/%s', __DIR__, $file)
         );
     }
 }

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Install;
@@ -48,10 +48,10 @@ class Database
      */
     public function importFile($dbName, $file)
     {
-        $this->connection->query(sprintf('use `%s`', $dbName));
+        $this->connection->query(\sprintf('use `%s`', $dbName));
 
         if (($contents = file_get_contents($file)) === false) {
-            throw new Exception(sprintf('Could not open file: %s', $file));
+            throw new Exception(\sprintf('Could not open file: %s', $file));
         }
 
         $rows = explode(";\n", trim($contents));
@@ -70,7 +70,7 @@ class Database
     {
         $parts = parse_url($url);
         if ($parts === false || !\array_key_exists('host', $parts) || !\array_key_exists('scheme', $parts)) {
-            throw new InvalidArgumentException(sprintf('Invalid Shop URL (%s)', $url));
+            throw new InvalidArgumentException(\sprintf('Invalid Shop URL (%s)', $url));
         }
 
         $isSecure = $parts['scheme'] === 'https';
@@ -87,7 +87,7 @@ class Database
             $path = '/' . $path;
         }
 
-        $this->connection->query(sprintf('use `%s`', $dbName));
+        $this->connection->query(\sprintf('use `%s`', $dbName));
 
         $stmt = $this->connection->prepare('UPDATE `s_core_shops` SET `host` = :host, `base_path` = :path, `secure` = :isSecure WHERE `main_id` IS NULL');
         $stmt->execute([
@@ -102,7 +102,7 @@ class Database
      */
     public function emptyDatabase($dbName)
     {
-        $this->connection->query(sprintf('use `%s`', $dbName));
+        $this->connection->query(\sprintf('use `%s`', $dbName));
 
         $sql = <<<'SQL'
 SET FOREIGN_KEY_CHECKS = 0;
@@ -131,7 +131,7 @@ SQL;
     public function dropDatabase($dbName)
     {
         $this->connection->exec(
-            sprintf(
+            \sprintf(
                 'DROP DATABASE IF EXISTS `%s`',
                 $dbName
             )
@@ -146,14 +146,14 @@ SQL;
     public function createDatabase($dbName)
     {
         $this->connection->exec(
-            sprintf(
+            \sprintf(
                 'CREATE DATABASE `%s`',
                 $dbName
             )
         );
 
         $this->connection->exec(
-            sprintf(
+            \sprintf(
                 'ALTER DATABASE `%s` DEFAULT CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;',
                 $dbName
             )

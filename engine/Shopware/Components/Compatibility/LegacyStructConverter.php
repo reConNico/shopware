@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Compatibility;
@@ -55,6 +54,7 @@ use Shopware\Bundle\StoreFrontBundle\Struct\Property\Group as PropertyGroup;
 use Shopware\Bundle\StoreFrontBundle\Struct\Property\Option as PropertyOption;
 use Shopware\Bundle\StoreFrontBundle\Struct\Property\Set;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopPage;
+use Shopware\Bundle\StoreFrontBundle\Struct\Tax;
 use Shopware\Bundle\StoreFrontBundle\Struct\Thumbnail;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Emotion\Emotion;
@@ -581,11 +581,11 @@ class LegacyStructConverter
             $data['attribute'] = $vote->getAttribute('core');
         }
 
-        if ($vote->getCreatedAt() instanceof DateTime) {
+        if ($vote->getCreatedAt() instanceof DateTimeInterface) {
             $data['datum'] = $vote->getCreatedAt()->format('Y-m-d H:i:s');
         }
 
-        if ($vote->getAnsweredAt() instanceof DateTime) {
+        if ($vote->getAnsweredAt() instanceof DateTimeInterface) {
             $data['answer_date'] = $vote->getAnsweredAt()->format('Y-m-d H:i:s');
         }
 
@@ -595,7 +595,7 @@ class LegacyStructConverter
     }
 
     /**
-     * @return array
+     * @return array{valFrom: int, valTo: int|null, from: int, to: int|null, price: float, pseudoprice: float, referenceprice: float|null, regulationPrice: float|null}
      */
     public function convertPriceStruct(Price $price)
     {
@@ -607,6 +607,7 @@ class LegacyStructConverter
             'price' => $price->getCalculatedPrice(),
             'pseudoprice' => $price->getCalculatedPseudoPrice(),
             'referenceprice' => $price->getCalculatedReferencePrice(),
+            'regulationPrice' => $price->getCalculatedRegulationPrice(),
         ];
 
         return $this->eventManager->filter('Legacy_Struct_Converter_Convert_Price', $data, [
@@ -1120,7 +1121,7 @@ class LegacyStructConverter
     private function getSourceSet(Thumbnail $thumbnail): string
     {
         if ($thumbnail->getRetinaSource() !== null) {
-            return sprintf('%s, %s 2x', $thumbnail->getSource(), $thumbnail->getRetinaSource());
+            return \sprintf('%s, %s 2x', $thumbnail->getSource(), $thumbnail->getRetinaSource());
         }
 
         return $thumbnail->getSource();
@@ -1136,7 +1137,7 @@ class LegacyStructConverter
         $price = str_replace('.', ',', (string) $price); // Replace points with commas
         $commaPos = strpos($price, ',');
         if ($commaPos) {
-            $part = substr($price, $commaPos + 1, \strlen($price) - $commaPos);
+            $part = (string) substr($price, $commaPos + 1, \strlen($price) - $commaPos);
             switch (\strlen($part)) {
                 case 1:
                     $price .= '0';
@@ -1182,6 +1183,11 @@ class LegacyStructConverter
         if ($product->getUpdatedAt()) {
             $updateDate = $product->getUpdatedAt()->format('Y-m-d');
         }
+        $tax = $product->getTax();
+        $taxRule = $this->contextService->getShopContext()->getTaxRule($product->getTax()->getId());
+        if ($taxRule instanceof Tax) {
+            $tax = $taxRule;
+        }
 
         $data = [
             'articleID' => $product->getId(),
@@ -1193,7 +1199,7 @@ class LegacyStructConverter
             'esd' => $product->hasEsd(),
             'articleName' => $product->getName(),
             'taxID' => $product->getTax()->getId(),
-            'tax' => $product->getTax()->getTax(),
+            'tax' => $tax->getTax(),
             'instock' => $product->getStock(),
             'isAvailable' => $product->isAvailable(),
             'hasAvailableVariant' => $product->hasAvailableVariant(),
@@ -1222,7 +1228,6 @@ class LegacyStructConverter
             'notification' => $product->allowsNotification(),
             'ean' => trim((string) $product->getEan()),
             'keywords' => $product->getKeywords(),
-            'sReleasedate' => $this->dateToString($product->getReleaseDate()),
             'template' => $product->getTemplate(),
             'attributes' => $product->getAttributes(),
             'allowBuyInListing' => $product->allowBuyInListing(),
@@ -1257,7 +1262,8 @@ class LegacyStructConverter
 
         $today = new DateTime();
         if ($product->getReleaseDate() && $product->getReleaseDate() > $today) {
-            $data['sReleasedate'] = $product->getReleaseDate()->format('Y-m-d');
+            $data['sReleasedate'] = $this->dateToString($product->getReleaseDate());
+            $data['sReleaseDate'] = $data['sReleasedate'];
         }
 
         return $this->eventManager->filter('Legacy_Struct_Converter_List_Product_Data', $data, [
@@ -1266,11 +1272,11 @@ class LegacyStructConverter
     }
 
     /**
-     * @param DateTimeInterface|string $date
+     * @param DateTimeInterface|string|null $date
      */
     private function dateToString($date): string
     {
-        if ($date instanceof DateTime) {
+        if ($date instanceof DateTimeInterface) {
             return $date->format('Y-m-d');
         }
 

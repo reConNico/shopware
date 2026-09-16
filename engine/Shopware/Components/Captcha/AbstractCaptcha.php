@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Captcha;
@@ -34,20 +33,12 @@ use Shopware_Components_Config;
 abstract class AbstractCaptcha implements CaptchaInterface
 {
     private const PATH_CAPTCHA_IMAGE = 'frontend/_public/src/img/bg--captcha.jpg';
-    private const PATH_CAPTCHA_IMAGE_FALLBACK = 'frontend/_resources/images/captcha/background.jpg';
 
     private const PATH_CAPTCHA_FONT = 'frontend/_public/src/fonts/captcha.ttf';
-    private const PATH_CAPTCHA_FONT_FALLBACK = 'frontend/_resources/images/captcha/font.ttf';
 
-    /**
-     * @var Shopware_Components_Config
-     */
-    protected $config;
+    protected Shopware_Components_Config $config;
 
-    /**
-     * @var Enlight_Template_Manager
-     */
-    private $templateManager;
+    private Enlight_Template_Manager $templateManager;
 
     public function __construct(
         Shopware_Components_Config $config,
@@ -69,14 +60,6 @@ abstract class AbstractCaptcha implements CaptchaInterface
         $captcha = $this->getCaptchaFile(self::PATH_CAPTCHA_IMAGE);
         $font = $this->getCaptchaFile(self::PATH_CAPTCHA_FONT);
 
-        if (empty($captcha)) {
-            $captcha = $this->getCaptchaFile(self::PATH_CAPTCHA_IMAGE_FALLBACK);
-        }
-
-        if (empty($font)) {
-            $font = $this->getCaptchaFile(self::PATH_CAPTCHA_FONT_FALLBACK);
-        }
-
         if (!empty($captcha)) {
             $im = imagecreatefromjpeg($captcha);
         } else {
@@ -89,16 +72,24 @@ abstract class AbstractCaptcha implements CaptchaInterface
 
         if (!empty($this->config->get('CaptchaColor'))) {
             $colors = explode(',', $this->config->get('CaptchaColor'));
+            $colors = array_map(static function ($color): int {
+                $color = (int) $color;
+                if ($color < 0 || $color > 255) {
+                    return 0;
+                }
+
+                return $color;
+            }, $colors);
         } else {
-            $colors = explode(',', '255,0,0');
+            $colors = [255, 0, 0];
         }
 
-        $black = (int) imagecolorallocate($im, (int) $colors[0], (int) $colors[1], (int) $colors[2]);
+        $black = (int) imagecolorallocate($im, $colors[0], $colors[1], $colors[2]);
 
         $string = implode(' ', str_split($string));
 
         if (!empty($font)) {
-            for ($i = 0, $iMax = \strlen($string); $i <= $iMax; ++$i) {
+            for ($i = 0, $iMax = \strlen($string); $i < $iMax; ++$i) {
                 $rand1 = Random::getInteger(35, 40);
                 $rand2 = Random::getInteger(15, 20);
                 $rand3 = Random::getInteger(60, 70);
@@ -106,10 +97,8 @@ abstract class AbstractCaptcha implements CaptchaInterface
                 imagettftext($im, $rand1, $rand2, (($i + 1) * 15) + 2, $rand3 + 2, $black, $font, $string[$i]);
             }
             for ($i = 0; $i < 8; ++$i) {
-                imageline($im, Random::getInteger(30, 70), Random::getInteger(0, 50), Random::getInteger(100, 150),
-                    Random::getInteger(20, 100), $black);
-                imageline($im, Random::getInteger(30, 70), Random::getInteger(0, 50), Random::getInteger(100, 150),
-                    Random::getInteger(20, 100), $black);
+                imageline($im, Random::getInteger(30, 70), Random::getInteger(0, 50), Random::getInteger(100, 150), Random::getInteger(20, 100), $black);
+                imageline($im, Random::getInteger(30, 70), Random::getInteger(0, 50), Random::getInteger(100, 150), Random::getInteger(20, 100), $black);
             }
         } else {
             $white = (int) imagecolorallocate($im, 255, 255, 255);

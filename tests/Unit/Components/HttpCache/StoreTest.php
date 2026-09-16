@@ -1,42 +1,46 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\HttpCache;
 
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use Shopware\Components\HttpCache\Store;
 use Symfony\Component\HttpFoundation\Request;
 
 class StoreTest extends TestCase
 {
+    private Store $httpCacheStore;
+
     public function setUp(): void
     {
-        $this->httpCacheStore = new \Shopware\Components\HttpCache\Store(
+        $this->httpCacheStore = new Store(
             'test',
             [],
             true,
-            [          //Set of parameters that must be ignored in the url
+            [          // Set of parameters that must be ignored in the url
                 'foo',
                 '_foo',
                 '__foo',
@@ -44,7 +48,10 @@ class StoreTest extends TestCase
         );
     }
 
-    public function provideUrls()
+    /**
+     * @return array<array{original: string, compare: string}>
+     */
+    public function provideUrls(): array
     {
         return [
             [
@@ -173,16 +180,12 @@ class StoreTest extends TestCase
     /**
      * @dataProvider provideUrls
      *
-     * @param string $originalURL
-     * @param string $expectedURL
-     *
-     * @see Shopware\Components\HttpCache\Store::generateCacheKey
+     * @see Store::generateCacheKey
      */
-    public function testGenerateCacheKey($originalURL, $expectedURL)
+    public function testGenerateCacheKey(string $originalURL, string $expectedURL): void
     {
         $originalRequest = Request::create($originalURL);
-        $class = new ReflectionClass($this->httpCacheStore);
-        $method = $class->getMethod('generateCacheKey');
+        $method = (new ReflectionClass($this->httpCacheStore))->getMethod('generateCacheKey');
         $method->setAccessible(true);
 
         static::assertSame(
@@ -194,16 +197,12 @@ class StoreTest extends TestCase
     /**
      * @dataProvider provideUrls
      *
-     * @param string $originalURL
-     * @param string $expectedURL
-     *
-     * @see Shopware\Components\HttpCache\Store::verifyIgnoredParameters
+     * @see Store::verifyIgnoredParameters
      */
-    public function testVerifyIgnoredParameters($originalURL, $expectedURL)
+    public function testVerifyIgnoredParameters(string $originalURL, string $expectedURL): void
     {
         $originalRequest = Request::create($originalURL);
-        $class = new ReflectionClass($this->httpCacheStore);
-        $method = $class->getMethod('verifyIgnoredParameters');
+        $method = (new ReflectionClass($this->httpCacheStore))->getMethod('verifyIgnoredParameters');
         $method->setAccessible(true);
 
         static::assertSame(

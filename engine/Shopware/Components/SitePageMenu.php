@@ -1,32 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components;
 
 use Doctrine\DBAL\Connection;
-use PDO;
-use PDOStatement;
 use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\FieldHelper;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\Routing\RouterInterface;
@@ -71,12 +69,7 @@ class SitePageMenu
      */
     public function getTree($shopId, $activeId)
     {
-        $query = $this->getQuery($shopId);
-
-        /** @var PDOStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $data = $this->getQuery($shopId)->execute()->fetchAllAssociative();
 
         $menu = [];
         $links = [];
@@ -97,7 +90,7 @@ class SitePageMenu
                 $menu[$key] = [];
             }
 
-            if ($site['__page_translation']) {
+            if (isset($site['__page_translation'])) {
                 $translations = unserialize($site['__page_translation'], ['allowed_classes' => false]);
 
                 if ($translations) {
@@ -170,7 +163,7 @@ class SitePageMenu
             }
             $id = (int) $site['id'];
 
-            //call recursive for tree building
+            // call recursive for tree building
             $site['subPages'] = $this->buildSiteTree(
                 $site['id'],
                 $sites,

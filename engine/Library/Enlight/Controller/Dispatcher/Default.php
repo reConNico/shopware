@@ -18,6 +18,7 @@
  */
 
 use Shopware\Components\DependencyInjection\ContainerAwareInterface;
+use Shopware\Components\DispatchFormatHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface as Container;
 
 /**
@@ -83,7 +84,7 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
     protected $modules = ['frontend', 'api', 'widgets', 'backend'];
 
     /**
-     * @var \Shopware\Components\DispatchFormatHelper
+     * @var DispatchFormatHelper
      */
     protected $dispatchFormatHelper;
 
@@ -105,7 +106,7 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
     }
 
     /**
-     * @return \Shopware\Components\DispatchFormatHelper
+     * @return DispatchFormatHelper
      */
     public function getDispatchFormatHelper()
     {
@@ -432,7 +433,7 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
             try {
                 Shopware()->Loader()->loadClass($class, $path);
             } catch (Exception $e) {
-                throw new Enlight_Exception(sprintf('Controller "%s" could not be loaded', $class));
+                throw new Enlight_Exception(\sprintf('Controller "%s" could not be loaded', $class));
             }
 
             $proxy = Shopware()->Hooks()->getProxy($class);
@@ -484,7 +485,7 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
 
     private function getControllerServiceId(string $module, string $name): ?string
     {
-        $controllerKey = strtolower(sprintf('%s_%s', $module, $name));
+        $controllerKey = strtolower(\sprintf('%s_%s', $module, $name));
 
         return $this->controllers[$controllerKey] ?? null;
     }

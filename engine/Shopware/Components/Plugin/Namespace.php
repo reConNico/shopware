@@ -1,33 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\ORMInvalidArgumentException;
 use Shopware\Components\Plugin\Configuration\ReaderInterface as ConfigurationReader;
 use Shopware\Components\Snippet\DatabaseHandler;
 use Shopware\Models\Plugin\Plugin;
 use Shopware\Models\Shop\Shop;
-use Shopware\Models\Widget\Widget;
 
 /**
  * Shopware Plugin Namespace
@@ -86,7 +87,7 @@ class Shopware_Components_Plugin_Namespace extends Enlight_Plugin_Namespace_Conf
      *
      * @return Enlight_Config
      */
-    public function getConfig($name, Shop $shop = null)
+    public function getConfig($name, ?Shop $shop = null)
     {
         if (!$shop) {
             $shop = $this->shop;
@@ -153,11 +154,10 @@ class Shopware_Components_Plugin_Namespace extends Enlight_Plugin_Namespace_Conf
      * Registers a plugin in the collection.
      *
      * @param Enlight_Plugin_Bootstrap|Shopware_Components_Plugin_Bootstrap $plugin
-     * @param DateTimeInterface                                             $refreshDate
      *
      * @return Enlight_Plugin_PluginManager|Shopware_Components_Plugin_Namespace
      */
-    public function registerPlugin(Enlight_Plugin_Bootstrap $plugin, DateTimeInterface $refreshDate = null)
+    public function registerPlugin(Enlight_Plugin_Bootstrap $plugin, ?DateTimeInterface $refreshDate = null)
     {
         parent::registerPlugin($plugin);
 
@@ -182,14 +182,14 @@ class Shopware_Components_Plugin_Namespace extends Enlight_Plugin_Namespace_Conf
             'namespace' => $this->getName(),
             'name' => $plugin->getName(),
             'label' => isset($info['label']) && \is_string($info['label']) ? $info['label'] : $plugin->getName(),
-            'version' => $info['version'] ?? '1.0.0',
-            'author' => $info['author'] ?? 'shopware AG',
-            'copyright' => $info['copyright'] ?? 'Copyright © 2012, shopware AG',
+            'version' => (string) ($info['version'] ?? '1.0.0'),
+            'author' => (string) ($info['author'] ?? 'shopware AG'),
+            'copyright' => (string) ($info['copyright'] ?? 'Copyright © 2012, shopware AG'),
             'description' => $info['description'] ?? null,
             'license' => $info['license'] ?? null,
             'support' => $info['support'] ?? null,
             'link' => $info['link'] ?? null,
-            'source' => $info['source'] ?? 'Default',
+            'source' => (string) ($info['source'] ?? 'Default'),
             'update_date' => $info['updateDate'] ?? null,
             'update_version' => $info['updateVersion'] ?? null,
             'update_source' => $info['updateSource'] ?? null,
@@ -439,10 +439,10 @@ class Shopware_Components_Plugin_Namespace extends Enlight_Plugin_Namespace_Conf
     /**
      * Registers a plugin in the collection.
      *
-     * @throws \Enlight_Config_Exception
-     * @throws \Enlight_Event_Exception
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\ORMInvalidArgumentException
+     * @throws Enlight_Config_Exception
+     * @throws Enlight_Event_Exception
+     * @throws OptimisticLockException
+     * @throws ORMInvalidArgumentException
      * @throws Exception
      *
      * @return bool|array
@@ -624,7 +624,7 @@ class Shopware_Components_Plugin_Namespace extends Enlight_Plugin_Namespace_Conf
      */
     protected function buildPath($namespace, $pluginName, $pluginSource)
     {
-        $baseDir = $this->pluginDirectories[$pluginSource];
+        $baseDir = $this->pluginDirectories[$pluginSource] ?? '';
 
         return $baseDir . $namespace . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR;
     }

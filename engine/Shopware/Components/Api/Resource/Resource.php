@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Api\Resource;
@@ -113,7 +113,7 @@ abstract class Resource implements ContainerAwareInterface
     /**
      * @return void
      */
-    public function setContainer(Container $container = null)
+    public function setContainer(?Container $container = null)
     {
         $this->container = $container;
     }
@@ -142,7 +142,7 @@ abstract class Resource implements ContainerAwareInterface
         $role = $this->getRole();
 
         if ($this->getAcl()->isAllowed($role, $resource, $privilege) === false) {
-            $message = sprintf(
+            $message = \sprintf(
                 'Role "%s" is not allowed to "%s" on resource "%s"',
                 \is_string($role) ? $role : $role->getRoleId(),
                 $privilege,
@@ -225,9 +225,7 @@ abstract class Resource implements ContainerAwareInterface
     }
 
     /**
-     * @phpstan-param Resource::HYDRATE_* $resultMode
-     *
-     * @param int $resultMode
+     * @param self::HYDRATE_* $resultMode
      *
      * @return void
      */
@@ -237,9 +235,7 @@ abstract class Resource implements ContainerAwareInterface
     }
 
     /**
-     * @phpstan-return Resource::HYDRATE_*
-     *
-     * @return int
+     * @return self::HYDRATE_*
      */
     public function getResultMode()
     {
@@ -332,12 +328,8 @@ abstract class Resource implements ContainerAwareInterface
             throw new BatchInterfaceNotImplementedException();
         }
 
-        $this->setAutoFlush(false);
-        $connection = $this->getManager()->getConnection();
-
         $results = [];
         foreach ($data as $key => $datum) {
-            $connection->beginTransaction();
             $id = $this->getIdByData($datum);
 
             try {
@@ -355,17 +347,12 @@ abstract class Resource implements ContainerAwareInterface
                     ];
                 }
 
-                $this->getManager()->flush();
-                $connection->commit();
-
                 if ($this->getResultMode() === self::HYDRATE_ARRAY) {
                     $results[$key]['data'] = Shopware()->Models()->toArray(
                         $results[$key]['data']
                     );
                 }
             } catch (Exception $e) {
-                $connection->rollBack();
-
                 if (!$this->getManager()->isOpen()) {
                     $this->resetEntityManager();
                 }
@@ -469,7 +456,7 @@ abstract class Resource implements ContainerAwareInterface
             $getterMethod = 'get' . ucfirst($property);
 
             if (!method_exists($entity, $getterMethod)) {
-                throw new RuntimeException(sprintf('Method %s not found on entity %s', $getterMethod, \get_class($entity)));
+                throw new RuntimeException(\sprintf('Method %s not found on entity %s', $getterMethod, \get_class($entity)));
             }
             if ($entity->$getterMethod() === $value) {
                 return $entity;
@@ -520,7 +507,7 @@ abstract class Resource implements ContainerAwareInterface
     {
         $repo = $this->getManager()->getRepository($entity);
         if (!$repo instanceof ModelRepository) {
-            throw new RuntimeException(sprintf('Passed entity has no configured repository: %s', $entity));
+            throw new RuntimeException(\sprintf('Passed entity has no configured repository: %s', $entity));
         }
 
         foreach ($conditions as $condition) {
@@ -565,7 +552,7 @@ abstract class Resource implements ContainerAwareInterface
             $item = $this->getCollectionElementByProperty($collection, $property, $data[$property]);
 
             if (!$item) {
-                throw new CustomValidationException(sprintf('%s by %s %s not found', $entityType, $property, $data[$property]));
+                throw new CustomValidationException(\sprintf('%s by %s %s not found', $entityType, $property, $data[$property]));
             }
 
             return $item;
@@ -619,7 +606,7 @@ abstract class Resource implements ContainerAwareInterface
             $item = $repo->findOneBy([$property => $data[$property]]);
 
             if (!$item) {
-                throw new CustomValidationException(sprintf('%s by %s %s not found', $entityType, $property, $data[$property]));
+                throw new CustomValidationException(\sprintf('%s by %s %s not found', $entityType, $property, $data[$property]));
             }
 
             $collection->add($item);

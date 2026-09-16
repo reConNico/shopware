@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -34,9 +34,6 @@ class AttributeTranslationMigrationHelper
      */
     private $connection;
 
-    /**
-     * @param PDO $connection
-     */
     public function __construct(PDO $connection)
     {
         $this->connection = $connection;
@@ -44,6 +41,7 @@ class AttributeTranslationMigrationHelper
 
     /**
      * @param int $maxCount
+     *
      * @return int
      */
     public function migrate($maxCount)
@@ -53,14 +51,14 @@ class AttributeTranslationMigrationHelper
         $columns = $this->getColumns();
 
         $statement = $this->connection->prepare(
-<<<EOL
-          SELECT * 
-          FROM s_core_translations
-          WHERE objecttype IN ("article", "variantMain", "variant")
-          AND id > :lastId
-          AND id <= :maxId
-          ORDER BY id ASC
-          LIMIT 250
+            <<<EOL
+SELECT *
+FROM s_core_translations
+WHERE objecttype IN ("article", "variantMain", "variant")
+AND id > :lastId
+AND id <= :maxId
+ORDER BY id ASC
+LIMIT 250
 EOL
         );
 
@@ -88,7 +86,7 @@ EOL
             $lastId = array_pop($rows)['id'];
             $statement->execute([':lastId' => $lastId, ':maxId' => $maxId]);
 
-            $count += count($rows);
+            $count += \count($rows);
             if ($count > $maxCount) {
                 break;
             }
@@ -118,6 +116,7 @@ EOL
 
     /**
      * @param string $str
+     *
      * @return string
      */
     private function underscoreToCamelCase($str)
@@ -129,21 +128,21 @@ EOL
 
     /**
      * @param array $data
-     * @param array $columns
-     * @return null|array
+     *
+     * @return array|null
      */
     private function filter($data, array $columns)
     {
-        if (!is_array($data)) {
+        if (!\is_array($data)) {
             return null;
         }
 
         $updated = false;
         foreach ($columns as $key => $column) {
-            if (array_key_exists($key, $data)) {
+            if (\array_key_exists($key, $data)) {
                 $newKey = '__attribute_' . $column;
 
-                if (!array_key_exists($newKey, $data)) {
+                if (!\array_key_exists($newKey, $data)) {
                     $data[$newKey] = $data[$key];
                     $updated = true;
                 }
@@ -158,8 +157,9 @@ EOL
     }
 
     /**
-     * @param array[] $rows
+     * @param array[]  $rows
      * @param string[] $columns
+     *
      * @return string[] indexed by translation id
      */
     private function getUpdatedTranslations($rows, $columns)
@@ -170,7 +170,7 @@ EOL
             try {
                 $updated = $this->filter(unserialize($row['objectdata']), $columns);
             } catch (Exception $e) {
-                //serialize error - continue with next translation
+                // serialize error - continue with next translation
                 continue;
             }
 

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\DependencyInjection\Bridge;
@@ -28,7 +28,6 @@ use Enlight_Controller_EventArgs;
 use Enlight_Controller_Front;
 use Enlight_Event_EventArgs;
 use Enlight_Event_EventManager as EnlightEventManager;
-use Shopware\Components\DependencyInjection\Container;
 use Shopware\Components\Routing\Context;
 use Shopware\Components\Routing\Router as RoutingRouter;
 use Shopware\Components\Routing\RouterInterface;
@@ -72,13 +71,9 @@ class Router
 
     public function onAfterRegisterShop(Enlight_Event_EventArgs $args)
     {
-        /** @var Container $container */
         $container = $args->getSubject();
-        /** @var RouterInterface $router */
-        $router = $container->get(\Shopware\Components\Routing\RouterInterface::class);
-        /** @var \Shopware\Models\Shop\Shop $shop */
+        $router = $container->get(RouterInterface::class);
         $shop = $container->get('shop');
-        /** @var Shopware_Components_Config $config */
         $config = $container->get(Shopware_Components_Config::class);
         // Register the shop (we're too soon)
         $config->setShop($shop);
@@ -103,7 +98,7 @@ class Router
         $front = $args->getSubject();
         $request = $front->Request();
         /** @var RouterInterface $router */
-        $router = $front->Router();
+        $router = $front->ensureRouter();
         // Fix context on forward
         $context = $router->getContext();
         $context->setGlobalParams($context::getGlobalParamsFromRequest($request));

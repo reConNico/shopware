@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Api\Resource;
@@ -60,10 +60,8 @@ class Cache extends Resource implements BatchInterface
 
     /**
      * Sets the Container.
-     *
-     * @param Container $container
      */
-    public function setContainer(Container $container = null)
+    public function setContainer(?Container $container = null)
     {
         if ($container) {
             $this->request = $container->get('front')->Request();
@@ -130,9 +128,6 @@ class Cache extends Resource implements BatchInterface
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getIdByData($data)
     {
         return $data['id'] ?? false;
@@ -189,7 +184,7 @@ class Cache extends Resource implements BatchInterface
      */
     protected function getRequest()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return $this->request;
     }
@@ -254,7 +249,7 @@ class Cache extends Resource implements BatchInterface
                 $this->cacheManager->clearOpCache();
                 break;
             default:
-                throw new NotFoundException(sprintf('Cache "%s" is not a valid cache id.', $cache));
+                throw new NotFoundException(\sprintf('Cache "%s" is not a valid cache id.', $cache));
         }
 
         if (!empty($capabilities['tags'])) {
@@ -295,7 +290,7 @@ class Cache extends Resource implements BatchInterface
                 $cacheInfo = $this->cacheManager->getOpCacheCacheInfo();
                 break;
             default:
-                throw new NotFoundException(sprintf('Cache "%s" is not a valid cache id.', $cache));
+                throw new NotFoundException(\sprintf('Cache "%s" is not a valid cache id.', $cache));
         }
 
         $cacheInfo['id'] = $cache;

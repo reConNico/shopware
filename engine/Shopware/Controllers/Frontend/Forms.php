@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\ORM\AbstractQuery;
@@ -30,6 +30,7 @@ use Shopware\Components\OrderNumberValidator\OrderNumberValidatorInterface;
 use Shopware\Components\Privacy\IpAnonymizerInterface;
 use Shopware\Components\Random;
 use Shopware\Components\Validator\EmailValidator;
+use Shopware\Components\Validator\NoUrlValidator;
 use Shopware\Models\Form\Form;
 
 /**
@@ -211,7 +212,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
 
                         $product = Shopware()->Modules()->Articles()->sGetArticleNameByOrderNumber($orderNumber);
 
-                        $element['value'] = sprintf('%s (%s)', $product, $this->get('shopware.escaper')->escapeHtml($orderNumber));
+                        $element['value'] = \sprintf('%s (%s)', $product, $this->get('shopware.escaper')->escapeHtml($orderNumber));
                         $this->_elements[$id]['value'] = $element['value'];
                     } catch (InvalidOrderNumberException $exception) {
                         // Explicit empty catch
@@ -227,10 +228,10 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                             $getBasket = Shopware()->Modules()->Basket()->sGetBasket();
                             foreach ($getBasket[CartKey::POSITIONS] ?? [] as $basketRow) {
                                 if (empty($basketRow['modus'])) {
-                                    $text .= sprintf(
+                                    $text .= \sprintf(
                                         "\n%s x %s (%s) - %s %s",
                                         $basketRow['quantity'],
-                                            $basketRow['articlename'],
+                                        $basketRow['articlename'],
                                         $basketRow['ordernumber'],
                                         $basketRow['price'],
                                         Shopware()->System()->sCurrency['currency']
@@ -255,7 +256,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                     }
                 }
 
-                $fields[$id] = $this->_createInputElement($element, $this->_postData[$id]);
+                $fields[$id] = $this->_createInputElement($element, $this->_postData[$id] ?? null);
                 $labels[$id] = $this->_createLabelElement($element);
             }
         }
@@ -297,7 +298,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
         if ($element['typ'] === 'text2') {
             $output .= str_replace(';', '/', (string) $element['label']);
         } else {
-            $output .= (string) ($element['label']);
+            $output .= (string) $element['label'];
         }
         if ((bool) $element['required'] === true) {
             $output .= '*';
@@ -310,7 +311,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
     /**
      * Create input element method
      *
-     * @param string|null $post
+     * @param array<string>|string|null $post
      *
      * @return string
      */
@@ -334,7 +335,11 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
             case 'email':
             case 'text':
             case 'textarea':
+            case 'alphanumeric':
             case 'file':
+                if (\is_array($post)) {
+                    break;
+                }
                 $post = $this->_filterInput($post);
                 if (empty($post) && !empty($element['value'])) {
                     $post = $element['value'];
@@ -346,6 +351,9 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                 break;
 
             case 'text2':
+                if (!\is_array($post)) {
+                    break;
+                }
                 $post[0] = $this->_filterInput($post[0]);
                 if (empty($post[0]) && !empty($element['value'][0])) {
                     $post[0] = $element['value'][0];
@@ -369,9 +377,23 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
             case 'hidden':
             case 'email':
             case 'text':
-                $output .= sprintf(
+                $output .= \sprintf(
                     "<input type=\"%s\" class=\"%s %s\" %s value=\"%s\" id=\"%s\" %s name=\"%s\"/>\r\n",
                     $element['typ'],
+                    $element['class'],
+                    $requiredField,
+                    $requiredFieldAria,
+                    $post,
+                    $element['name'],
+                    $placeholder,
+                    $element['name']
+                );
+                break;
+
+            case 'nourl':
+                $output .= \sprintf(
+                    "<input type=\"%s\" class=\"%s %s\" %s value=\"%s\" id=\"%s\" %s name=\"%s\"/>\r\n",
+                    'text',
                     $element['class'],
                     $requiredField,
                     $requiredFieldAria,
@@ -388,7 +410,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                 } else {
                     $checked = '';
                 }
-                $output .= sprintf(
+                $output .= \sprintf(
                     "<input type=\"%s\" class=\"%s %s\" %s value=\"%s\" id=\"%s\" name=\"%s\"%s/>\r\n",
                     $element['typ'],
                     $element['class'],
@@ -402,7 +424,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                 break;
 
             case 'file':
-                $output .= sprintf(
+                $output .= \sprintf(
                     "<input type=\"%s\" class=\"%s %s file\" %s id=\"%s\" %s name=\"%s\" maxlength=\"100000\" accept=\"%s\"/>\r\n",
                     $element['typ'],
                     $element['class'],
@@ -421,29 +443,29 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
 
                 if (strpos($element['label'], ';') !== false) {
                     $placeholders = explode(';', $element['label']);
-                    $placeholder0 = sprintf('placeholder="%s%s"', $placeholders[0], $requiredFieldSnippet);
-                    $placeholder1 = sprintf('placeholder="%s%s"', $placeholders[1], $requiredFieldSnippet);
+                    $placeholder0 = \sprintf('placeholder="%s%s"', $placeholders[0], $requiredFieldSnippet);
+                    $placeholder1 = \sprintf('placeholder="%s%s"', $placeholders[1], $requiredFieldSnippet);
                 } else {
                     $placeholder0 = $placeholder;
                     $placeholder1 = $placeholder;
                 }
 
-                $output .= sprintf(
+                $output .= \sprintf(
                     "<input type=\"text\" class=\"%s %s\" %s value=\"%s\" %s id=\"%s\" name=\"%s\"/>\r\n",
                     $element['class'][0],
                     $requiredField,
                     $requiredFieldAria,
-                    $post[0],
+                    $post[0] ?? null,
                     $placeholder0,
                     $element['name'][0],
                     $element['name'][0]
                 );
-                $output .= sprintf(
+                $output .= \sprintf(
                     "<input type=\"text\" class=\"%s %s\" %s value=\"%s\" %s id=\"%s\" name=\"%s\"/>\r\n",
                     $element['class'][1],
                     $requiredField,
                     $requiredFieldAria,
-                    $post[1],
+                    $post[1] ?? null,
                     $placeholder1,
                     $element['name'][1],
                     $element['name'][1]
@@ -454,7 +476,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                 if (empty($post) && $element['value']) {
                     $post = $element['value'];
                 }
-                $output .= sprintf(
+                $output .= \sprintf(
                     "<textarea class=\"%s %s\" %s id=\"%s\" %s name=\"%s\">%s</textarea>\r\n",
                     $element['class'],
                     $requiredField,
@@ -468,7 +490,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
 
             case 'select':
                 $values = explode(';', $element['value']);
-                $output .= sprintf(
+                $output .= \sprintf(
                     "<select class=\"%s %s\" %s id=\"%s\" name=\"%s\">\r\n\t", $element['class'],
                     $requiredField,
                     $requiredFieldAria,
@@ -483,15 +505,15 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                 $label = $element['label'] . $requiredFieldSnippet;
 
                 if (empty($post)) {
-                    $output .= sprintf('<option selected="selected" %s value="">%s</option>', $requiredField, $label);
+                    $output .= \sprintf('<option selected="selected" %s value="">%s</option>', $requiredField, $label);
                 } else {
-                    $output .= sprintf('<option %s value="">%s</option>', $requiredField, $label);
+                    $output .= \sprintf('<option %s value="">%s</option>', $requiredField, $label);
                 }
                 foreach ($values as $value) {
                     if ($value == $post) {
-                        $output .= sprintf('<option selected>%s</option>', $value);
+                        $output .= \sprintf('<option selected>%s</option>', $value);
                     } else {
-                        $output .= sprintf('<option>%s</option>', $value);
+                        $output .= \sprintf('<option>%s</option>', $value);
                     }
                 }
                 $output .= "</select>\r\n";
@@ -506,7 +528,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                         $checked = ' checked';
                     }
 
-                    $output .= sprintf(
+                    $output .= \sprintf(
                         '<input type="radio" class="%s %s" value="%s" id="%s" name="%s"%s> %s ',
                         $element['class'],
                         $requiredField,
@@ -525,14 +547,21 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
     }
 
     /**
-     * @param string $input
+     * @param string|null $input
      *
      * @return string
      */
     protected function _filterInput($input)
     {
+        if (!\is_string($input)) {
+            return '';
+        }
+
         // Remove all control characters, unassigned, private use, formatting and surrogate code points
         $input = preg_replace('#[^\PC\s]#u', '', $input);
+        if (!\is_string($input)) {
+            return '';
+        }
 
         $temp = str_replace('"', '', $input);
         if (preg_match('#{\s*/*literal\s*}#i', $temp) > 0) {
@@ -556,6 +585,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
         $errors = [];
 
         $emailValidator = $this->container->get(EmailValidator::class);
+        $noUrlValidator = $this->container->get(NoUrlValidator::class);
 
         foreach ($elements as $element) {
             $valid = true;
@@ -607,7 +637,7 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                             $valid = false;
                             break;
                         }
-                        $host = trim(substr($value, strpos($value, '@') + 1));
+                        $host = trim(substr($value, strpos($value, '@') + 1) ?: '');
                         if (empty($host) || !gethostbyname($host)) {
                             unset($value);
                             $valid = false;
@@ -622,6 +652,14 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                                 $valid = false;
                             }
                             $value = array_values($value);
+                        }
+                        break;
+
+                    case 'nourl':
+                        if (!$noUrlValidator->isValid($value)) {
+                            unset($value);
+                            $valid = false;
+                            break;
                         }
                         break;
 
@@ -679,7 +717,10 @@ class Shopware_Controllers_Frontend_Forms extends Enlight_Controller_Action
                 $data = [];
 
                 foreach ($translation as $key => $value) {
-                    $data[str_replace('__attribute_', '', $key)] = $value;
+                    $newKey = str_replace('__attribute_', '', $key);
+                    if (\is_string($newKey)) {
+                        $data[$newKey] = $value;
+                    }
                 }
 
                 $form->getAttribute()->fromArray($data);

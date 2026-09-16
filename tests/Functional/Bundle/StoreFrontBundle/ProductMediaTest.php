@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\StoreFrontBundle;
@@ -30,7 +29,6 @@ use Shopware\Bundle\StoreFrontBundle\Gateway\ProductMediaGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Gateway\VariantMediaGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ProductServiceInterface;
-use Shopware\Bundle\StoreFrontBundle\Struct;
 use Shopware\Bundle\StoreFrontBundle\Struct\Media;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
 use Shopware\Components\Routing\Context;
@@ -142,7 +140,7 @@ class ProductMediaTest extends TestCase
     protected function getProduct(
         string $number,
         ShopContext $context,
-        Category $category = null,
+        ?Category $category = null,
         $imageCount = null
     ): array {
         $data = parent::getProduct($number, $context, $category);
@@ -162,7 +160,7 @@ class ProductMediaTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function getVariantImageProduct(string $number, Struct\ShopContext $context, int $imageCount = 2): array
+    private function getVariantImageProduct(string $number, ShopContext $context, int $imageCount = 2): array
     {
         $data = $this->getProduct(
             $number,
@@ -188,7 +186,6 @@ class ProductMediaTest extends TestCase
 
     private function assertMediaFile(string $expected, Media $media): void
     {
-        static::assertInstanceOf(Media::class, $media);
         static::assertNotEmpty($media->getThumbnails());
         static::assertStringContainsString($expected, $media->getFile());
 

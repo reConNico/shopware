@@ -38,6 +38,14 @@ fix-code-style: .make.install.composer-dependencies
 check-phpstan: .make.install.composer-dependencies
 	php ./vendor/bin/phpstan analyze -c .phpstan.neon
 
+generate-phpstan-baseline: .make.install.composer-dependencies
+	mv .phpstan-baseline.neon phpstan-baseline.neon
+	sed -i -r 's/- .phpstan-baseline.neon/- phpstan-baseline.neon/g' .phpstan.neon
+	php ./vendor/bin/phpstan analyze -c .phpstan.neon --generate-baseline
+	wait;
+	mv phpstan-baseline.neon .phpstan-baseline.neon
+	sed -i -r 's/- phpstan-baseline.neon/- .phpstan-baseline.neon/g' .phpstan.neon
+
 check-eslint-frontend: .make.install.npm-dependencies
 	npm run lint --prefix ./themes
 
@@ -69,10 +77,10 @@ test-phpunit: init
 	./vendor/bin/phpunit --config recovery/common/phpunit.xml.dist --log-junit build/artifacts/test-log.xml
 
 test-phpunit-coverage-cobertura: init
-	php -d pcov.enabled=1 -d pcov.directory="$(CURDIR)" vendor/bin/phpunit --configuration="tests/phpunit.xml.dist" --log-junit="build/artifacts/phpunit.junit.xml" --colors="never" --exclude-group="elasticSearch,pcovAdapterBrokenTest" --testsuite="$(TESTSUITE)" --coverage-cobertura="build/artifacts/phpunit-coverage-$(TESTSUITE).cobertura.xml"
+	php -d pcov.enabled=1 -d pcov.directory="$(CURDIR)" vendor/bin/phpunit --configuration="tests/phpunit.xml.dist" --colors="never" --exclude-group="elasticSearch,pcovAdapterBrokenTest" --testsuite="$(TESTSUITE)" --coverage-cobertura="build/artifacts/phpunit-coverage-$(TESTSUITE).cobertura.xml"
 
 test-phpunit-coverage-statistic: init tests/phpunit-full-coverage.xml
-	php -d pcov.enabled=1 -d pcov.directory="$(CURDIR)" vendor/bin/phpunit --configuration="tests/phpunit-full-coverage.xml" --log-junit="build/artifacts/phpunit.junit.xml" --colors="never" --exclude-group="elasticSearch,pcovAdapterBrokenTest" --testsuite="$(TESTSUITE)" --coverage-text
+	php -d pcov.enabled=1 -d pcov.directory="$(CURDIR)" vendor/bin/phpunit --configuration="tests/phpunit-full-coverage.xml" --colors="never" --exclude-group="elasticSearch,pcovAdapterBrokenTest" --testsuite="$(TESTSUITE)" --coverage-text
 
 test-phpunit-elasticsearch: elasticsearch-populate
 	./vendor/bin/phpunit --config tests/phpunit.xml.dist --log-junit build/artifacts/test-log.xml --exclude-group=skipElasticSearch --group=elasticSearch
@@ -101,7 +109,8 @@ check-config-variables:
 	@if [ -z "$(DB_PASSWORD)" ]; then echo "No or invalid database password supplied"; exit 1; fi
 
 clean-make-config:
-	rm .make.config.* 2> /dev/null || true
+	rm -f .make.config.*
+	rm -f .make.install.*
 
 clean:
 	rm .make.* 2> /dev/null || true
@@ -109,18 +118,19 @@ clean:
 debug-config-test: .make.config.build.debug
 
 .make.config: check-config-variables .make.config.behat
-	@sed -e 's/%db\.user%/$(DB_USER)/g' -e 's/%db\.password%/$(DB_PASSWORD)/g' -e 's/%db\.database%/$(DB_NAME)/g' -e 's/%db\.host%/$(DB_HOST)/g' -e 's/%db\.port%/$(DB_PORT)/g' -e 's/%db\.port%/$(DB_PORT)/g' -e 's/%elasticsearch\.host%/$(ELASTICSEARCH_HOST)/g' < ./config.php.dist > ./config.php
+	@sed -e 's/%db\.user%/$(DB_USER)/g' -e 's/%db\.password%/$(DB_PASSWORD)/g' -e 's/%db\.database%/$(DB_NAME)/g' -e 's/%db\.host%/$(DB_HOST)/g' -e 's/%db\.port%/$(DB_PORT)/g' -e 's/%db\.port%/$(DB_PORT)/g' -e 's/%elasticsearch\.host%/$(ELASTICSEARCH_HOST)/g' -e 's|%smtp\.host%|$(SMTP_HOST)|g' < ./config.php.dist > ./config.php
 	touch $@
 
 .make.config.build.%: check-config-variables .make.config.behat
-	@sed -e 's/%db\.user%/$(DB_USER)/g' -e 's/%db\.password%/$(DB_PASSWORD)/g' -e 's/%db\.database%/$(DB_NAME)/g' -e 's/%db\.host%/$(DB_HOST)/g' -e 's/%db\.port%/$(DB_PORT)/g' -e 's/%db\.port%/$(DB_PORT)/g' -e 's/%elasticsearch\.host%/$(ELASTICSEARCH_HOST)/g' < ./build/config-$*.php > ./config.php
+	@sed -e 's/%db\.user%/$(DB_USER)/g' -e 's/%db\.password%/$(DB_PASSWORD)/g' -e 's/%db\.database%/$(DB_NAME)/g' -e 's/%db\.host%/$(DB_HOST)/g' -e 's/%db\.port%/$(DB_PORT)/g' -e 's/%db\.port%/$(DB_PORT)/g' -e 's/%elasticsearch\.host%/$(ELASTICSEARCH_HOST)/g' -e 's|%smtp\.host%|$(SMTP_HOST)|g' < ./build/config-$*.php > ./config.php
 	touch $@
 
 .make.config.behat:
-	@sed -e 's/%sw\.host%/$(SW_HOST)/g' -e 's|%sw\.path%|$(SW_BASE_PATH)|g' < ./build/behat.yml.dist > ./tests/Mink/behat.yml
+	@sed -e 's/%sw\.host%/$(SW_HOST)/g' -e 's|%sw\.path%|$(SW_BASE_PATH)|g' -e 's|%selenium\.host%|$(SELENIUM_HOST)|g' < ./tests/Mink/behat.yml.dist > ./tests/Mink/behat.yml
 	touch $@
 
 .make.install.composer-dependencies:
+	composer update 'laminas/*' cocur/slugify
 	composer install
 	composer install -d recovery/common
 	composer bin all install
@@ -141,8 +151,6 @@ debug-config-test: .make.config.build.debug
 	./bin/console sw:theme:initialize
 	./bin/console sw:firstrunwizard:disable
 	./bin/console sw:admin:create --name="Demo" --email="demo@demo.de" --username="demo" --password="demo" --locale=de_DE -n
-	./bin/console sw:config:set installationSurvey false -d
-	./bin/console dbal:run-sql "INSERT IGNORE INTO \`s_core_auth_config\` (\`user_id\`, \`name\`, \`config\`) VALUES (1, 'customer_module', '{\"showWizard\":false}');"
 
 recovery/install/data/install.lock:
 	touch $@

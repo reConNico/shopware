@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Components\Migrations\AbstractMigration;
@@ -35,12 +35,12 @@ class Migrations_Migration939 extends AbstractMigration
         $this->updateCustomerFacetAndSorting();
     }
 
-    private function updateTranslation()
+    private function updateTranslation(): void
     {
         $shops = $this->connection->query('SELECT id FROM s_core_shops')->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($shops as $shop) {
-            $translation = $this->getExistingSortingTranslations($shop['id']);
+            $translation = $this->getExistingSortingTranslations((int) $shop['id']);
 
             if (!empty($translation)) {
                 $id = $translation['id'];
@@ -70,7 +70,7 @@ SQL;
         }
     }
 
-    private function updateCustomerFacetAndSorting()
+    private function updateCustomerFacetAndSorting(): void
     {
         $sql = <<<SQL
 UPDATE `s_search_custom_sorting` SET label = 'Lowest price' WHERE id = 3 and label = 'Cheapest price';
@@ -95,17 +95,25 @@ SQL;
         $this->addSql($sql);
     }
 
-    private function getExistingSortingTranslations($shopId)
+    /**
+     * @return array{id: numeric-string, 0: numeric-string, objectdata: string, 1: string}|null
+     */
+    private function getExistingSortingTranslations(int $shopId): ?array
     {
         $sql = <<<SQL
 SELECT s_core_translations.id, s_core_translations.objectdata
 FROM
     s_core_translations
 WHERE
-    s_core_translations.objecttype = 'custom_facet' AND s_core_translations.objectlanguage =  $shopId;
+    s_core_translations.objecttype = 'custom_facet' AND s_core_translations.objectlanguage = $shopId;
 SQL;
 
-        $translation = $this->connection->query($sql)->fetch();
+        $statement = $this->connection->query($sql);
+        if (!$statement instanceof PDOStatement) {
+            return null;
+        }
+
+        $translation = $statement->fetch();
         if (!$translation) {
             return null;
         }

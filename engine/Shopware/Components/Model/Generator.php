@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Model;
@@ -51,23 +51,22 @@ class Generator
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 ';
 
@@ -176,7 +175,7 @@ class %className% extends ModelEntity
      *
      * @var AbstractSchemaManager
      */
-    protected $schemaManager = null;
+    protected $schemaManager;
 
     /**
      * Contains the table mapping for the existing Shopware models.
@@ -334,7 +333,7 @@ class %className% extends ModelEntity
         $file = $this->getPath() . $className . '.php';
 
         if (file_exists($file) && !is_writable($file)) {
-            throw new Exception(sprintf('File: "%s" isn\'t writable, please check the file permissions for this model!', $file), 501);
+            throw new Exception(\sprintf('File: "%s" isn\'t writable, please check the file permissions for this model!', $file), 501);
         }
 
         $result = file_put_contents($file, $sourceCode);
@@ -435,10 +434,10 @@ class %className% extends ModelEntity
     {
         if (!is_dir($dir)) {
             if (@mkdir($dir, 0777, true) === false && !is_dir($dir)) {
-                throw new RuntimeException(sprintf("Unable to create directory (%s)\n", $dir));
+                throw new RuntimeException(\sprintf("Unable to create directory (%s)\n", $dir));
             }
         } elseif (!is_writable($dir)) {
-            throw new RuntimeException(sprintf("Unable to write in directory (%s)\n", $dir));
+            throw new RuntimeException(\sprintf("Unable to write in directory (%s)\n", $dir));
         }
     }
 
@@ -511,7 +510,7 @@ class %className% extends ModelEntity
 
         // Check if the passed table is a Shopware attribute table.
         if (strpos($table->getName(), '_attributes')) {
-            //if the table is an attribute table we have to use the class name of the parent table.
+            // if the table is an attribute table we have to use the class name of the parent table.
             $parentClass = str_replace('_attributes', '', $table->getName());
             $className = $this->getClassNameOfTableName($parentClass);
 

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway;
@@ -63,6 +63,8 @@ interface ConfiguratorGatewayInterface
     public function getConfiguratorMedia(BaseProduct $product, ShopContextInterface $context);
 
     /**
+     * @deprecated Will be removed with 5.8
+     *
      * Returns all possible configurator combinations for the provided product.
      * The returned array contains as array key the id of the configurator option.
      * The array value contains an imploded array with all possible configurator option ids
@@ -86,4 +88,19 @@ interface ConfiguratorGatewayInterface
      * @return array<int, array<string>> Indexed by the option id
      */
     public function getProductCombinations(BaseProduct $product);
+
+    /**
+     * Returns only available possible configurator combinations for the provided product.
+     * The returned array contains as array key the id of the configurator option.
+     * The array value contains an array with all possible configurator option configurations
+     *
+     * Example (written with the configurator option names)
+     * array(
+     *     'white' => array(array('XL', 'Cotton'), array('XL', 'Leather')),
+     *     'red'   => array(array('S', ...), array('L', ...)
+     * )
+     *
+     * @return array<int, array<int, array<int, int>>> Indexed by the option id
+     */
+    public function getAvailableConfigurations(BaseProduct $product): array;
 }

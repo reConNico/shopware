@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\User;
@@ -114,7 +114,7 @@ class Role extends ModelEntity implements Zend_Acl_Role_Interface
      * The privileges property is the inverse side of the association between resource and privileges.
      * The association is joined over the s_core_acl_privileges.resourceID field and the s_core_acl_resources.id
      *
-     * @var \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\User\Rule>
+     * @var \Doctrine\Common\Collections\ArrayCollection<Rule>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\User\Rule", mappedBy="role", cascade={"remove"})
      */
@@ -124,7 +124,7 @@ class Role extends ModelEntity implements Zend_Acl_Role_Interface
      * The children property contains all inherited Shopware\Models\User\Role instances.
      * The children inherits all privileges from his parent.
      *
-     * @var \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\User\Role>
+     * @var \Doctrine\Common\Collections\ArrayCollection<Role>
      *
      * @ORM\OneToMany(targetEntity="\Shopware\Models\User\Role", mappedBy="parent")
      */
@@ -134,7 +134,7 @@ class Role extends ModelEntity implements Zend_Acl_Role_Interface
      * The parent property contains the instance of the inherited Shopware\Models\User\Role
      * model. The Role inherits all privileges from his parent.
      *
-     * @var \Shopware\Models\User\Role|null
+     * @var Role|null
      *
      * @ORM\ManyToOne(targetEntity="\Shopware\Models\User\Role", inversedBy="children")
      * @ORM\JoinColumn(name="parentID", referencedColumnName="id")
@@ -299,7 +299,7 @@ class Role extends ModelEntity implements Zend_Acl_Role_Interface
      *
      * @param \Doctrine\Common\Collections\ArrayCollection $users
      *
-     * @return \Shopware\Models\User\Role
+     * @return Role
      */
     public function setUsers($users)
     {
@@ -357,7 +357,7 @@ class Role extends ModelEntity implements Zend_Acl_Role_Interface
      * contains the inherited parent role. The association is defined over
      * the Role.id property and the Role.parentId property.
      *
-     * @return \Shopware\Models\User\Role|null
+     * @return Role|null
      */
     public function getParent()
     {
@@ -370,7 +370,7 @@ class Role extends ModelEntity implements Zend_Acl_Role_Interface
      * contains the inherited parent role. The association is defined over
      * the Role.id property and the Role.parentId property.
      *
-     * @param \Shopware\Models\User\Role|null $parent
+     * @param Role|null $parent
      */
     public function setParent($parent)
     {

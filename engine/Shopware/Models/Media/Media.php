@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Media;
@@ -230,7 +230,7 @@ class Media extends ModelEntity
     /**
      * Internal container for the uploaded file.
      *
-     * @var UploadedFile
+     * @var File
      */
     private $file;
 
@@ -568,8 +568,6 @@ class Media extends ModelEntity
      * Setter method for the file property. If the file is set, the file information will be extracted
      * and set into the internal properties.
      *
-     * @param UploadedFile $file
-     *
      * @return Media
      */
     public function setFile(File $file)
@@ -716,7 +714,7 @@ class Media extends ModelEntity
     public function onRemove()
     {
         $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
-        //check if file exist and remove it
+        // check if file exist and remove it
         if ($mediaService->has($this->path)) {
             $mediaService->delete($this->path);
         }
@@ -770,8 +768,6 @@ class Media extends ModelEntity
             if (!is_numeric($data['width'])) {
                 continue;
             }
-            // If no height configured, set 0
-            $data['height'] = isset($data['height']) ? $data['height'] : 0;
 
             // Create thumbnail with the configured size
             $this->createThumbnail((int) $data['width'], (int) $data['height']);
@@ -824,7 +820,7 @@ class Media extends ModelEntity
     /**
      * Returns the converted file name.
      *
-     * @return bool|string
+     * @return string
      */
     public function getFileName()
     {
@@ -832,7 +828,6 @@ class Media extends ModelEntity
             return $this->removeSpecialCharacters($this->name) . '.' . $this->extension;
         }
 
-        // Do whatever you want to generate a unique name
         return Random::getAlphanumericString(13) . '.' . $this->extension;
     }
 
@@ -1277,12 +1272,7 @@ class Media extends ModelEntity
         }
     }
 
-    /**
-     * @param string $name
-     *
-     * @return string
-     */
-    private function removeSpecialCharacters($name)
+    private function removeSpecialCharacters(string $name): string
     {
         $name = iconv('utf-8', 'ascii//translit', $name);
         $name = preg_replace('#[^A-Za-z0-9\-_]#', '-', $name);

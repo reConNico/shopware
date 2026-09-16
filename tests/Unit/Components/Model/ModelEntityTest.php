@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Model;
@@ -28,60 +28,55 @@ use Doctrine\Common\Collections\ArrayCollection;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use Shopware\Models\Article\Article;
+use Shopware\Components\Model\ModelEntity;
+use Shopware\Models\Article\Article as Product;
 use Shopware\Models\Article\Configurator\Template\Template;
 use Shopware\Models\Article\Link;
 use Shopware\Models\Article\Supplier;
 use Shopware\Models\Country\Area;
+use Shopware\Models\Country\Country;
 use Shopware\Models\Document\Document;
+use Shopware\Models\Document\Element;
 use Shopware\Models\Tax\Tax;
+use Shopware\Models\Voucher\Code;
 use Shopware\Models\Voucher\Voucher;
 
-/**
- * @covers \Shopware\Components\Model\ModelEntity
- *
- * @uses \Shopware\Models\Article\Article
- * @uses \Shopware\Models\Article\Link
- * @uses \Shopware\Models\Article\Supplier
- * @uses \Shopware\Models\Article\Configurator\Template\Template
- * @uses \Shopware\Models\Tax\Tax
- */
 class ModelEntityTest extends TestCase
 {
-    public function testCanAssignProperties()
+    public function testCanAssignProperties(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $data = [
             'name' => 'foo',
             'description' => 'bar',
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertEquals('foo', $article->getName());
-        static::assertEquals('bar', $article->getDescription());
+        static::assertSame('foo', $product->getName());
+        static::assertSame('bar', $product->getDescription());
     }
 
-    public function testCanReAssignProperties()
+    public function testCanReAssignProperties(): void
     {
-        $article = new Article();
-        $article->setName('lorem');
-        $article->setDescription('bar');
+        $product = new Product();
+        $product->setName('lorem');
+        $product->setDescription('bar');
 
         $data = [
             'name' => 'foo',
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertEquals('foo', $article->getName());
-        static::assertEquals('bar', $article->getDescription());
+        static::assertSame('foo', $product->getName());
+        static::assertSame('bar', $product->getDescription());
     }
 
     public function testCanAssignOneToOne(): void
     {
-        $product = new Article();
+        $product = new Product();
 
         $data = [
             'configuratorTemplate' => [
@@ -94,7 +89,7 @@ class ModelEntityTest extends TestCase
 
         static::assertNotNull($product->getConfiguratorTemplate());
         static::assertTrue($product->getConfiguratorTemplate()->getActive());
-        static::assertEquals('baz', $product->getConfiguratorTemplate()->getEan());
+        static::assertSame('baz', $product->getConfiguratorTemplate()->getEan());
 
         // configuratorTemplate is the owning side of relation, so article has to be set
         static::assertSame($product, $product->getConfiguratorTemplate()->getArticle());
@@ -102,7 +97,7 @@ class ModelEntityTest extends TestCase
 
     public function testLoopsArePreventedOneToOne(): void
     {
-        $product = new Article();
+        $product = new Product();
 
         $data = [
             'name' => 'foo',
@@ -122,7 +117,7 @@ class ModelEntityTest extends TestCase
 
     public function testCanAssignOneToOneByInstance(): void
     {
-        $product = new Article();
+        $product = new Product();
 
         $tax = new Tax();
         $tax->setName('foobar');
@@ -143,7 +138,7 @@ class ModelEntityTest extends TestCase
 
     public function testCanReAssignOneToOne(): void
     {
-        $product = new Article();
+        $product = new Product();
 
         $template = new Template();
         $template->setEan('foo');
@@ -160,12 +155,12 @@ class ModelEntityTest extends TestCase
 
         static::assertNotNull($product->getConfiguratorTemplate());
         static::assertTrue($product->getConfiguratorTemplate()->getActive());
-        static::assertEquals('foo', $product->getConfiguratorTemplate()->getEan());
+        static::assertSame('foo', $product->getConfiguratorTemplate()->getEan());
     }
 
     public function testCanEmptyArrayDoesNotOverrideOneToOne(): void
     {
-        $product = new Article();
+        $product = new Product();
 
         $template = new Template();
         $template->setEan('foo');
@@ -181,12 +176,12 @@ class ModelEntityTest extends TestCase
 
         static::assertNotNull($product->getConfiguratorTemplate());
         static::assertTrue($product->getConfiguratorTemplate()->getActive());
-        static::assertEquals('foo', $product->getConfiguratorTemplate()->getEan());
+        static::assertSame('foo', $product->getConfiguratorTemplate()->getEan());
     }
 
     public function testCanRemoveOneToOne(): void
     {
-        $product = new Article();
+        $product = new Product();
         $product->setName('Dummy');
 
         $template = new Template();
@@ -205,9 +200,9 @@ class ModelEntityTest extends TestCase
         static::assertNull($template->getArticle());
     }
 
-    public function testCanAssignManyToOne()
+    public function testCanAssignManyToOne(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $data = [
             'supplier' => [
@@ -215,14 +210,16 @@ class ModelEntityTest extends TestCase
             ],
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertEquals('foo', $article->getSupplier()->getName());
+        $supplier = $product->getSupplier();
+        static::assertNotNull($supplier);
+        static::assertSame('foo', $supplier->getName());
     }
 
-    public function testCanAssignManyToOneByInstance()
+    public function testCanAssignManyToOneByInstance(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $supplier = new Supplier();
         $supplier->setName('test');
@@ -231,22 +228,22 @@ class ModelEntityTest extends TestCase
             'supplier' => $supplier,
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertSame($supplier, $article->getSupplier());
+        static::assertSame($supplier, $product->getSupplier());
     }
 
-    public function testCanReAssignManyToOne()
+    public function testCanReAssignManyToOne(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $supplier = new Supplier();
         $supplier->setName('test');
         $supplier->setDescription('description');
 
-        $article->setSupplier($supplier);
+        $product->setSupplier($supplier);
 
-        static::assertSame($supplier, $article->getSupplier());
+        static::assertSame($supplier, $product->getSupplier());
 
         $data = [
             'supplier' => [
@@ -254,69 +251,73 @@ class ModelEntityTest extends TestCase
             ],
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertEquals('foo', $article->getSupplier()->getName());
+        $supplier = $product->getSupplier();
+        static::assertNotNull($supplier);
+        static::assertSame('foo', $supplier->getName());
 
-        // 19 taxrate shoud be preserved
-        static::assertEquals('description', $article->getSupplier()->getDescription());
+        // 19 tax rate should be preserved
+        static::assertSame('description', $supplier->getDescription());
     }
 
-    public function testCanEmptyArrayDoesNotOverrideManyToOne()
+    public function testCanEmptyArrayDoesNotOverrideManyToOne(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $supplier = new Supplier();
         $supplier->setName('test');
         $supplier->setDescription('description');
 
-        $article->setSupplier($supplier);
+        $product->setSupplier($supplier);
 
-        static::assertSame($supplier, $article->getSupplier());
+        static::assertSame($supplier, $product->getSupplier());
 
         $data = [
             'supplier' => [],
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertEquals('test', $article->getSupplier()->getName());
-        static::assertEquals('description', $article->getSupplier()->getDescription());
+        $supplier = $product->getSupplier();
+        static::assertNotNull($supplier);
+        static::assertSame('test', $supplier->getName());
+        static::assertSame('description', $supplier->getDescription());
     }
 
-    public function testCanRemoveManyToOne()
+    public function testCanRemoveManyToOne(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $supplier = new Supplier();
         $supplier->setName('test');
         $supplier->setDescription('description');
 
-        $article->setSupplier($supplier);
+        $product->setSupplier($supplier);
 
-        static::assertSame($supplier, $article->getSupplier());
+        static::assertSame($supplier, $product->getSupplier());
 
         $data = [
             'supplier' => null,
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertNull($article->getSupplier());
+        static::assertNull($product->getSupplier());
     }
 
-    public function testCanReAssignWithAnotherIdThrowsExceptionManyToOne()
+    public function testCanReAssignWithAnotherIdThrowsExceptionManyToOne(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $supplier = new Supplier();
         $supplier->setName('test');
         $supplier->setDescription('description');
-        $this->setProperty($supplier, 'id', 1);
+        $this->setId($supplier);
 
-        $article->setSupplier($supplier);
+        $product->setSupplier($supplier);
 
-        static::assertSame($supplier, $article->getSupplier());
+        static::assertSame($supplier, $product->getSupplier());
 
         $data = [
             'supplier' => [
@@ -326,12 +327,12 @@ class ModelEntityTest extends TestCase
         ];
 
         $this->expectException(InvalidArgumentException::class);
-        $article->fromArray($data);
+        $product->fromArray($data);
     }
 
-    public function testCanAssignOneToMany()
+    public function testCanAssignOneToMany(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $data = [
             'links' => [
@@ -345,14 +346,14 @@ class ModelEntityTest extends TestCase
             ],
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertCount(2, $article->getLinks());
+        static::assertCount(2, $product->getLinks());
     }
 
-    public function testCanAssignOneToManyByInstance()
+    public function testCanAssignOneToManyByInstance(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $link0 = new Link();
         $link0->setName('dummy');
@@ -366,24 +367,24 @@ class ModelEntityTest extends TestCase
             ],
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertCount(2, $article->getLinks());
+        static::assertCount(2, $product->getLinks());
 
-        static::assertContains($link0, $article->getLinks());
+        static::assertContains($link0, $product->getLinks());
     }
 
-    public function testCanOverWriteAssignOneToMany()
+    public function testCanOverWriteAssignOneToMany(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $link0 = new Link();
         $link0->setName('dummy');
         $link0->setLink('lorem');
 
-        $article->getLinks()->add($link0);
+        $product->getLinks()->add($link0);
 
-        static::assertContains($link0, $article->getLinks());
+        static::assertContains($link0, $product->getLinks());
 
         $data = [
             'links' => [
@@ -393,47 +394,47 @@ class ModelEntityTest extends TestCase
             ],
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertCount(1, $article->getLinks());
-        static::assertNotContains($link0, $article->getLinks());
+        static::assertCount(1, $product->getLinks());
+        static::assertNotContains($link0, $product->getLinks());
 
-        static::assertEquals('batz', $article->getLinks()->current()->getName());
+        static::assertSame('batz', $product->getLinks()->current()->getName());
     }
 
-    public function testCanRemoveOneToMany()
+    public function testCanRemoveOneToMany(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $link0 = new Link();
         $link0->setName('dummy');
         $link0->setLink('lorem');
 
-        $article->getLinks()->add($link0);
+        $product->getLinks()->add($link0);
 
-        static::assertContains($link0, $article->getLinks());
+        static::assertContains($link0, $product->getLinks());
 
         $data = [
             'links' => null,
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertCount(0, $article->getLinks());
+        static::assertCount(0, $product->getLinks());
     }
 
-    public function testCanUpdateOneToManyById()
+    public function testCanUpdateOneToManyById(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $link0 = new Link();
         $link0->setName('dummy');
         $link0->setLink('lorem');
-        $this->setProperty($link0, 'id', 1);
+        $this->setId($link0);
 
-        $article->getLinks()->add($link0);
+        $product->getLinks()->add($link0);
 
-        static::assertContains($link0, $article->getLinks());
+        static::assertContains($link0, $product->getLinks());
 
         $data = [
             'links' => [
@@ -447,27 +448,27 @@ class ModelEntityTest extends TestCase
             ],
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertCount(2, $article->getLinks());
-        static::assertContains($link0, $article->getLinks());
+        static::assertCount(2, $product->getLinks());
+        static::assertContains($link0, $product->getLinks());
 
-        static::assertEquals('batz', $article->getLinks()->first()->getName());
-        static::assertEquals('foo', $article->getLinks()->next()->getName());
+        static::assertSame('batz', $product->getLinks()->first()->getName());
+        static::assertSame('foo', $product->getLinks()->next()->getName());
     }
 
-    public function testCanUpdateOneToMany()
+    public function testCanUpdateOneToMany(): void
     {
-        $article = new Article();
+        $product = new Product();
 
         $link0 = new Link();
         $link0->setName('dummy');
         $link0->setLink('lorem');
-        $this->setProperty($link0, 'id', 1);
+        $this->setId($link0);
 
-        $article->getLinks()->add($link0);
+        $product->getLinks()->add($link0);
 
-        static::assertContains($link0, $article->getLinks());
+        static::assertContains($link0, $product->getLinks());
 
         $data = [
             'links' => [
@@ -478,45 +479,39 @@ class ModelEntityTest extends TestCase
             ],
         ];
 
-        $article->fromArray($data);
+        $product->fromArray($data);
 
-        static::assertCount(1, $article->getLinks());
-        static::assertNotContains($link0, $article->getLinks());
+        static::assertCount(1, $product->getLinks());
+        static::assertNotContains($link0, $product->getLinks());
 
-        static::assertEquals('batz', $article->getLinks()->first()->getName());
+        static::assertSame('batz', $product->getLinks()->first()->getName());
     }
 
-    public function testCanSetElementsOnDocument()
+    public function testCanSetElementsOnDocument(): void
     {
-        $document = new Document();
+        $element = new Element();
+        $element->setName('dummy');
 
-        $data = [
-            [
-                'name' => 'dummy',
-            ],
-        ];
-        $document->setElements($data);
+        $document = new Document();
+        $document->setElements([$element]);
 
         static::assertCount(1, $document->getElements());
-        static::assertEquals('dummy', $document->getElements()->first()->getName());
+        static::assertSame('dummy', $document->getElements()->first()->getName());
     }
 
-    public function testCanSetElementsOnDocumentWithArrayCollection()
+    public function testCanSetElementsOnDocumentWithArrayCollection(): void
     {
-        $document = new Document();
+        $element = new Element();
+        $element->setName('dummy');
 
-        $data = new ArrayCollection([
-            [
-                'name' => 'dummy',
-            ],
-        ]);
-        $document->setElements($data);
+        $document = new Document();
+        $document->setElements(new ArrayCollection([$element]));
 
         static::assertCount(1, $document->getElements());
-        static::assertEquals('dummy', $document->getElements()->first()->getName());
+        static::assertSame('dummy', $document->getElements()->first()->getName());
     }
 
-    public function testCanSetCodesOnVoucher()
+    public function testCanSetCodesOnVoucher(): void
     {
         $voucher = new Voucher();
 
@@ -528,49 +523,38 @@ class ModelEntityTest extends TestCase
         $voucher->setCodes($data);
 
         static::assertCount(1, $voucher->getCodes());
-        static::assertEquals('dummy', $voucher->getCodes()->first()->getCode());
+        static::assertSame('dummy', $voucher->getCodes()->first()->getCode());
     }
 
-    public function testCanSetCodesOnVoucherWithArrayCollection()
+    public function testCanSetCodesOnVoucherWithArrayCollection(): void
     {
-        $voucher = new Voucher();
+        $code = new Code();
+        $code->setCode('dummy');
 
-        $data = new ArrayCollection([
-            [
-                'code' => 'dummy',
-            ],
-        ]);
-        $voucher->setCodes($data);
+        $voucher = new Voucher();
+        $voucher->setCodes(new ArrayCollection([$code]));
 
         static::assertCount(1, $voucher->getCodes());
-        static::assertEquals('dummy', $voucher->getCodes()->first()->getCode());
+        static::assertSame('dummy', $voucher->getCodes()->first()->getCode());
     }
 
-    public function testCanSetCountriesOnArea()
+    public function testCanSetCountriesOnArea(): void
     {
+        $country = new Country();
+        $country->setName('dummy');
+
         $area = new Area();
-
-        $data = [
-            [
-                'name' => 'dummy',
-            ],
-        ];
-        $area->setCountries($data);
+        $area->setCountries([$country]);
 
         static::assertCount(1, $area->getCountries());
-        static::assertEquals('dummy', $area->getCountries()->first()->getName());
+        static::assertSame('dummy', $area->getCountries()->first()->getName());
     }
 
-    /**
-     * @param object $entity
-     * @param string $key
-     */
-    protected function setProperty($entity, $key, $value)
+    protected function setId(ModelEntity $entity): void
     {
-        $reflectionClass = new ReflectionClass($entity);
-        $property = $reflectionClass->getProperty($key);
+        $property = (new ReflectionClass($entity))->getProperty('id');
 
         $property->setAccessible(true);
-        $property->setValue($entity, $value);
+        $property->setValue($entity, 1);
     }
 }

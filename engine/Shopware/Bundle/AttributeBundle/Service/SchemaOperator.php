@@ -1,48 +1,43 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AttributeBundle\Service;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
 use Exception;
 
 class SchemaOperator implements SchemaOperatorInterface
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
+
+    private TableMappingInterface $tableMapping;
 
     /**
-     * @var TableMappingInterface
+     * @var list<string>
      */
-    private $tableMapping;
-
-    /**
-     * @var array
-     */
-    private $nameBlacklist;
+    private array $nameBlacklist;
 
     public function __construct(Connection $connection, TableMappingInterface $tableMapping)
     {
@@ -54,7 +49,7 @@ class SchemaOperator implements SchemaOperatorInterface
     /**
      * {@inheritdoc}
      *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      * @throws Exception
      */
     public function createColumn($table, $column, $type, $defaultValue = null)
@@ -66,7 +61,7 @@ class SchemaOperator implements SchemaOperatorInterface
             throw new Exception('No column type provided');
         }
 
-        $sql = sprintf(
+        $sql = \sprintf(
             'ALTER TABLE `%s` ADD `%s` %s NULL DEFAULT %s',
             $table,
             $column,
@@ -80,7 +75,7 @@ class SchemaOperator implements SchemaOperatorInterface
     /**
      * {@inheritdoc}
      *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      * @throws Exception
      */
     public function changeColumn($table, $originalName, $newName, $type, $defaultValue = null)
@@ -97,7 +92,7 @@ class SchemaOperator implements SchemaOperatorInterface
         $this->validateField($newName);
         $defaultValue = $this->filterDefaultValue($defaultValue);
 
-        $sql = sprintf(
+        $sql = \sprintf(
             'ALTER TABLE `%s` CHANGE `%s` `%s` %s NULL DEFAULT %s;',
             $table,
             $originalName,
@@ -112,7 +107,7 @@ class SchemaOperator implements SchemaOperatorInterface
     /**
      * {@inheritdoc}
      *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      * @throws Exception
      */
     public function dropColumn($table, $column)
@@ -120,17 +115,17 @@ class SchemaOperator implements SchemaOperatorInterface
         $this->validate($table, $column);
 
         if ($this->tableMapping->isCoreColumn($table, $column)) {
-            throw new Exception(sprintf('Provided column is an core attribute column: %s', $column));
+            throw new Exception(\sprintf('Provided column is an core attribute column: %s', $column));
         }
 
-        $sql = sprintf('ALTER TABLE `%s` DROP `%s`', $table, $column);
+        $sql = \sprintf('ALTER TABLE `%s` DROP `%s`', $table, $column);
         $this->connection->executeQuery($sql);
     }
 
     /**
      * {@inheritdoc}
      *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      * @throws Exception
      */
     public function resetColumn($table, $column)
@@ -138,10 +133,10 @@ class SchemaOperator implements SchemaOperatorInterface
         $this->validate($table, $column);
 
         if (!$this->tableMapping->isTableColumn($table, $column)) {
-            throw new Exception(sprintf('Provided column %s does not exist in table %s', $column, $table));
+            throw new Exception(\sprintf('Provided column %s does not exist in table %s', $column, $table));
         }
 
-        $sql = sprintf('UPDATE `%s` SET `%s` = NULL', $table, $column);
+        $sql = \sprintf('UPDATE `%s` SET `%s` = NULL', $table, $column);
         $this->connection->executeUpdate($sql);
     }
 
@@ -151,7 +146,7 @@ class SchemaOperator implements SchemaOperatorInterface
      *
      * @throws Exception
      */
-    private function validate($table, $name)
+    private function validate($table, $name): void
     {
         if (!$table) {
             throw new Exception('No table name provided');
@@ -164,15 +159,15 @@ class SchemaOperator implements SchemaOperatorInterface
         $this->validateField($name);
 
         if (!$this->tableMapping->isAttributeTable($table)) {
-            throw new Exception(sprintf('Provided table is no attribute table: %s', $table));
+            throw new Exception(\sprintf('Provided table is no attribute table: %s', $table));
         }
         if ($this->tableMapping->isIdentifierColumn($table, $name)) {
-            throw new Exception(sprintf('Provided column is an identifier column: %s', $name));
+            throw new Exception(\sprintf('Provided column is an identifier column: %s', $name));
         }
 
         $lowerCaseName = strtolower($name);
-        if (\in_array($lowerCaseName, $this->nameBlacklist)) {
-            throw new Exception(sprintf('Provided name %s is a reserved keyword.', $name));
+        if (\in_array($lowerCaseName, $this->nameBlacklist, true)) {
+            throw new Exception(\sprintf('Provided name %s is a reserved keyword.', $name));
         }
     }
 
@@ -181,14 +176,14 @@ class SchemaOperator implements SchemaOperatorInterface
      *
      * @throws Exception
      */
-    private function validateField($field)
+    private function validateField($field): void
     {
         if (\strlen($field) > 64) {
             throw new Exception('Maximum length: 64 chars');
         }
 
         if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $field)) {
-            throw new Exception(sprintf('Invalid chars in %s', $field));
+            throw new Exception(\sprintf('Invalid chars in %s', $field));
         }
     }
 

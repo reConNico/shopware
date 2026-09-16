@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
@@ -38,7 +38,7 @@ class PluginListCommand extends ShopwareCommand implements CompletionAwareInterf
     /**
      * {@inheritdoc}
      */
-    public function completeOptionValues($optionName, CompletionContext $context)
+    public function completeOptionValues($optionName, CompletionContext $context): array
     {
         if ($optionName === 'filter') {
             return [
@@ -65,7 +65,7 @@ class PluginListCommand extends ShopwareCommand implements CompletionAwareInterf
     /**
      * {@inheritdoc}
      */
-    public function completeArgumentValues($argumentName, CompletionContext $context)
+    public function completeArgumentValues($argumentName, CompletionContext $context): array
     {
         return [];
     }
@@ -73,7 +73,7 @@ class PluginListCommand extends ShopwareCommand implements CompletionAwareInterf
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('sw:plugin:list')
@@ -82,7 +82,8 @@ class PluginListCommand extends ShopwareCommand implements CompletionAwareInterf
                 'filter',
                 'f',
                 InputOption::VALUE_REQUIRED,
-                'Filter Plugins (inactive, active, installed, uninstalled)'
+                'Filter Plugins (inactive, active, installed, uninstalled)',
+                ''
             )
             ->addOption(
                 'namespace',
@@ -103,7 +104,7 @@ class PluginListCommand extends ShopwareCommand implements CompletionAwareInterf
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $em = $this->container->get(ModelManager::class);
 
@@ -145,7 +146,6 @@ class PluginListCommand extends ShopwareCommand implements CompletionAwareInterf
 
         $rows = [];
 
-        /** @var Plugin $plugin */
         foreach ($plugins as $plugin) {
             $rows[] = [
                 $plugin->getName(),

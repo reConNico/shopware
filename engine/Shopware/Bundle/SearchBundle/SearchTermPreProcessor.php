@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundle;
@@ -33,16 +33,16 @@ class SearchTermPreProcessor implements SearchTermPreProcessorInterface
      */
     public function process($term)
     {
-        //This fix prevents an exception if the search term includes an character that can not be
-        //displayed with the database charset.
-        //This fix can be removed if all tables are set to utf8mb4_unicode_ci.
+        // This fix prevents an exception if the search term includes an character that can not be
+        // displayed with the database charset.
+        // This fix can be removed if all tables are set to utf8mb4_unicode_ci.
 
-        //converts encoded characters back ('%a5%27' to '?')
+        // converts encoded characters back ('%a5%27' to '?')
         $term = mb_convert_encoding($term, 'UTF-8');
-        //does the replacing of 4byte chars to the Unicode replacement character
+        // does the replacing of 4byte chars to the Unicode replacement character
         $term = (string) preg_replace('/[\xF0-\xF7].../s', '�', $term);
 
-        //we have to strip the / otherwise broken urls would be created e.g. wrong pager urls
+        // we have to strip the / otherwise broken urls would be created e.g. wrong pager urls
         $term = trim(strip_tags(htmlspecialchars_decode(stripslashes($term))));
 
         return str_replace('/', ' ', $term);

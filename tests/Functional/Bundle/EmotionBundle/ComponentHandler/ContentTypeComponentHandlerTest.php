@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\EmotionBundle\ComponentHandler;
@@ -47,7 +48,7 @@ class ContentTypeComponentHandlerTest extends Enlight_Components_Test_TestCase
         static::assertFalse($this->getContainer()->has('shopware.bundle.content_type.testcontent'));
         $fixtures = file_get_contents(__DIR__ . '/fixtures/fixtures.sql');
         static::assertIsString($fixtures);
-        $this->getContainer()->get(Connection::class)->exec($fixtures);
+        $this->getContainer()->get(Connection::class)->executeStatement($fixtures);
         KernelStorage::unset();
         static::assertTrue($this->getContainer()->has('shopware.bundle.content_type.testcontent'));
     }
@@ -56,20 +57,21 @@ class ContentTypeComponentHandlerTest extends Enlight_Components_Test_TestCase
     {
         parent::tearDown();
 
-        static::assertTrue($this->getContainer()->has('shopware.bundle.content_type.testcontent'));
+        $firstCheck = $this->getContainer()->has('shopware.bundle.content_type.testcontent');
+        static::assertTrue($firstCheck);
         $fixtures = file_get_contents(__DIR__ . '/fixtures/cleanUp.sql');
         static::assertIsString($fixtures);
-        $this->getContainer()->get(Connection::class)->exec($fixtures);
+        $this->getContainer()->get(Connection::class)->executeStatement($fixtures);
         KernelStorage::unset();
-        static::assertFalse($this->getContainer()->has('shopware.bundle.content_type.testcontent'));
+        $secondCheck = $this->getContainer()->has('shopware.bundle.content_type.testcontent');
+        static::assertFalse($secondCheck);
     }
 
     public function testLoadAllSelectedContent(): void
     {
         $contentTypeComponentHandler = $this->getContainer()->get(ContentTypeComponentHandler::class);
 
-        $resolvedDataCollection = new ResolvedDataCollection();
-        $resolvedDataCollection->setBatchResult(new BatchProductSearchResult([]));
+        $resolvedDataCollection = $this->createDataCollection();
         $elementConfig = new ElementConfig();
         $elementConfig->set(ContentTypeComponentHandler::CONTENT_TYPE_KEY, 'testcontent');
         $elementConfig->set(ContentTypeComponentHandler::MODE_KEY, ContentTypeComponentHandler::MODE_SELECTED);
@@ -82,5 +84,26 @@ class ContentTypeComponentHandlerTest extends Enlight_Components_Test_TestCase
         $contentTypeComponentHandler->handle($resolvedDataCollection, $element, $shopContext);
 
         static::assertCount(6, $element->getData()->get(ContentTypeComponentHandler::ITEMS_KEY));
+    }
+
+    public function testHandleDoesNotFailIfElementHasNoContentTypeDefined(): void
+    {
+        $contentTypeComponentHandler = $this->getContainer()->get(ContentTypeComponentHandler::class);
+        $resolvedDataCollection = $this->createDataCollection();
+
+        $elementConfig = new ElementConfig();
+        $element = new Element();
+        $element->setConfig($elementConfig);
+        $shopContext = $this->createShopContext();
+
+        $contentTypeComponentHandler->handle($resolvedDataCollection, $element, $shopContext);
+    }
+
+    private function createDataCollection(): ResolvedDataCollection
+    {
+        $resolvedDataCollection = new ResolvedDataCollection();
+        $resolvedDataCollection->setBatchResult(new BatchProductSearchResult([]));
+
+        return $resolvedDataCollection;
     }
 }

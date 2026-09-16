@@ -1,26 +1,28 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
+
+use Shopware\Models\Article\Article;
 
 class Shopware_Plugins_Core_MarketingAggregate_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
@@ -167,7 +169,7 @@ class Shopware_Plugins_Core_MarketingAggregate_Bootstrap extends Shopware_Compon
      */
     public function afterSimilarShownArticlesReset(Enlight_Event_EventArgs $arguments)
     {
-        if (!($this->isSimilarShownActivated())) {
+        if (!$this->isSimilarShownActivated()) {
             return $arguments->getReturn();
         }
 
@@ -195,7 +197,7 @@ class Shopware_Plugins_Core_MarketingAggregate_Bootstrap extends Shopware_Compon
      */
     public function beforeSetLastArticle(Enlight_Event_EventArgs $arguments)
     {
-        if (Shopware()->Session()->get('Bot') || !($this->isSimilarShownActivated())) {
+        if (Shopware()->Session()->get('Bot') || !$this->isSimilarShownActivated()) {
             return $arguments->getReturn();
         }
 
@@ -250,7 +252,7 @@ class Shopware_Plugins_Core_MarketingAggregate_Bootstrap extends Shopware_Compon
             self::AGGREGATE_STRATEGY_LIVE
         );
 
-        if ($strategy !== self::AGGREGATE_STRATEGY_CRON_JOB || !($this->isSimilarShownActivated())) {
+        if ($strategy !== self::AGGREGATE_STRATEGY_CRON_JOB || !$this->isSimilarShownActivated()) {
             return true;
         }
 
@@ -364,13 +366,13 @@ class Shopware_Plugins_Core_MarketingAggregate_Bootstrap extends Shopware_Compon
      */
     public function incrementTopSeller(Enlight_Event_EventArgs $arguments)
     {
-        if (Shopware()->Session()->get('Bot') || !($this->isTopSellerActivated())) {
+        if (Shopware()->Session()->get('Bot') || !$this->isTopSellerActivated()) {
             return $arguments->getReturn();
         }
 
         $details = $arguments->getDetails();
         foreach ($details as $article) {
-            if ($article['modus'] != 0 || empty($article['articleID'])) {
+            if (($article['modus'] ?? null) != 0 || empty($article['articleID'])) {
                 continue;
             }
 
@@ -423,7 +425,7 @@ class Shopware_Plugins_Core_MarketingAggregate_Bootstrap extends Shopware_Compon
             self::AGGREGATE_STRATEGY_LIVE
         );
 
-        if ($strategy !== self::AGGREGATE_STRATEGY_LIVE || !($this->isTopSellerActivated())) {
+        if ($strategy !== self::AGGREGATE_STRATEGY_LIVE || !$this->isTopSellerActivated()) {
             return $arguments->getReturn();
         }
 
@@ -441,12 +443,11 @@ class Shopware_Plugins_Core_MarketingAggregate_Bootstrap extends Shopware_Compon
             return;
         }
 
-        /** @var \Shopware\Models\Article\Article $product */
         $product = $arguments->getEntity();
-        if (!($product instanceof \Shopware\Models\Article\Article)) {
+        if (!$product instanceof Article) {
             return;
         }
-        if (!($product->getId()) > 0) {
+        if (!($product->getId() > 0)) {
             return;
         }
 

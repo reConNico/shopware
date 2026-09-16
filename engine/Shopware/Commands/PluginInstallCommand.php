@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
@@ -84,7 +84,7 @@ class PluginInstallCommand extends PluginCommand implements CompletionAwareInter
                 'activate',
                 null,
                 InputOption::VALUE_NONE,
-                'Activate plugin after intallation.'
+                'Activate plugin after installation.'
             )
             ->addOption(
                 'no-refresh',
@@ -115,7 +115,7 @@ EOF
         try {
             $plugin = $pluginManager->getPluginByName($pluginName);
         } catch (Exception $e) {
-            $output->writeln(sprintf('Plugin by name "%s" was not found.', $pluginName));
+            $output->writeln(\sprintf('Plugin by name "%s" was not found.', $pluginName));
 
             return 1;
         }
@@ -123,17 +123,17 @@ EOF
         $installationContext = null;
 
         if ($plugin->getInstalled()) {
-            $output->writeln(sprintf('The plugin %s is already installed.', $pluginName));
+            $output->writeln(\sprintf('The plugin %s is already installed.', $pluginName));
         } else {
             $installationContext = $pluginManager->installPlugin($plugin);
-            $output->writeln(sprintf('Plugin %s has been installed successfully.', $pluginName));
+            $output->writeln(\sprintf('Plugin %s has been installed successfully.', $pluginName));
         }
 
         $activationContext = null;
 
         if ($input->getOption('activate')) {
             $activationContext = $pluginManager->activatePlugin($plugin);
-            $output->writeln(sprintf('Plugin %s has been activated successfully.', $pluginName));
+            $output->writeln(\sprintf('Plugin %s has been activated successfully.', $pluginName));
         }
 
         $this->clearCachesIfRequested($input, $output, $installationContext, $activationContext);

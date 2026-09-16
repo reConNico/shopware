@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -37,7 +37,7 @@ class Shopware_Components_Auth extends Enlight_Components_Auth
     /**
      * Adapter that is current active - has a valid user session
      *
-     * @var \Zend_Auth_Adapter_Interface
+     * @var Zend_Auth_Adapter_Interface
      */
     protected $_baseAdapter; // Current active adapter
 
@@ -100,9 +100,9 @@ class Shopware_Components_Auth extends Enlight_Components_Auth
     /**
      * Set current active adapter
      *
-     * @param \Zend_Auth_Adapter_Interface|null $adapter
+     * @param Zend_Auth_Adapter_Interface|null $adapter
      *
-     * @return \Shopware_Components_Auth
+     * @return Shopware_Components_Auth
      */
     public function setBaseAdapter($adapter)
     {
@@ -114,7 +114,7 @@ class Shopware_Components_Auth extends Enlight_Components_Auth
     /**
      * Get current active adapter
      *
-     * @return \Zend_Auth_Adapter_Interface
+     * @return Zend_Auth_Adapter_Interface
      */
     public function getBaseAdapter()
     {
@@ -126,7 +126,7 @@ class Shopware_Components_Auth extends Enlight_Components_Auth
      *
      * @return Zend_Auth_Result
      */
-    public function authenticate(Zend_Auth_Adapter_Interface $adapter = null)
+    public function authenticate(?Zend_Auth_Adapter_Interface $adapter = null)
     {
         if ($adapter == null) {
             $adapter = $this->_baseAdapter;
@@ -138,7 +138,7 @@ class Shopware_Components_Auth extends Enlight_Components_Auth
     /**
      * Refresh authentication - for example expire date -
      */
-    public function refresh(Zend_Auth_Adapter_Interface $adapter = null)
+    public function refresh(?Zend_Auth_Adapter_Interface $adapter = null)
     {
         if ($adapter == null) {
             $adapter = $this->getBaseAdapter();
@@ -165,7 +165,7 @@ class Shopware_Components_Auth extends Enlight_Components_Auth
             self::$_instance = new self();
         }
 
-        /** @var \Shopware_Components_Auth $return */
+        /** @var Shopware_Components_Auth $return */
         $return = self::$_instance;
 
         return $return;

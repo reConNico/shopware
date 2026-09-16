@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Core;
@@ -31,7 +30,9 @@ use Enlight_Template_Manager;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use sExport;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Model\ModelRepository;
+use Shopware\Models\Dispatch\Dispatch;
 use Shopware\Models\ProductFeed\ProductFeed;
 use Shopware\Tests\Functional\Traits\ContainerTrait;
 use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
@@ -68,10 +69,10 @@ class ExportTest extends TestCase
 
         if (!is_dir($this->cacheDir)) {
             if (@mkdir($this->cacheDir, 0777, true) === false) {
-                throw new RuntimeException(sprintf("Unable to create directory '%s'\n", $this->cacheDir));
+                throw new RuntimeException(\sprintf("Unable to create directory '%s'\n", $this->cacheDir));
             }
         } elseif (!is_writable($this->cacheDir)) {
-            throw new RuntimeException(sprintf("Unable to write in directory '%s'\n", $this->cacheDir));
+            throw new RuntimeException(\sprintf("Unable to write in directory '%s'\n", $this->cacheDir));
         }
 
         $this->connection = $this->getContainer()->get('dbal_connection');
@@ -151,6 +152,80 @@ class ExportTest extends TestCase
         $result = $db->query($sql)->fetchAll()[0];
 
         static::assertArrayHasKey('mainnumber', $result);
+    }
+
+    public function testsGetPremiumDispatchSurchargeInactiveSurcharge(): void
+    {
+        $testSurcharge = new Dispatch();
+        $testSurcharge->setName('Test surcharge');
+        $testSurcharge->setDescription('');
+        $testSurcharge->setComment('');
+        $testSurcharge->setPosition(0);
+        $testSurcharge->setCalculation(Dispatch::CALCULATION_WEIGHT);
+        $testSurcharge->setSurchargeCalculation(Dispatch::SURCHARGE_CALCULATION_ALWAYS);
+        $testSurcharge->setTaxCalculation(0);
+        $testSurcharge->setBindLastStock(0);
+
+        $testSurcharge->setType(Dispatch::TYPE_SURCHARGE);
+        $testSurcharge->setActive(false);
+        $testSurcharge->setBindSql('foo=bar');
+
+        $this->getContainer()->get(ModelManager::class)->persist($testSurcharge);
+        $this->getContainer()->get(ModelManager::class)->flush($testSurcharge);
+
+        $cart = [
+            'instock' => '1',
+            'stockmin' => '1',
+            'laststock' => '0',
+            'weight' => '0.000',
+            'count_article' => '1',
+            'shippingfree' => '0',
+            'amount' => '19.99',
+            'max_tax' => '19.00',
+            'userID' => '',
+            'has_topseller' => '0',
+            'has_comment' => '',
+            'has_esd' => '0',
+            'articleID' => '2',
+            'countryID' => '2',
+            'paymentID' => '5',
+            'customergroupID' => '1',
+            'multishopID' => '1',
+            'sessionID' => 'testSessionId',
+        ];
+        $surcharge = $this->export->sGetPremiumDispatchSurcharge($cart);
+
+        static::assertSame(0.0, $surcharge);
+    }
+
+    public function testsGetPremiumDispatchSurchargeActiveSurcharge(): void
+    {
+        $this->connection->executeStatement(
+            "INSERT INTO `s_premium_dispatch` (`name`, `type`, `description`, `comment`, `active`, `position`, `calculation`, `surcharge_calculation`, `tax_calculation`, `bind_shippingfree`, `bind_laststock`)
+             VALUES ('Test', :type, '', '', 1, 0, 1, 0, 0, 0, 0);",
+            ['type' => Dispatch::TYPE_SURCHARGE]
+        );
+
+        $cart = [
+            'instock' => '1',
+            'stockmin' => '1',
+            'laststock' => '0',
+            'weight' => '0.000',
+            'count_article' => '1',
+            'shippingfree' => '0',
+            'amount' => '19.99',
+            'max_tax' => '19.00',
+            'userID' => '',
+            'has_topseller' => '0',
+            'has_comment' => '',
+            'has_esd' => '0',
+            'articleID' => '2',
+            'customergroupID' => '1',
+            'multishopID' => '1',
+        ];
+        $surcharge = $this->export->sGetPremiumDispatchSurcharge($cart);
+
+        static::assertSame(0.0, $surcharge);
     }
 
     private function generateFeed(int $feedId): string

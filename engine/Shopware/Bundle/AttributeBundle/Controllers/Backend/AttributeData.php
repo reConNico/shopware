@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Bundle\AttributeBundle\Service\ConfigurationStruct;
 use Shopware\Bundle\AttributeBundle\Service\CrudServiceInterface;
 use Shopware\Bundle\AttributeBundle\Service\DataLoaderInterface;
+use Shopware\Bundle\AttributeBundle\Service\DataPersisterInterface;
 
 class Shopware_Controllers_Backend_AttributeData extends Shopware_Controllers_Backend_ExtJs
 {
@@ -59,8 +60,7 @@ class Shopware_Controllers_Backend_AttributeData extends Shopware_Controllers_Ba
 
     public function saveDataAction()
     {
-        /** @var \Shopware\Bundle\AttributeBundle\Service\DataPersisterInterface $dataPersister */
-        $dataPersister = $this->get(\Shopware\Bundle\AttributeBundle\Service\DataPersisterInterface::class);
+        $dataPersister = $this->get(DataPersisterInterface::class);
 
         $data = [];
         foreach ($this->Request()->getParams() as $key => $value) {
@@ -135,7 +135,7 @@ class Shopware_Controllers_Backend_AttributeData extends Shopware_Controllers_Ba
             $arrayStore = json_decode($column->getArrayStore(), true);
             if (!empty($arrayStore)) {
                 foreach ($arrayStore as &$option) {
-                    $optionKey = sprintf('%soptions_store_%s', $key, strtolower($option['key']));
+                    $optionKey = \sprintf('%soptions_store_%s', $key, strtolower($option['key']));
                     $option['value'] = $snippets->get($optionKey, $option['value']);
                 }
                 unset($option);

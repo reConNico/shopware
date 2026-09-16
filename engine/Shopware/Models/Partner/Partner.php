@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Partner;
@@ -30,6 +30,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
 use Shopware\Components\Security\AttributeCleanerTrait;
+use Shopware\Models\Attribute\Partner as PartnerAttribute;
 
 /**
  * Standard Export Model Entity
@@ -48,7 +49,7 @@ class Partner extends ModelEntity
     /**
      * INVERSE SIDE
      *
-     * @var \Shopware\Models\Attribute\Partner|null
+     * @var PartnerAttribute|null
      *
      * @ORM\OneToOne(targetEntity="Shopware\Models\Attribute\Partner", mappedBy="partner", orphanRemoval=true, cascade={"persist"})
      */
@@ -588,7 +589,7 @@ class Partner extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Attribute\Partner|null
+     * @return PartnerAttribute|null
      */
     public function getAttribute()
     {
@@ -596,12 +597,12 @@ class Partner extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Attribute\Partner|array|null $attribute
+     * @param PartnerAttribute|array|null $attribute
      *
-     * @return \Shopware\Models\Partner\Partner
+     * @return Partner
      */
     public function setAttribute($attribute)
     {
-        return $this->setOneToOne($attribute, \Shopware\Models\Attribute\Partner::class, 'attribute', 'partner');
+        return $this->setOneToOne($attribute, PartnerAttribute::class, 'attribute', 'partner');
     }
 }

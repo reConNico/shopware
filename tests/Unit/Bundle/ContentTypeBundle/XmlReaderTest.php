@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Bundle\ContentTypeBundle;
@@ -30,14 +31,10 @@ use Shopware\Bundle\ContentTypeBundle\Field\DummyField;
 use Shopware\Bundle\ContentTypeBundle\Field\TextField;
 use Shopware\Bundle\ContentTypeBundle\Services\TypeBuilder;
 use Shopware\Bundle\ContentTypeBundle\Services\XmlReader\ContentTypesReader;
-use Shopware\Bundle\ContentTypeBundle\Structs\Type;
 
 class XmlReaderTest extends TestCase
 {
-    /**
-     * @var ContentTypesReader
-     */
-    private $reader;
+    private ContentTypesReader $reader;
 
     public function setUp(): void
     {
@@ -52,6 +49,7 @@ class XmlReaderTest extends TestCase
 
         static::assertArrayHasKey('store', $data);
         $store = $data['store'];
+        static::assertIsArray($store);
 
         // Minimum required fields
         static::assertArrayHasKey('name', $store);
@@ -64,8 +62,6 @@ class XmlReaderTest extends TestCase
         static::assertCount(3, $store['fieldSets'][0]['fields']);
 
         $type = $this->getTypeBuilder()->createType('store', $store);
-
-        static::assertInstanceOf(Type::class, $type);
 
         static::assertEquals('store', $type->getInternalName());
         static::assertEquals('stores', $type->getName());
@@ -80,8 +76,6 @@ class XmlReaderTest extends TestCase
         $store = $data['store'];
 
         $type = $this->getTypeBuilder()->createType('store', $store);
-
-        static::assertInstanceOf(Type::class, $type);
 
         static::assertCount(2, $type->getFields());
 
@@ -99,6 +93,20 @@ class XmlReaderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->reader->read(__DIR__ . '/fixtures/valid_with_invalid_typeName.xml');
+    }
+
+    public function testReadValidTypeNameWithNumber(): void
+    {
+        $contentTypes = $this->reader->read(__DIR__ . '/fixtures/valid_with_number_in_typeName.xml');
+        static::assertArrayHasKey('a123Test', $contentTypes);
+        $testContentType = $contentTypes['a123Test'];
+        static::assertSame('TEST 123', $testContentType['name']);
+    }
+
+    public function testReadInvalidTypeNameStartingWithNumberFile(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->reader->read(__DIR__ . '/fixtures/valid_with_invalid_starting_number_in_typeName.xml');
     }
 
     public function testReadingInvalidFrontendConfiguration(): void

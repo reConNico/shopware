@@ -1,33 +1,40 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Api\Resource;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Shopware\Components\Api\Exception as ApiException;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\Query;
+use Doctrine\ORM\TransactionRequiredException;
+use Shopware\Components\Api\Exception\CustomValidationException;
 use Shopware\Components\Api\Exception\NotFoundException;
+use Shopware\Components\Api\Exception\OrmException as ShopwareOrmException;
 use Shopware\Components\Api\Exception\ParameterMissingException;
+use Shopware\Components\Api\Exception\PrivilegeException;
 use Shopware\Components\Api\Exception\ValidationException;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\NumberRangeIncrementerInterface;
@@ -79,7 +86,7 @@ class Order extends Resource
         $orderModel = $this->getRepository()->findOneBy(['number' => $number]);
 
         if (!$orderModel) {
-            throw new NotFoundException(sprintf('Order by number %s not found', $number));
+            throw new NotFoundException(\sprintf('Order by number %s not found', $number));
         }
 
         return $orderModel->getId();
@@ -88,10 +95,12 @@ class Order extends Resource
     /**
      * @param string $number
      *
-     * @throws ParameterMissingException
+     * @throws NonUniqueResultException
      * @throws NotFoundException
+     * @throws ParameterMissingException
+     * @throws PrivilegeException
      *
-     * @return array|OrderModel
+     * @return array<string, mixed>|OrderModel
      */
     public function getOneByNumber($number)
     {
@@ -103,10 +112,12 @@ class Order extends Resource
     /**
      * @param int $id
      *
-     * @throws ParameterMissingException
      * @throws NotFoundException
+     * @throws ParameterMissingException
+     * @throws NonUniqueResultException
+     * @throws PrivilegeException
      *
-     * @return array|OrderModel
+     * @return array<string, mixed>|OrderModel
      */
     public function getOne($id)
     {
@@ -121,7 +132,7 @@ class Order extends Resource
             ->getOneOrNullResult($this->getResultMode());
 
         if ($order === null) {
-            throw new NotFoundException(sprintf('Order by id %d not found', $id));
+            throw new NotFoundException(\sprintf('Order by id %d not found', $id));
         }
 
         if (\is_array($order)) {
@@ -134,10 +145,14 @@ class Order extends Resource
     }
 
     /**
-     * @param int $offset
-     * @param int $limit
+     * @param int                                                                                                            $offset
+     * @param int                                                                                                            $limit
+     * @param array<string, mixed>|array<array{property: string, value: mixed, expression?: string, operator?: string|null}> $criteria
+     * @param array<array{property: string, direction?: string}>                                                             $orderBy
      *
-     * @return array
+     * @throws PrivilegeException
+     *
+     * @return array{data: array<array<string, mixed>|OrderModel>, total: int}
      */
     public function getList($offset = 0, $limit = 25, array $criteria = [], array $orderBy = [])
     {
@@ -145,14 +160,14 @@ class Order extends Resource
 
         $builder = $this->getRepository()->createQueryBuilder('orders')
             ->addSelect(['attribute'])
-            ->leftJoin('orders.attribute', 'attribute');
-
-        $builder->addFilter($criteria);
-        $builder->addOrderBy($orderBy);
-        $builder->setFirstResult($offset)
-                ->setMaxResults($limit);
-        $builder->addSelect(['partial customer.{id,email}']);
-        $builder->leftJoin('orders.customer', 'customer');
+            ->leftJoin('orders.attribute', 'attribute')
+            ->addFilter($criteria)
+            ->addOrderBy($orderBy)
+            ->setFirstResult($offset)
+                ->setMaxResults($limit)
+            ->addSelect(['partial customer.{id,email}'])
+            ->leftJoin('orders.customer', 'customer');
+        /** @var Query<OrderModel|array<string, mixed>> $query */
         $query = $builder->getQuery();
 
         $query->setHydrationMode($this->getResultMode());
@@ -163,7 +178,7 @@ class Order extends Resource
         $totalResult = $paginator->count();
 
         // Returns the order data
-        $orders = $paginator->getIterator()->getArrayCopy();
+        $orders = iterator_to_array($paginator);
 
         foreach ($orders as &$order) {
             if (\is_array($order)) {
@@ -177,7 +192,14 @@ class Order extends Resource
     }
 
     /**
+     * @param array<string, mixed> $params
+     *
+     * @throws NotFoundException
+     * @throws ParameterMissingException
+     * @throws PrivilegeException
      * @throws ValidationException
+     * @throws ORMException
+     * @throws ShopwareOrmException
      *
      * @return OrderModel
      */
@@ -213,7 +235,7 @@ class Order extends Resource
             throw new ValidationException($violations);
         }
 
-        $this->prepareCreateAddresses($params, $order);
+        $this->createAddresses($params, $order);
 
         // Generate an order number if none was provided. Doing it after validation since
         // the generation of the order number cannot be reverted in a simple manner.
@@ -234,8 +256,15 @@ class Order extends Resource
     }
 
     /**
-     * @param string $number
-     * @param array  $params
+     * @param string               $number
+     * @param array<string, mixed> $params
+     *
+     * @throws CustomValidationException
+     * @throws NotFoundException
+     * @throws ParameterMissingException
+     * @throws PrivilegeException
+     * @throws ShopwareOrmException
+     * @throws ValidationException
      *
      * @return OrderModel
      */
@@ -247,11 +276,18 @@ class Order extends Resource
     }
 
     /**
-     * @param int $id
+     * @param int                  $id
+     * @param array<string, mixed> $params
      *
-     * @throws ValidationException
+     * @throws CustomValidationException
      * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
      * @throws ParameterMissingException
+     * @throws PrivilegeException
+     * @throws ShopwareOrmException
+     * @throws TransactionRequiredException
+     * @throws ValidationException
      *
      * @return OrderModel
      */
@@ -266,7 +302,7 @@ class Order extends Resource
         $order = $this->getRepository()->find($id);
 
         if (!$order) {
-            throw new NotFoundException(sprintf('Order by id %d not found', $id));
+            throw new NotFoundException(\sprintf('Order by id %d not found', $id));
         }
 
         $params = $this->prepareOrderData($params, $order);
@@ -286,16 +322,19 @@ class Order extends Resource
     /**
      * Helper method to prepare the order data
      *
+     * @param array<string, mixed> $params
+     *
      * @throws NotFoundException
      * @throws ParameterMissingException
+     * @throws ValidationException
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function prepareCreateOrderData(array $params)
     {
         $params = $this->prepareCreateOrderDetailsData($params);
 
-        $orderWhiteList = [
+        $allowedOrderFields = [
             'attribute',
             'billing',
             'clearedDate',
@@ -314,6 +353,7 @@ class Order extends Resource
             'invoiceAmountNet',
             'invoiceShipping',
             'invoiceShippingNet',
+            'invoiceShippingTaxRate',
             'languageIso',
             'net',
             'number',
@@ -334,7 +374,7 @@ class Order extends Resource
             'shopId',
         ];
 
-        $params = array_intersect_key($params, array_flip($orderWhiteList));
+        $params = array_intersect_key($params, array_flip($allowedOrderFields));
 
         if (!\array_key_exists('customerId', $params)) {
             throw new ParameterMissingException('customerId');
@@ -362,7 +402,7 @@ class Order extends Resource
 
         $params['customer'] = $this->getContainer()->get(ModelManager::class)->find(CustomerModel::class, $params['customerId']);
         if (empty($params['customer'])) {
-            throw new NotFoundException(sprintf('Customer by id %s not found', $params['customerId']));
+            throw new NotFoundException(\sprintf('Customer by id %s not found', $params['customerId']));
         }
         unset($params['customerId']);
 
@@ -371,7 +411,7 @@ class Order extends Resource
             'group' => 'state',
         ]);
         if (empty($params['orderStatus'])) {
-            throw new NotFoundException(sprintf('OrderStatus by id %s not found', $params['orderStatusId']));
+            throw new NotFoundException(\sprintf('OrderStatus by id %s not found', $params['orderStatusId']));
         }
         unset($params['orderStatusId']);
 
@@ -380,19 +420,19 @@ class Order extends Resource
             'group' => 'payment',
         ]);
         if (empty($params['paymentStatus'])) {
-            throw new NotFoundException(sprintf('PaymentStatus by id %s not found', $params['paymentStatusId']));
+            throw new NotFoundException(\sprintf('PaymentStatus by id %s not found', $params['paymentStatusId']));
         }
         unset($params['paymentStatusId']);
 
         $params['payment'] = $this->getContainer()->get(ModelManager::class)->find(Payment::class, $params['paymentId']);
         if (empty($params['payment'])) {
-            throw new NotFoundException(sprintf('Payment by id %s not found', $params['paymentId']));
+            throw new NotFoundException(\sprintf('Payment by id %s not found', $params['paymentId']));
         }
         unset($params['paymentId']);
 
         $params['dispatch'] = $this->getContainer()->get(ModelManager::class)->find(Dispatch::class, $params['dispatchId']);
         if (empty($params['dispatch'])) {
-            throw new NotFoundException(sprintf('Dispatch by id %s not found', $params['dispatchId']));
+            throw new NotFoundException(\sprintf('Dispatch by id %s not found', $params['dispatchId']));
         }
         unset($params['dispatchId']);
 
@@ -400,7 +440,7 @@ class Order extends Resource
             $params['partner'] = $this->getContainer()->get(ModelManager::class)->find(Partner::class, $params['partnerId']);
 
             if (empty($params['partner'])) {
-                throw new NotFoundException(sprintf('Partner by id %s not found', $params['partnerId']));
+                throw new NotFoundException(\sprintf('Partner by id %s not found', $params['partnerId']));
             }
 
             unset($params['partnerId']);
@@ -408,7 +448,7 @@ class Order extends Resource
 
         $params['shop'] = $this->getContainer()->get(ModelManager::class)->find(Shop::class, $params['shopId']);
         if (empty($params['shop'])) {
-            throw new NotFoundException(sprintf('Shop by id %s not found', $params['shopId']));
+            throw new NotFoundException(\sprintf('Shop by id %s not found', $params['shopId']));
         }
 
         unset($params['shopId']);
@@ -419,14 +459,16 @@ class Order extends Resource
     /**
      * Helper method to prepare the order detail data
      *
+     * @param array<string, mixed> $params
+     *
      * @throws NotFoundException
      * @throws ValidationException
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function prepareCreateOrderDetailsData(array $params)
     {
-        $detailWhiteList = [
+        $allowedOrderDetailFields = [
             'articleId',
             'articleName',
             'articleNumber',
@@ -459,8 +501,7 @@ class Order extends Resource
         }
 
         foreach ($details as &$detail) {
-            // Apply whiteList
-            $detail = array_intersect_key($detail, array_flip($detailWhiteList));
+            $detail = array_intersect_key($detail, array_flip($allowedOrderDetailFields));
 
             if (!\array_key_exists('statusId', $detail)) {
                 throw new NotFoundException('details.statusId');
@@ -481,14 +522,14 @@ class Order extends Resource
 
             $status = $this->getContainer()->get(ModelManager::class)->find(DetailStatus::class, $detail['statusId']);
             if (!$status) {
-                throw new NotFoundException(sprintf('DetailStatus by id %s not found', $detail['statusId']));
+                throw new NotFoundException(\sprintf('DetailStatus by id %s not found', $detail['statusId']));
             }
             $detailModel->setStatus($status);
             unset($detail['statusId']);
 
             $tax = $this->getContainer()->get(ModelManager::class)->find(Tax::class, $detail['taxId']);
             if (!$tax) {
-                throw new NotFoundException(sprintf('Tax by id %s not found', $detail['taxId']));
+                throw new NotFoundException(\sprintf('Tax by id %s not found', $detail['taxId']));
             }
             $detailModel->setTax($tax);
             unset($detail['taxId']);
@@ -515,15 +556,21 @@ class Order extends Resource
     /**
      * Helper method to prepare the order data
      *
-     * @throws NotFoundException
+     * @param array<string, mixed> $params
      *
-     * @return array
+     * @throws CustomValidationException
+     * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
+     * @throws TransactionRequiredException
+     *
+     * @return array<string, mixed>
      */
     public function prepareOrderData(array $params, OrderModel $order)
     {
         $params = $this->prepareOrderDetailsData($params, $order);
 
-        $orderWhiteList = [
+        $allowedOrderFields = [
             'paymentStatusId',
             'orderStatusId',
             'trackingCode',
@@ -536,7 +583,7 @@ class Order extends Resource
             'details',
         ];
 
-        $params = array_intersect_key($params, array_flip($orderWhiteList));
+        $params = array_intersect_key($params, array_flip($allowedOrderFields));
 
         if (isset($params['orderStatusId'])) {
             $params['orderStatus'] = Shopware()->Models()->getRepository(Status::class)->findOneBy(
@@ -547,7 +594,7 @@ class Order extends Resource
             );
 
             if (empty($params['orderStatus'])) {
-                throw new NotFoundException(sprintf('OrderStatus by id %s not found', $params['orderStatusId']));
+                throw new NotFoundException(\sprintf('OrderStatus by id %s not found', $params['orderStatusId']));
             }
         }
 
@@ -560,7 +607,7 @@ class Order extends Resource
             );
 
             if (empty($params['paymentStatus'])) {
-                throw new NotFoundException(sprintf('PaymentStatus by id %s not found', $params['paymentStatusId']));
+                throw new NotFoundException(\sprintf('PaymentStatus by id %s not found', $params['paymentStatusId']));
             }
 
             return $params;
@@ -572,13 +619,19 @@ class Order extends Resource
     /**
      * Helper method to prepare the order detail data
      *
-     * @throws NotFoundException|ApiException\CustomValidationException
+     * @param array<string, mixed> $params
      *
-     * @return array
+     * @throws CustomValidationException
+     * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
+     * @throws TransactionRequiredException
+     *
+     * @return array<string, mixed>
      */
     public function prepareOrderDetailsData(array $params, OrderModel $order)
     {
-        $detailWhiteList = [
+        $allowedOrderDetailFields = [
             'status',
             'shipped',
             'id',
@@ -593,8 +646,7 @@ class Order extends Resource
         }
 
         foreach ($details as &$detail) {
-            // Apply whiteList
-            $detail = array_intersect_key($detail, array_flip($detailWhiteList));
+            $detail = array_intersect_key($detail, array_flip($allowedOrderDetailFields));
         }
         unset($detail);
 
@@ -612,7 +664,7 @@ class Order extends Resource
                 $status = Shopware()->Models()->find(DetailStatus::class, $detail['status']);
 
                 if (!$status) {
-                    throw new NotFoundException(sprintf('DetailStatus by id %s not found', $detail['status']));
+                    throw new NotFoundException(\sprintf('DetailStatus by id %s not found', $detail['status']));
                 }
 
                 $detailModel->setStatus($status);
@@ -632,11 +684,13 @@ class Order extends Resource
     }
 
     /**
+     * @param array<string, mixed> $params
+     *
      * @throws NotFoundException
      * @throws ValidationException
      * @throws ParameterMissingException
      */
-    private function prepareCreateAddresses(array $params, OrderModel $order): void
+    private function createAddresses(array $params, OrderModel $order): void
     {
         if (!\array_key_exists('billing', $params)) {
             throw new ParameterMissingException('billing');
@@ -656,7 +710,7 @@ class Order extends Resource
         if (isset($billing['stateId'])) {
             $state = $this->getContainer()->get(ModelManager::class)->find(State::class, (int) $billing['stateId']);
             if (!$state instanceof State) {
-                throw new NotFoundException(sprintf('Billing State by id %s not found', $billing['stateId']));
+                throw new NotFoundException(\sprintf('Billing State by id %s not found', $billing['stateId']));
             }
         } else {
             $billing['stateId'] = 0;
@@ -664,11 +718,11 @@ class Order extends Resource
 
         $country = $this->getContainer()->get(ModelManager::class)->find(CountryModel::class, $billing['countryId']);
         if (!$country instanceof CountryModel) {
-            throw new NotFoundException(sprintf('Billing Country by id %s not found', $billing['countryId']));
+            throw new NotFoundException(\sprintf('Billing Country by id %s not found', $billing['countryId']));
         }
 
         if (!$order->getCustomer() instanceof CustomerModel) {
-            throw new NotFoundException(sprintf('Order with ID "%s" has no customer', $order->getId()));
+            throw new NotFoundException(\sprintf('Order with ID "%s" has no customer', $order->getId()));
         }
 
         $billingAddress = new Billing();
@@ -693,7 +747,7 @@ class Order extends Resource
         if (isset($shipping['stateId'])) {
             $state = $this->getContainer()->get(ModelManager::class)->find(State::class, (int) $shipping['stateId']);
             if (!$state instanceof State) {
-                throw new NotFoundException(sprintf('Shipping State by id %s not found', $shipping['stateId']));
+                throw new NotFoundException(\sprintf('Shipping State by id %s not found', $shipping['stateId']));
             }
         } else {
             $shipping['stateId'] = 0;
@@ -701,7 +755,7 @@ class Order extends Resource
 
         $country = $this->getContainer()->get(ModelManager::class)->find(CountryModel::class, $shipping['countryId']);
         if (!$country) {
-            throw new NotFoundException(sprintf('Shipping Country by id %s not found', $shipping['countryId']));
+            throw new NotFoundException(\sprintf('Shipping Country by id %s not found', $shipping['countryId']));
         }
 
         $shippingAddress = new Shipping();

@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\MediaServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
 use Shopware\Components\Compatibility\LegacyStructConverter;
 use Shopware\Components\Routing\RouterInterface;
 use Shopware\Components\ShopRegistrationServiceInterface;
@@ -411,25 +412,19 @@ class Shopware_Plugins_Core_CronRating_Bootstrap extends Shopware_Components_Plu
      *
      * by using the corresponding shopId for every order's positions.
      *
-     * @param array $orderPositions
-     *
-     * @return array
+     * @return array<int, array<string, BaseProduct>>
      */
-    private function structurePositionsArray($orderPositions)
+    private function structurePositionsArray(array $orderPositions): array
     {
         $shopPositionNumbers = [];
 
-        foreach ($orderPositions as $order_id => $positions) {
-            $firstPosition = $positions[array_keys($positions)[0]];
-            $shopId = is_numeric($firstPosition['language']) ? $firstPosition['language'] : $firstPosition['subshopID'];
-
-            if (!\is_array($shopPositionNumbers[$shopId])) {
-                $shopPositionNumbers[$shopId] = [];
-            }
+        foreach ($orderPositions as $positions) {
+            $firstPosition = $positions[array_key_first($positions)];
+            $shopId = is_numeric($firstPosition['language']) ? (int) $firstPosition['language'] : (int) $firstPosition['subshopID'];
 
             $shopPositionNumbers[$shopId] = array_merge(
                 array_column($positions, 'articleordernumber'),
-                $shopPositionNumbers[$shopId]
+                $shopPositionNumbers[$shopId] ?? []
             );
         }
 

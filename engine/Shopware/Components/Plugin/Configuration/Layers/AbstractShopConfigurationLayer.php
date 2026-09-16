@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Plugin\Configuration\Layers;
@@ -95,9 +94,9 @@ abstract class AbstractShopConfigurationLayer implements ConfigurationLayerInter
         $builder = $this->configureQuery($builder, $shopId, $pluginName);
 
         $values = $builder->select([
-                'coreConfigElements.name',
-                'coreConfigValues.value',
-            ])
+            'coreConfigElements.name',
+            'coreConfigValues.value',
+        ])
             ->execute()
             ->fetchAll(PDO::FETCH_KEY_PAIR)
         ;
@@ -119,13 +118,13 @@ abstract class AbstractShopConfigurationLayer implements ConfigurationLayerInter
         /** @var Plugin|null $plugin */
         $plugin = $pluginRepository->findOneBy(['name' => $pluginName]);
         if ($plugin === null) {
-            throw new WriterException(sprintf('Plugin by name "%s" not found.', $pluginName));
+            throw new WriterException(\sprintf('Plugin by name "%s" not found.', $pluginName));
         }
 
         /** @var Form|null $form */
         $form = $formRepository->findOneBy(['pluginId' => $plugin->getId()]);
         if ($form === null) {
-            throw new WriterException(sprintf('Plugin form by plugin id "%u" not found.', $plugin->getId()));
+            throw new WriterException(\sprintf('Plugin form by plugin id "%u" not found.', $plugin->getId()));
         }
 
         $parentValues = $this->getParent()->readValues($pluginName, $shopId);
@@ -152,11 +151,11 @@ abstract class AbstractShopConfigurationLayer implements ConfigurationLayerInter
         /** @var Element|null $element */
         $element = $elementRepository->findOneBy(['form' => $form, 'name' => $name]);
         if ($element === null) {
-            throw new WriterException(sprintf('Config element "%s" not found.', $name));
+            throw new WriterException(\sprintf('Config element "%s" not found.', $name));
         }
 
         if ($shopId !== 1 && $element->getScope() === 0) {
-            $message = sprintf("Element '%s' is not writeable for shop %u", $element->getName(), $shopId);
+            $message = \sprintf("Element '%s' is not writeable for shop %u", $element->getName(), $shopId);
             $baseException = new InvalidArgumentException($message);
             throw new WriterException('Element is not valid', 0, $baseException);
         }

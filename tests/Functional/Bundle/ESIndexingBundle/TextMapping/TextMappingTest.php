@@ -1,30 +1,33 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\ESIndexingBundle\TextMapping;
 
 use Doctrine\DBAL\Connection;
+use Elasticsearch\Client;
+use Shopware\Bundle\ESIndexingBundle\IndexFactory;
 use Shopware\Bundle\ESIndexingBundle\Product\ProductMapping;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
 use Shopware\Models\Category\Category;
@@ -35,14 +38,11 @@ use Shopware\Tests\Functional\Bundle\StoreFrontBundle\TestCase;
  */
 class TextMappingTest extends TestCase
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     protected function setUp(): void
     {
-        $this->connection = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class);
+        $this->connection = Shopware()->Container()->get(Connection::class);
         $this->connection->beginTransaction();
 
         parent::setUp();
@@ -55,24 +55,24 @@ class TextMappingTest extends TestCase
         parent::tearDown();
     }
 
-    public function testKeywordsIsQueryAble()
+    public function testKeywordsIsQueryAble(): void
     {
         $context = $this->getContext();
         $category = $this->helper->createCategory();
 
         $products = $this->createProducts(['test9999' => []], $context, $category);
+        $productNumber = key($products);
+        static::assertIsString($productNumber);
 
-        $this->helper->updateArticle(key($products), ['mainDetail' => [
+        $this->helper->updateProduct($productNumber, ['mainDetail' => [
             'ean' => 444,
-            ],
-        ]);
+        ]]);
 
-        $client = Shopware()->Container()->get(\Elasticsearch\Client::class);
-        $indexFactory = Shopware()->Container()->get(\Shopware\Bundle\ESIndexingBundle\IndexFactory::class);
+        $client = Shopware()->Container()->get(Client::class);
+        $indexFactory = Shopware()->Container()->get(IndexFactory::class);
 
         $this->helper->refreshSearchIndexes($context->getShop());
 
-        /** @var string $version */
         $version = Shopware()->Container()->getParameter('shopware.es.version');
 
         $arguments = [
@@ -101,9 +101,6 @@ class TextMappingTest extends TestCase
         static::assertEquals('test9999', $response['hits']['hits'][0]['_id']);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createProducts(array $products, ShopContext $context, Category $category): array
     {
         $createdProducts = parent::createProducts($products, $context, $category);

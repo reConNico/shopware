@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator;
 
+use Shopware\Bundle\SearchBundle\FacetInterface;
+use Shopware\Bundle\SearchBundle\SortingInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Search\CustomFacet;
 use Shopware\Bundle\StoreFrontBundle\Struct\Search\CustomSorting;
 use Shopware\Components\LogawareReflectionHelper;
@@ -52,9 +54,10 @@ class CustomListingHydrator extends Hydrator
         $sorting->setLabel($data['__customSorting_label']);
         $sorting->setPosition((int) $data['__customSorting_position']);
 
+        /** @var array<SortingInterface> $sortings */
         $sortings = $this->reflector->unserialize(
             json_decode($data['__customSorting_sortings'], true),
-            sprintf('Serialization error in custom sorting %s', $sorting->getLabel())
+            \sprintf('Serialization error in custom sorting %s', $sorting->getLabel())
         );
 
         $sorting->setSortings($sortings);
@@ -91,14 +94,18 @@ class CustomListingHydrator extends Hydrator
 
         $facets = $this->reflector->unserialize(
             $facets,
-            sprintf('Serialization error in custom facet %s', $customFacet->getName())
+            \sprintf('Serialization error in custom facet %s', $customFacet->getName())
         );
 
         if (empty($facets)) {
             return null;
         }
+        $firstFacet = array_shift($facets);
+        if (!$firstFacet instanceof FacetInterface) {
+            return null;
+        }
 
-        $customFacet->setFacet(array_shift($facets));
+        $customFacet->setFacet($firstFacet);
 
         return $customFacet;
     }

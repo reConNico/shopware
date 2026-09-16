@@ -187,7 +187,7 @@ class Enlight_Controller_Request_RequestTestCase extends Enlight_Controller_Requ
     {
         $type = strtoupper(trim((string) $type));
         if (!\in_array($type, $this->_validMethodTypes, true)) {
-            throw new \Exception('Invalid request method specified');
+            throw new Exception('Invalid request method specified');
         }
 
         $this->method = $type;
@@ -354,9 +354,13 @@ class Enlight_Controller_Request_RequestTestCase extends Enlight_Controller_Requ
     {
         if ($key === null) {
             return array_merge($_SERVER, $this->_serverParams);
-        } elseif (isset($this->_serverParams[$key])) {
-            return $this->_serverParams[$key] !== null ? $this->_serverParams[$key] : $default;
-        } elseif ($this->server->has($key)) {
+        }
+
+        if (isset($this->_serverParams[$key])) {
+            return $this->_serverParams[$key] ?: $default;
+        }
+
+        if ($this->server->has($key)) {
             return $this->server->get($key);
         }
 

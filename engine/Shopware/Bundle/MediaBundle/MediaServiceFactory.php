@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\MediaBundle;
@@ -31,6 +31,7 @@ use IteratorAggregate;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Filesystem;
 use Shopware\Bundle\MediaBundle\Adapters\AdapterFactoryInterface;
+use Shopware\Bundle\MediaBundle\Strategy\StrategyFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class MediaServiceFactory
@@ -69,7 +70,7 @@ class MediaServiceFactory
     public function factory($backendName)
     {
         if (!isset($this->cdnConfig['adapters'][$backendName])) {
-            throw new Exception(sprintf('Configuration "%s" not found', $backendName));
+            throw new Exception(\sprintf('Configuration "%s" not found', $backendName));
         }
 
         // Filesystem
@@ -78,7 +79,7 @@ class MediaServiceFactory
         $filesystem = new Filesystem($adapter, ['visibility' => AdapterInterface::VISIBILITY_PUBLIC]);
 
         // Strategy
-        $strategyFactory = $this->container->get(\Shopware\Bundle\MediaBundle\Strategy\StrategyFactory::class);
+        $strategyFactory = $this->container->get(StrategyFactory::class);
         $strategyName = isset($config['strategy']) ? $config['strategy'] : $this->cdnConfig['strategy'];
         $strategy = $strategyFactory->factory($strategyName);
 
@@ -103,7 +104,7 @@ class MediaServiceFactory
         $adapter = $adapters->first();
 
         if (!$adapter) {
-            throw new Exception(sprintf('CDN Adapter "%s" not found.', $config['type']));
+            throw new Exception(\sprintf('CDN Adapter "%s" not found.', $config['type']));
         }
 
         return $adapter;

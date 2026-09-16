@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\PluginInstallerBundle\Service;
@@ -27,7 +28,8 @@ namespace Shopware\Bundle\PluginInstallerBundle\Service;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Driver\ResultStatement;
+use Doctrine\DBAL\DBALException;
+use Doctrine\ORM\OptimisticLockException;
 use Enlight_Event_EventManager;
 use Exception;
 use InvalidArgumentException;
@@ -45,11 +47,11 @@ use Shopware\Bundle\PluginInstallerBundle\Events\PrePluginDeactivateEvent;
 use Shopware\Bundle\PluginInstallerBundle\Events\PrePluginInstallEvent;
 use Shopware\Bundle\PluginInstallerBundle\Events\PrePluginUninstallEvent;
 use Shopware\Bundle\PluginInstallerBundle\Events\PrePluginUpdateEvent;
+use Shopware\Components\Migrations\AbstractMigration;
 use Shopware\Components\Migrations\AbstractPluginMigration;
 use Shopware\Components\Migrations\PluginMigrationManager;
 use Shopware\Components\Model\ModelManager;
-use Shopware\Components\Plugin as PluginBootstrap;
-use Shopware\Components\Plugin as PluginComponent;
+use Shopware\Components\Plugin as PluginBaseClass;
 use Shopware\Components\Plugin\Context\ActivateContext;
 use Shopware\Components\Plugin\Context\DeactivateContext;
 use Shopware\Components\Plugin\Context\InstallContext;
@@ -70,58 +72,31 @@ use Shopware\Models\Plugin\Plugin;
 
 class PluginInstaller
 {
-    /**
-     * @var ModelManager
-     */
-    private $em;
+    private ModelManager $em;
+
+    private Connection $connection;
+
+    private DatabaseHandler $snippetHandler;
+
+    private RequirementValidator $requirementValidator;
+
+    private PDO $pdo;
 
     /**
-     * @var Connection
+     * @var array<string, string>
      */
-    private $connection;
+    private array $pluginDirectories;
+
+    private ShopwareReleaseStruct $release;
+
+    private Enlight_Event_EventManager $events;
+
+    private LoggerInterface $logger;
+
+    private Kernel $kernel;
 
     /**
-     * @var DatabaseHandler
-     */
-    private $snippetHandler;
-
-    /**
-     * @var RequirementValidator
-     */
-    private $requirementValidator;
-
-    /**
-     * @var PDO
-     */
-    private $pdo;
-
-    /**
-     * @var string[]
-     */
-    private $pluginDirectories;
-
-    /**
-     * @var ShopwareReleaseStruct
-     */
-    private $release;
-
-    /**
-     * @var Enlight_Event_EventManager
-     */
-    private $events;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var Kernel
-     */
-    private $kernel;
-
-    /**
-     * @param string|string[] $pluginDirectories
+     * @param array<string, string> $pluginDirectories
      */
     public function __construct(
         ModelManager $em,
@@ -129,7 +104,7 @@ class PluginInstaller
         RequirementValidator $requirementValidator,
         PDO $pdo,
         Enlight_Event_EventManager $events,
-        $pluginDirectories,
+        array $pluginDirectories,
         ShopwareReleaseStruct $release,
         LoggerInterface $logger,
         Kernel $kernel
@@ -140,7 +115,7 @@ class PluginInstaller
         $this->requirementValidator = $requirementValidator;
         $this->pdo = $pdo;
         $this->events = $events;
-        $this->pluginDirectories = (array) $pluginDirectories;
+        $this->pluginDirectories = $pluginDirectories;
         $this->release = $release;
         $this->logger = $logger;
         $this->kernel = $kernel;
@@ -163,13 +138,13 @@ class PluginInstaller
         $this->installResources($pluginBootstrap, $plugin);
 
         // Makes sure the version is updated in the db after a re-installation
-        if ($this->hasInfoNewerVersion($plugin->getUpdateVersion(), $plugin->getVersion())) {
+        if ($plugin->getUpdateVersion() && $this->hasInfoNewerVersion($plugin->getUpdateVersion(), $plugin->getVersion())) {
             $plugin->setVersion($plugin->getUpdateVersion());
         }
 
         $this->em->flush($plugin);
 
-        $this->applyMigrations($pluginBootstrap, AbstractPluginMigration::MODUS_INSTALL);
+        $this->applyMigrations($pluginBootstrap, AbstractMigration::MODUS_INSTALL);
 
         $pluginBootstrap->install($context);
 
@@ -187,8 +162,8 @@ class PluginInstaller
      * @param bool $removeData
      *
      * @throws Exception
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws DBALException
+     * @throws OptimisticLockException
      *
      * @return UninstallContext
      */
@@ -250,7 +225,7 @@ class PluginInstaller
 
         $this->installResources($pluginBootstrap, $plugin);
 
-        $this->applyMigrations($pluginBootstrap, AbstractPluginMigration::MODUS_UPDATE);
+        $this->applyMigrations($pluginBootstrap, AbstractMigration::MODUS_UPDATE);
 
         $pluginBootstrap->update($context);
 
@@ -268,7 +243,7 @@ class PluginInstaller
 
     /**
      * @throws Exception
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws OptimisticLockException
      *
      * @return ActivateContext
      */
@@ -293,7 +268,7 @@ class PluginInstaller
 
     /**
      * @throws Exception
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws OptimisticLockException
      *
      * @return DeactivateContext
      */
@@ -316,26 +291,26 @@ class PluginInstaller
 
     /**
      * @throws RuntimeException
+     *
+     * @return void
      */
     public function refreshPluginList(DateTimeInterface $refreshDate)
     {
+        $refreshDateString = $refreshDate->format('Y-m-d H:i:s');
         $initializer = new PluginInitializer(
             $this->pdo,
             $this->pluginDirectories
         );
 
-        $plugins = $initializer->initializePlugins();
-
-        foreach ($plugins as $plugin) {
+        foreach ($initializer->initializePlugins() as $plugin) {
             $pluginInfoPath = $plugin->getPath() . '/plugin.xml';
             if (is_file($pluginInfoPath)) {
-                $xmlConfigReader = new XmlPluginReader();
-                $info = $xmlConfigReader->read($pluginInfoPath);
+                $info = (new XmlPluginReader())->read($pluginInfoPath);
             } else {
                 $info = [];
             }
 
-            $currentPluginInfo = $this->em->getConnection()->fetchAssoc(
+            $currentPluginInfo = $this->em->getConnection()->fetchAssociative(
                 'SELECT * FROM s_core_plugins WHERE `name` LIKE ?',
                 [$plugin->getName()]
             );
@@ -352,43 +327,43 @@ class PluginInstaller
                 }
             }
 
-            $info['label'] = isset($info['label']['en']) ? $info['label']['en'] : $plugin->getName();
-            $info['description'] = isset($info['description']['en']) ? $info['description']['en'] : null;
-            $info['version'] = isset($info['version']) ? $info['version'] : '0.0.1';
-            $info['author'] = isset($info['author']) ? $info['author'] : null;
-            $info['link'] = isset($info['link']) ? $info['link'] : null;
+            $info['label'] = (string) ($info['label']['en'] ?? $plugin->getName());
+            $info['description'] = $info['description']['en'] ?? null;
+            $info['version'] = (string) ($info['version'] ?? '0.0.1');
+            $info['author'] = $info['author'] ?? null;
+            $info['link'] = $info['link'] ?? null;
 
             $data = [
                 'namespace' => $plugin->getPluginNamespace(),
                 'version' => $info['version'],
-                'author' => $info['author'],
+                'author' => $info['author'] ? (string) $info['author'] : null,
                 'name' => $plugin->getName(),
-                'link' => $info['link'],
+                'link' => $info['link'] ? (string) $info['link'] : null,
                 'label' => $info['label'],
-                'description' => $info['description'],
-                'capability_update' => true,
-                'capability_install' => true,
-                'capability_enable' => true,
-                'capability_secure_uninstall' => true,
-                'refresh_date' => $refreshDate,
-                'translations' => $translations ? json_encode($translations) : null,
-                'changes' => isset($info['changelog']) ? json_encode($info['changelog']) : null,
+                'description' => $info['description'] ? (string) $info['description'] : null,
+                'capability_update' => 1,
+                'capability_install' => 1,
+                'capability_enable' => 1,
+                'capability_secure_uninstall' => 1,
+                'refresh_date' => $refreshDateString,
+                'translations' => $translations ? json_encode($translations, JSON_THROW_ON_ERROR) : null,
+                'changes' => isset($info['changelog']) ? json_encode($info['changelog'], JSON_THROW_ON_ERROR) : null,
             ];
 
             if ($currentPluginInfo) {
                 if ($this->hasInfoNewerVersion($info['version'], $currentPluginInfo['version'])) {
-                    $data['version'] = $currentPluginInfo['version'];
+                    $data['version'] = (string) $currentPluginInfo['version'];
                     $data['update_version'] = $info['version'];
                 }
 
                 $this->em->getConnection()->update(
                     's_core_plugins',
                     $data,
-                    ['id' => $currentPluginInfo['id']],
+                    ['id' => (int) $currentPluginInfo['id']],
                     ['refresh_date' => 'datetime']
                 );
             } else {
-                $data['added'] = $refreshDate;
+                $data['added'] = $refreshDateString;
                 $this->em->getConnection()->insert(
                     's_core_plugins',
                     $data,
@@ -408,15 +383,10 @@ class PluginInstaller
      */
     public function getPluginPath(Plugin $plugin)
     {
-        $pluginBootstrap = $this->getPluginByName($plugin->getName());
-
-        return $pluginBootstrap->getPath();
+        return $this->getPluginByName($plugin->getName())->getPath();
     }
 
-    /**
-     * @param bool $removeDirty
-     */
-    private function removeSnippets(PluginBootstrap $bootstrap, $removeDirty)
+    private function removeSnippets(PluginBaseClass $bootstrap, bool $removeDirty): void
     {
         $this->snippetHandler->removeFromDatabase($bootstrap->getPath() . '/Resources/snippets/', $removeDirty);
     }
@@ -424,7 +394,7 @@ class PluginInstaller
     /**
      * @throws Exception
      */
-    private function installResources(PluginBootstrap $bootstrap, Plugin $plugin)
+    private function installResources(PluginBaseClass $bootstrap, Plugin $plugin): void
     {
         if (is_file($bootstrap->getPath() . '/Resources/config.xml')) {
             $this->installForm($plugin, $bootstrap->getPath() . '/Resources/config.xml');
@@ -443,88 +413,67 @@ class PluginInstaller
         }
     }
 
-    private function installSnippets(PluginBootstrap $bootstrap)
+    private function installSnippets(PluginBaseClass $bootstrap): void
     {
         $this->snippetHandler->loadToDatabase($bootstrap->getPath() . '/Resources/snippets/');
     }
 
     /**
-     * @param string $file
-     *
      * @throws Exception
      */
-    private function installForm(Plugin $plugin, $file)
+    private function installForm(Plugin $plugin, string $file): void
     {
-        $xmlConfigReader = new XmlConfigReader();
-        $config = $xmlConfigReader->read($file);
+        $config = (new XmlConfigReader())->read($file);
 
         $formSynchronizer = new FormSynchronizer($this->em);
         $formSynchronizer->synchronize($plugin, $config);
     }
 
     /**
-     * @param string $file
-     *
      * @throws InvalidArgumentException
      */
-    private function installMenu(Plugin $plugin, $file)
+    private function installMenu(Plugin $plugin, string $file): void
     {
-        $menuReader = new XmlMenuReader();
-        $menu = $menuReader->read($file);
+        $menu = (new XmlMenuReader())->read($file);
 
         $menuSynchronizer = new MenuSynchronizer($this->em);
         $menuSynchronizer->synchronize($plugin, $menu);
     }
 
     /**
-     * @param string $file
-     *
      * @throws InvalidArgumentException
      */
-    private function installCronjob(Plugin $plugin, $file)
+    private function installCronjob(Plugin $plugin, string $file): void
     {
-        $cronjobReader = new XmlCronjobReader();
-        $cronjobs = $cronjobReader->read($file);
+        $cronjobs = (new XmlCronjobReader())->read($file);
 
         $cronjobSynchronizer = new CronjobSynchronizer($this->em->getConnection());
         $cronjobSynchronizer->synchronize($plugin, $cronjobs);
     }
 
-    /**
-     * @param string $updateVersion
-     * @param string $currentVersion
-     *
-     * @return bool
-     */
-    private function hasInfoNewerVersion($updateVersion, $currentVersion)
+    private function hasInfoNewerVersion(string $updateVersion, string $currentVersion): bool
     {
         return version_compare($updateVersion, $currentVersion, '>');
     }
 
     /**
-     * @param string $pluginName
-     *
      * @throws Exception
-     *
-     * @return PluginBootstrap
      */
-    private function getPluginByName($pluginName)
+    private function getPluginByName(string $pluginName): PluginBaseClass
     {
         $plugins = $this->kernel->getPlugins();
 
         if (!isset($plugins[$pluginName])) {
-            throw new InvalidArgumentException(sprintf('Plugin by name "%s" not found.', $pluginName));
+            throw new InvalidArgumentException(\sprintf('Plugin by name "%s" not found.', $pluginName));
         }
 
         return $plugins[$pluginName];
     }
 
     /**
-     * @param int $pluginId
-     *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    private function removeEmotionComponents($pluginId)
+    private function removeEmotionComponents(int $pluginId): void
     {
         // Remove emotion-components
         $sql = 'DELETE s_emotion_element_value, s_emotion_element
@@ -547,11 +496,9 @@ class PluginInstaller
     }
 
     /**
-     * @param int $pluginId
-     *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    private function removeFormsAndElements($pluginId)
+    private function removeFormsAndElements(int $pluginId): void
     {
         $sql = <<<SQL
 DELETE s_core_config_forms, s_core_config_form_translations, s_core_config_elements, s_core_config_element_translations, s_core_config_values
@@ -566,31 +513,26 @@ SQL;
     }
 
     /**
-     * @param int $pluginId
-     *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    private function removeTemplates($pluginId)
+    private function removeTemplates(int $pluginId): void
     {
         $sql = 'DELETE FROM s_core_templates WHERE plugin_id = :pluginId';
         $this->connection->executeStatement($sql, [':pluginId' => $pluginId]);
     }
 
     /**
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    private function removeMenuEntries(int $pluginId)
+    private function removeMenuEntries(int $pluginId): void
     {
-        $builder = $this->em->getConnection()->createQueryBuilder();
-        $builder->select(['id', 'controller', 'action']);
-        $builder->from('s_core_menu');
-        $builder->andWhere('pluginID = :pluginId');
-        $builder->setParameter(':pluginId', $pluginId);
-
-        /** @var ResultStatement<array> $statement */
-        $statement = $builder->execute();
-
-        $menuItems = $statement->fetchAll();
+        $menuItems = $this->em->getConnection()->createQueryBuilder()
+            ->select(['id', 'controller', 'action'])
+            ->from('s_core_menu')
+            ->andWhere('pluginID = :pluginId')
+            ->setParameter(':pluginId', $pluginId)
+            ->execute()
+            ->fetchAllAssociative();
 
         if (\count($menuItems) === 0) {
             return;
@@ -620,28 +562,27 @@ SQL;
     }
 
     /**
-     * @param int $pluginId
-     *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    private function removeCrontabEntries($pluginId)
+    private function removeCrontabEntries(int $pluginId): void
     {
         $sql = 'DELETE FROM s_crontab WHERE pluginID = :pluginId';
         $this->connection->executeStatement($sql, [':pluginId' => $pluginId]);
     }
 
     /**
-     * @param int $pluginId
-     *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    private function removeEventSubscribers($pluginId)
+    private function removeEventSubscribers(int $pluginId): void
     {
         $sql = 'DELETE FROM s_core_subscribes WHERE pluginID = :pluginId';
         $this->connection->executeStatement($sql, [':pluginId' => $pluginId]);
     }
 
-    private function applyMigrations(PluginComponent $plugin, string $mode, bool $keepUserData = false): void
+    /**
+     * @param AbstractPluginMigration::MODUS_* $mode
+     */
+    private function applyMigrations(PluginBaseClass $plugin, string $mode, bool $keepUserData = false): void
     {
         $manager = new PluginMigrationManager($this->pdo, $plugin, $this->logger);
         if (!is_dir($manager->getMigrationPath())) {

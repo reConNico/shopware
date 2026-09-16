@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -29,6 +29,7 @@ use Doctrine\ORM\Query\Parameter;
 use Shopware\Components\CSRFWhitelistAware;
 use Shopware\Components\ShopRegistrationServiceInterface;
 use Shopware\Models\Customer\Customer;
+use Shopware\Models\Order\Order;
 use Shopware\Models\Partner\Partner;
 use Shopware\Models\Shop\Shop;
 
@@ -219,7 +220,7 @@ class Shopware_Controllers_Backend_Partner extends Shopware_Controllers_Backend_
             return;
         }
 
-        echo sprintf(
+        echo \sprintf(
             '%s %s %s %s|%d',
             $customer->getNumber(),
             $customer->getFirstname() . ' ' . $customer->getLastname(),
@@ -316,7 +317,7 @@ class Shopware_Controllers_Backend_Partner extends Shopware_Controllers_Backend_
 
         $this->get(ShopRegistrationServiceInterface::class)->registerShop($shop);
 
-        $url = $this->Front()->Router()->assemble(['module' => 'frontend', 'controller' => 'index']);
+        $url = $this->Front()->ensureRouter()->assemble(['module' => 'frontend', 'controller' => 'index']);
 
         $this->redirect($url . '?sPartner=' . urlencode($partnerId));
     }
@@ -348,10 +349,12 @@ class Shopware_Controllers_Backend_Partner extends Shopware_Controllers_Backend_
 
     /**
      * Helper function returns total count of the passed query builder
+     *
+     * @param Query<Order> $dataQuery
      */
     private function getStatisticListTotalCount(Query $dataQuery): ?int
     {
-        //userCurrencyFactor has not to be part of the count parameters
+        // userCurrencyFactor has not to be part of the count parameters
         $originalParameters = $dataQuery->getParameters();
         $countParameters = new ArrayCollection();
 
@@ -399,6 +402,7 @@ class Shopware_Controllers_Backend_Partner extends Shopware_Controllers_Backend_
         } else {
             $toDate = new DateTime($toDate);
         }
+
         // To get the right value cause 2012-02-02 is smaller than 2012-02-02 15:33:12
         return $toDate->add(new DateInterval('P1D'));
     }

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
@@ -30,11 +30,13 @@ use Shopware\Bundle\PluginInstallerBundle\Context\DownloadRequest;
 use Shopware\Bundle\PluginInstallerBundle\Context\LicenceRequest;
 use Shopware\Bundle\PluginInstallerBundle\Context\PluginsByTechnicalNameRequest;
 use Shopware\Bundle\PluginInstallerBundle\Exception\StoreException;
+use Shopware\Bundle\PluginInstallerBundle\Service\InstallerService;
 use Shopware\Bundle\PluginInstallerBundle\Service\PluginStoreService;
 use Shopware\Bundle\PluginInstallerBundle\StoreClient;
 use Shopware\Bundle\PluginInstallerBundle\Struct\AccessTokenStruct;
 use Shopware\Bundle\PluginInstallerBundle\Struct\LicenceStruct;
 use Shopware\Bundle\PluginInstallerBundle\Struct\PluginStruct;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Plugin\Plugin;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
@@ -77,7 +79,7 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
                 $context = new LicenceRequest('en_GB', $this->getVersionFromArguments($context->getWords()), $this->getDomainFromArguments($context->getWords()), $token);
 
                 /** @var PluginStoreService $pluginStoreService */
-                $pluginStoreService = $this->container->get(\Shopware\Bundle\PluginInstallerBundle\Service\PluginStoreService::class);
+                $pluginStoreService = $this->container->get(PluginStoreService::class);
 
                 return array_map(function (LicenceStruct $licence) {
                     return $licence->getTechnicalName();
@@ -124,7 +126,7 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
 
         if ($plugin && $plugin->getCode() !== null) {
             if ($plugin->hasFreeDownload() === false && $plugin->hasCapabilityDummy() === false) {
-                $io->note(sprintf('You must be authenticated to download: %s', $plugin->getLabel()));
+                $io->note(\sprintf('You must be authenticated to download: %s', $plugin->getLabel()));
 
                 $token = $this->checkAuthentication();
             }
@@ -137,7 +139,7 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
 
             try {
                 /** @var PluginStoreService $pluginStoreService */
-                $pluginStoreService = $this->container->get(\Shopware\Bundle\PluginInstallerBundle\Service\PluginStoreService::class);
+                $pluginStoreService = $this->container->get(PluginStoreService::class);
                 $licences = $pluginStoreService->getLicences($context);
                 $licences = array_filter(
                     $licences,
@@ -156,13 +158,13 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
         }
 
         if (!$plugin) {
-            $io->error(sprintf('Plugin %s not found', $technicalName));
+            $io->error(\sprintf('Plugin %s not found', $technicalName));
 
             return 1;
         }
 
         $io->section($plugin->getLabel());
-        $io->comment(sprintf('Checking system requirements for plugin %s', $plugin->getLabel()));
+        $io->comment(\sprintf('Checking system requirements for plugin %s', $plugin->getLabel()));
 
         $plugin = $this->createPluginStruct($plugin);
 
@@ -193,7 +195,7 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
 
         try {
             $this->clearOpcodeCache();
-            $this->container->get(\Shopware\Bundle\PluginInstallerBundle\Service\InstallerService::class)->refreshPluginList();
+            $this->container->get(InstallerService::class)->refreshPluginList();
 
             $this->io->success('Process completed successfully.');
         } catch (Exception $e) {
@@ -211,18 +213,18 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
     private function handleDummyUpdate(PluginStruct $plugin, $domain, $version)
     {
         if (!$plugin->isUpdateAvailable()) {
-            $this->io->text(sprintf('No update available for plugin %s', $plugin->getLabel()));
+            $this->io->text(\sprintf('No update available for plugin %s', $plugin->getLabel()));
 
             return;
         }
 
-        $this->io->comment(sprintf('Download plugin update package %s', $plugin->getLabel()));
+        $this->io->comment(\sprintf('Download plugin update package %s', $plugin->getLabel()));
 
         $request = new DownloadRequest($plugin->getTechnicalName(), $version, $domain, null);
 
         $model = $this->getPluginModel($plugin->getTechnicalName());
         if ($plugin->isActive()) {
-            $this->container->get(\Shopware\Bundle\PluginInstallerBundle\Service\InstallerService::class)->deactivatePlugin($model);
+            $this->container->get(InstallerService::class)->deactivatePlugin($model);
         }
 
         $this->container->get('shopware_plugininstaller.plugin_download_service')
@@ -237,7 +239,7 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
      */
     private function handleDummyInstall(PluginStruct $plugin, $domain, $version)
     {
-        $this->io->comment(sprintf('Download plugin install package %s', $plugin->getLabel()));
+        $this->io->comment(\sprintf('Download plugin install package %s', $plugin->getLabel()));
 
         $request = new DownloadRequest($plugin->getTechnicalName(), $version, $domain, null);
 
@@ -245,16 +247,15 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
     }
 
     /**
-     * @param string            $domain
-     * @param string            $version
-     * @param AccessTokenStruct $token
+     * @param string $domain
+     * @param string $version
      *
      * @throws Exception
      */
-    private function handleLicenceUpdate(PluginStruct $plugin, $domain, $version, AccessTokenStruct $token = null)
+    private function handleLicenceUpdate(PluginStruct $plugin, $domain, $version, ?AccessTokenStruct $token = null)
     {
         if (!$plugin->isUpdateAvailable()) {
-            $this->io->text(sprintf('No update available for plugin %s', $plugin->getLabel()));
+            $this->io->text(\sprintf('No update available for plugin %s', $plugin->getLabel()));
 
             return;
         }
@@ -263,7 +264,7 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
 
         $model = $this->getPluginModel($plugin->getTechnicalName());
         if ($plugin->isActive()) {
-            $this->container->get(\Shopware\Bundle\PluginInstallerBundle\Service\InstallerService::class)
+            $this->container->get(InstallerService::class)
                 ->deactivatePlugin($model);
         }
 
@@ -273,11 +274,10 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
     }
 
     /**
-     * @param string            $domain
-     * @param string            $version
-     * @param AccessTokenStruct $token
+     * @param string $domain
+     * @param string $version
      */
-    private function handleLicenceInstall(PluginStruct $plugin, $domain, $version, AccessTokenStruct $token = null)
+    private function handleLicenceInstall(PluginStruct $plugin, $domain, $version, ?AccessTokenStruct $token = null)
     {
         $this->io->comment('Downloading plugin install package');
 
@@ -293,7 +293,7 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
      */
     private function getPluginModel($technicalName)
     {
-        $repo = $this->container->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Plugin::class);
+        $repo = $this->container->get(ModelManager::class)->getRepository(Plugin::class);
 
         return $repo->findOneBy(['name' => $technicalName]);
     }
@@ -344,7 +344,7 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
             $this->io->comment('Connection to store...');
 
             /** @var StoreClient $storeClient */
-            $storeClient = $this->container->get(\Shopware\Bundle\PluginInstallerBundle\StoreClient::class);
+            $storeClient = $this->container->get(StoreClient::class);
             $token = $storeClient->getAccessToken($username, $password);
 
             $this->io->comment('Authenticated successfully.');
@@ -468,7 +468,7 @@ class StoreDownloadCommand extends StoreCommand implements CompletionAwareInterf
 
         try {
             /** @var StoreClient $storeClient */
-            $storeClient = $this->container->get(\Shopware\Bundle\PluginInstallerBundle\StoreClient::class);
+            $storeClient = $this->container->get(StoreClient::class);
 
             return $storeClient->getAccessToken($username, $password);
         } catch (Exception $e) {

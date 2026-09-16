@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Plugin;
@@ -34,11 +34,11 @@ use InvalidArgumentException;
 use Symfony\Component\Config\Util\XmlUtils;
 
 /**
- * @deprecated This class will be removed in 5.6
+ * @deprecated This class will be removed in 5.8
  *
- * Use new class Shopware\Components\Plugin\XmlReader\XmlPluginInfoReader (see Shopware 5.6)
+ * Use new class @see XmlReader\XmlPluginReader (see Shopware 5.6)
  *
- * https://github.com/shopware/shopware/blob/5.6/engine/Shopware/Components/Plugin/XmlReader/XmlPluginInfoReader.php
+ * https://github.com/shopware5/shopware/blob/5.6/engine/Shopware/Components/Plugin/XmlReader/XmlPluginReader.php
  */
 class XmlPluginInfoReader
 {
@@ -47,7 +47,7 @@ class XmlPluginInfoReader
         try {
             $dom = XmlUtils::loadFile($file, __DIR__ . '/schema/plugin.xsd');
         } catch (Exception $e) {
-            throw new InvalidArgumentException(sprintf('Unable to parse file "%s". Message: %s', $file, $e->getMessage()), $e->getCode(), $e);
+            throw new InvalidArgumentException(\sprintf('Unable to parse file "%s". Message: %s', $file, $e->getMessage()), $e->getCode(), $e);
         }
 
         return $this->parseInfo($dom);
@@ -73,8 +73,7 @@ class XmlPluginInfoReader
             $info['description'][$lang] = trim((string) $description->nodeValue);
         }
 
-        $simpleKeys = ['version', 'license', 'author', 'copyright', 'link'];
-        foreach ($simpleKeys as $simpleKey) {
+        foreach (['version', 'license', 'author', 'copyright', 'link'] as $simpleKey) {
             if ($names = $this->getChildren($entry, $simpleKey)) {
                 $info[$simpleKey] = $names[0]->nodeValue;
             }

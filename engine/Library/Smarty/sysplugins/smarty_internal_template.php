@@ -19,6 +19,7 @@
  * @property Smarty_Template_Compiled $compiled
  * @property Smarty_Template_Cached   $cached
  */
+#[AllowDynamicProperties]
 class Smarty_Internal_Template extends Smarty_Internal_TemplateBase {
 
     /**
@@ -240,7 +241,7 @@ class Smarty_Internal_Template extends Smarty_Internal_TemplateBase {
      * @param integer $cache_lifetime life time of cache data
      * @param array   $vars optional  variables to assign
      * @param int     $parent_scope   scope in which {include} should execute
-     * @returns string template content
+     * @return string template content
      */
     public function getSubTemplate($template, $cache_id, $compile_id, $caching, $cache_lifetime, $data, $parent_scope)
     {
@@ -297,7 +298,7 @@ class Smarty_Internal_Template extends Smarty_Internal_TemplateBase {
      * @param array   $vars optional  variables to assign
      * @param int     $parent_scope   scope in which {include} should execute
      * @param string  $hash           nocache hash code
-     * @returns string template content
+     * @return string template content
      */
     public function setupInlineSubTemplate($template, $cache_id, $compile_id, $caching, $cache_lifetime, $data, $parent_scope, $hash)
     {

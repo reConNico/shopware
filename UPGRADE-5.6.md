@@ -2,9 +2,21 @@
 
 This changelog references changes done in Shopware 5.6 patch versions.
 
+## 5.6.10
+
+[View all changes from v5.6.9...v5.6.10](https://github.com/shopware5/shopware/compare/v5.6.9...v5.6.10)
+
+## 5.6.9
+
+[View all changes from v5.6.8...v5.6.9](https://github.com/shopware5/shopware/compare/v5.6.8...v5.6.9)
+
+### Changes
+
+* Changed bot detection to not recognize Huawei devices as bot
+
 ## 5.6.8
 
-[View all changes from v5.6.7...v5.6.8](https://github.com/shopware/shopware/compare/v5.6.7...v5.6.8)
+[View all changes from v5.6.7...v5.6.8](https://github.com/shopware5/shopware/compare/v5.6.7...v5.6.8)
 
 ### Additions
 
@@ -23,7 +35,7 @@ This changelog references changes done in Shopware 5.6 patch versions.
 
 ## 5.6.7
 
-[View all changes from v5.6.6...v5.6.7](https://github.com/shopware/shopware/compare/v5.6.6...v5.6.7)
+[View all changes from v5.6.6...v5.6.7](https://github.com/shopware5/shopware/compare/v5.6.6...v5.6.7)
 
 ### Additions
 
@@ -92,7 +104,7 @@ This changelog references changes done in Shopware 5.6 patch versions.
 
 ## 5.6.6
 
-[View all changes from v5.6.5...v5.6.6](https://github.com/shopware/shopware/compare/v5.6.5...v5.6.6)
+[View all changes from v5.6.5...v5.6.6](https://github.com/shopware5/shopware/compare/v5.6.5...v5.6.6)
 
 ### Changes
 
@@ -100,7 +112,7 @@ This changelog references changes done in Shopware 5.6 patch versions.
 
 ## 5.6.5
 
-[View all changes from v5.6.4...v5.6.5](https://github.com/shopware/shopware/compare/v5.6.4...v5.6.5)
+[View all changes from v5.6.4...v5.6.5](https://github.com/shopware5/shopware/compare/v5.6.4...v5.6.5)
 
 ### Additions
 
@@ -149,7 +161,7 @@ This changelog references changes done in Shopware 5.6 patch versions.
 
 ## 5.6.4
 
-[View all changes from v5.6.3...v5.6.4](https://github.com/shopware/shopware/compare/v5.6.3...v5.6.4)
+[View all changes from v5.6.3...v5.6.4](https://github.com/shopware5/shopware/compare/v5.6.3...v5.6.4)
 
 ### Changes
 
@@ -157,7 +169,7 @@ This changelog references changes done in Shopware 5.6 patch versions.
 
 ## 5.6.3
 
-[View all changes from v5.6.2...v5.6.3](https://github.com/shopware/shopware/compare/v5.6.2...v5.6.3)
+[View all changes from v5.6.2...v5.6.3](https://github.com/shopware5/shopware/compare/v5.6.2...v5.6.3)
 
 ### Additions
 
@@ -220,7 +232,7 @@ to read [this documentation](https://developers.shopware.com/developers-guide/co
 
 ## 5.6.2
 
-[View all changes from v5.6.1...v5.6.2](https://github.com/shopware/shopware/compare/v5.6.1...v5.6.2)
+[View all changes from v5.6.1...v5.6.2](https://github.com/shopware5/shopware/compare/v5.6.1...v5.6.2)
 
 ### Additions
 
@@ -283,7 +295,7 @@ to read [this documentation](https://developers.shopware.com/developers-guide/co
 
 ## 5.6.1
 
-[View all changes from v5.6.0...v5.6.1](https://github.com/shopware/shopware/compare/v5.6.0...v5.6.1)
+[View all changes from v5.6.0...v5.6.1](https://github.com/shopware5/shopware/compare/v5.6.0...v5.6.1)
 
 ### Additions
 
@@ -313,7 +325,7 @@ to read [this documentation](https://developers.shopware.com/developers-guide/co
 
 ## 5.6.0
 
-[View all changes from v5.5.10...v5.6.0](https://github.com/shopware/shopware/compare/v5.5.10...v5.6.0)
+[View all changes from v5.5.10...v5.6.0](https://github.com/shopware5/shopware/compare/v5.5.10...v5.6.0)
 
 ### Additions
 
@@ -402,7 +414,7 @@ to read [this documentation](https://developers.shopware.com/developers-guide/co
 * Added `_config` property to class `Shopware_Models_Document_Order` to make it usable while model creation
 * Added new parameter to prevent certain exceptions from cluttering your logs. See [Disable logging of specific exceptions](###Disable logging of specific exceptions) for more details
 * Added a `Symfony\Component\HttpKernel\Bundle\Bundle` class to all Shopware bundles and moved all service.xml files to a corresponding `DependencyInjection` directory
-* Added `es.index_configuration` and `es.backend.index_configuration` section to `config.php` to allow custom elasticsearch settings
+* Added `es.index_settings` and `es.backend.index_settings` section to `config.php` to allow custom elasticsearch settings
 * Added getter and setter to Config/Form model
 * Added new event `Shopware_Controllers_Order_SendMail_Prepare` to `Shopware_Controllers_Backend_Order::sendMailAction`
 * Added `Shopware\Components\CacheSubscriber` to clear config cache, when plugin config changes

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Components\DependencyInjection\Bridge\Db;
@@ -149,6 +149,8 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      * Set local no auth property
      *
      * @param bool $flag
+     *
+     * @return void
      */
     public function setNoAuth($flag = true)
     {
@@ -159,6 +161,8 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      * Set local no acl property
      *
      * @param bool $flag
+     *
+     * @return void
      */
     public function setNoAcl($flag = true)
     {
@@ -188,13 +192,17 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
     /**
      * This pre-dispatch event-hook checks backend permissions
      *
+     * @param Enlight_Controller_ActionEventArgs $args
+     *
      * @throws Enlight_Controller_Exception
+     *
+     * @return void
      */
     public function onPreDispatchBackend(Enlight_Event_EventArgs $args)
     {
         $this->action = $args->getSubject();
         $this->request = $this->action->Request();
-        $this->aclResource = strtolower($this->request->getControllerName());
+        $this->aclResource = strtolower(str_replace('_', '', $this->request->getControllerName()));
 
         if ($this->aclResource === 'error' || $this->request->getModuleName() !== 'backend') {
             return;
@@ -248,7 +256,7 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
             }
 
             if (!$this->isAllowed($test)) {
-                throw new Enlight_Controller_Exception($test['errorMessage'] ?: 'Permission denied', 401);
+                throw new Enlight_Controller_Exception($test['errorMessage'] ?? 'Permission denied', 401);
             }
 
             return $auth;
@@ -264,6 +272,8 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      *
      * @throws Exception
      * @throws SmartyException
+     *
+     * @return void
      */
     public function registerAclPlugin($auth)
     {
@@ -401,10 +411,10 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      * database adapter by default
      *
      * @throws SmartyException
-     * @throws \Enlight_Exception
+     * @throws Enlight_Exception
      * @throws Exception
      *
-     * @return \Zend_Auth
+     * @return Zend_Auth
      */
     public function onInitResourceAuth(Enlight_Event_EventArgs $args)
     {
@@ -436,6 +446,8 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      * Init backend locales
      *
      * @throws Exception
+     *
+     * @return void
      */
     protected function initLocale()
     {

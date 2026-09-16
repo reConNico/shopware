@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Controllers\Backend;
 
 use Enlight_Components_Test_Controller_TestCase;
+use Exception;
 
 class SupplierTest extends Enlight_Components_Test_Controller_TestCase
 {
@@ -131,5 +132,30 @@ class SupplierTest extends Enlight_Components_Test_Controller_TestCase
         $this->Request()->setMethod('POST')->setPost(['id' => $lastSupplier['id']]);
         $this->dispatch('backend/supplier/deleteSupplier');
         static::assertTrue($this->View()->success);
+    }
+
+    /**
+     * Test if getSuppliers will also assign true when no suppliers have been found
+     *
+     * @throws Exception
+     */
+    public function testGetZeroSuppliers(): void
+    {
+        Shopware()->Plugins()->Backend()->Auth()->setNoAuth();
+        $this->Request()->setMethod('GET');
+        $filter = json_encode([
+            'property' => 'name',
+            'value' => 'thismanufacturerdoesnotexist',
+            'operator' => null,
+            'expression' => null,
+        ]);
+        $query_params = urlencode(\sprintf('[%s]', $filter));
+        $this->dispatch('backend/supplier/getSuppliers?filter=' . $query_params);
+        static::assertTrue($this->View()->getAssign('success'));
+
+        $jsonBody = $this->View()->getAssign();
+        static::assertArrayHasKey('total', $jsonBody);
+        static::assertArrayHasKey('data', $jsonBody);
+        static::assertArrayHasKey('success', $jsonBody);
     }
 }

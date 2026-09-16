@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -170,7 +170,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function saveConfigData(array $data)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         foreach ($data as $values) {
             foreach ($values as $configKey => $value) {
@@ -190,7 +190,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function prepareDataForSaving($data)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $output = [];
         $output['httpCache'] = $this->prepareHttpCacheConfigForSaving($data['httpCache'][0]);
@@ -215,7 +215,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function prepareForSavingDefault(array $data)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         unset($data['id']);
 
@@ -231,7 +231,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function prepareSeoConfigForSaving(array $data)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         unset($data['id']);
 
@@ -258,7 +258,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function prepareHttpCacheConfigForSaving(array $data)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $modelManager = $this->container->get(ModelManager::class);
         $repo = $modelManager->getRepository(Plugin::class);
@@ -310,7 +310,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function saveConfig($name, $value)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $modelManager = $this->container->get(ModelManager::class);
         $shopRepository = $modelManager->getRepository(Shop::class);
@@ -371,7 +371,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function readConfig($configName, $defaultValue = '')
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         // If we have a simple config item, we can return it by using Shopware()->Config()
         if (strpos($configName, ':') === false) {
@@ -619,13 +619,13 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
                 'id' => 1,
                 'name' => Shopware()->Snippets()->getNamespace('backend/performance/main')->get('cache/apc'),
                 'value' => \extension_loaded('apcu'),
-                'valid' => \extension_loaded('apcu') === true && ini_get('apc.enabled') ? self::PERFORMANCE_VALID : self::PERFORMANCE_INVALID,
+                'valid' => \extension_loaded('apcu') === true && \ini_get('apc.enabled') ? self::PERFORMANCE_VALID : self::PERFORMANCE_INVALID,
             ],
             [
                 'id' => 3,
                 'name' => Shopware()->Snippets()->getNamespace('backend/performance/main')->get('cache/zend'),
                 'value' => \extension_loaded('Zend OPcache'),
-                'valid' => \extension_loaded('Zend OPcache') === true && ini_get('opcache.enable') ? self::PERFORMANCE_VALID : self::PERFORMANCE_INVALID,
+                'valid' => \extension_loaded('Zend OPcache') === true && \ini_get('opcache.enable') ? self::PERFORMANCE_VALID : self::PERFORMANCE_INVALID,
             ],
             [
                 'id' => 4,
@@ -777,8 +777,8 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
             'sitemapLastRefresh',
         ]);
 
-        $sitemapConfig['customUrls'] = $this->get(ConfigHandler::class)->get(Confighandler::CUSTOM_URLS_KEY);
-        $sitemapConfig['excludedUrls'] = $this->get(ConfigHandler::class)->get(Confighandler::EXCLUDED_URLS_KEY);
+        $sitemapConfig['customUrls'] = $this->get(ConfigHandler::class)->get(ConfigHandler::CUSTOM_URLS_KEY);
+        $sitemapConfig['excludedUrls'] = $this->get(ConfigHandler::class)->get(ConfigHandler::EXCLUDED_URLS_KEY);
 
         $sitemapConfig['excludedUrls'] = array_map(function ($excludeUrl) {
             $excludeUrl['resource'] = $this->convertModelToResource($excludeUrl['resource']);

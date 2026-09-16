@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Plugin\XmlReader;
@@ -31,10 +32,7 @@ use Shopware\Components\Plugin\XmlReader\XmlCronjobReader;
 
 class XmlCronjobReaderTest extends TestCase
 {
-    /**
-     * @var XmlCronjobReader
-     */
-    private $cronjobReader;
+    private XmlCronjobReader $cronjobReader;
 
     protected function setUp(): void
     {
@@ -43,9 +41,8 @@ class XmlCronjobReaderTest extends TestCase
 
     public function testReadFile(): void
     {
-        $result = $this->readFile('cronjob.xml');
+        $result = $this->readFile();
 
-        static::assertIsArray($result);
         static::assertCount(2, $result);
 
         $firstCron = $result[0];
@@ -89,10 +86,10 @@ class XmlCronjobReaderTest extends TestCase
         static::assertCount(0, $result);
     }
 
-    private function readFile(string $file): array
+    private function readFile(): array
     {
         return $this->cronjobReader->read(
-            sprintf('%s/examples/cronjob/%s', __DIR__, $file)
+            \sprintf('%s/examples/cronjob/%s', __DIR__, 'cronjob.xml')
         );
     }
 }

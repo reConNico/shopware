@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -222,6 +221,7 @@ Ext.define('Shopware.form.field.ArticleSearch', {
      * @array
      */
     searchScope: ['articles', 'variants', 'configurator'],
+    extraParam: {},
 
     /**
      * Form field configuration
@@ -252,7 +252,6 @@ Ext.define('Shopware.form.field.ArticleSearch', {
         var me = this;
 
         me.registerEvents();
-
         //maps the article store to the store attribute
         if (!(me.store instanceof Ext.data.Store)) {
             if (!(me.articleStore instanceof Ext.data.Store)) {
@@ -281,11 +280,13 @@ Ext.define('Shopware.form.field.ArticleSearch', {
         }
 
         if (Ext.isArray(me.searchScope) && me.searchScope.length > 0) {
-            me.dropDownStore.getProxy().extraParams = {
+            var extraParams = Ext.apply(me.extraParam, {
                 articles: Ext.Array.contains(me.searchScope, 'articles'),
                 variants: Ext.Array.contains(me.searchScope, 'variants'),
-                configurator: Ext.Array.contains(me.searchScope, 'configurator')
-            };
+                configurator: Ext.Array.contains(me.searchScope, 'configurator'),
+            });
+
+            me.dropDownStore.getProxy().extraParams = extraParams;
         }
 
         me.hiddenField = me.createHiddenField();
@@ -293,7 +294,7 @@ Ext.define('Shopware.form.field.ArticleSearch', {
         me.dropDownMenu = me.createDropDownMenu();
         me.items = [ me.hiddenField, me.searchField, me.dropDownMenu ];
 
-        // Create an store and a grid for the selected articles
+        // Create a store and a grid for the selected articles
         if (!me.multiSelect) {
             delete me.multiSelectStore;
         } else {
@@ -301,7 +302,7 @@ Ext.define('Shopware.form.field.ArticleSearch', {
             me.items.push(me.multiSelectGrid);
         }
 
-        // Are we're having an store to preselect articles?
+        // Are we're having a store to preselect articles?
         if (me.articleStore && me.multiSelect) {
             me.multiSelectGrid.show();
         }

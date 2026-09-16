@@ -34,7 +34,7 @@ class Enlight_Controller_Plugins_ScriptRenderer_Bootstrap extends Enlight_Plugin
     /**
      * @var string used when no file parameter is given
      */
-    protected $defaultFile = null;
+    protected $defaultFile;
 
     /**
      * @var array will be set in the response instance on pre dispatch
@@ -144,16 +144,22 @@ class Enlight_Controller_Plugins_ScriptRenderer_Bootstrap extends Enlight_Plugin
         $fileNames = (array) $request->getParam('file', $this->defaultFile);
         if (empty($fileNames)) {
             $fileNames = $request->getParam('f');
-            $fileNames = explode('|', $fileNames);
+            $fileNames = explode('|', (string) $fileNames);
         }
 
         $templateNames = [];
         foreach ($fileNames as $fileName) {
             // Remove unwanted characters
             $fileName = preg_replace('/[^a-z0-9\/_-]/i', '', $fileName);
+            if (!\is_string($fileName)) {
+                continue;
+            }
 
             // Replace multiple forward slashes
             $fileName = preg_replace('#/+#', '/', $fileName);
+            if (!\is_string($fileName)) {
+                continue;
+            }
 
             // Remove leading and trailing forward slash
             $fileName = trim($fileName, '/');
@@ -189,10 +195,13 @@ class Enlight_Controller_Plugins_ScriptRenderer_Bootstrap extends Enlight_Plugin
      *
      * @return Enlight_Controller_Plugins_ScriptRenderer_Bootstrap
      */
-    public function setViewRenderer(Enlight_Controller_Plugins_ViewRenderer_Bootstrap $viewRenderer = null)
+    public function setViewRenderer(?Enlight_Controller_Plugins_ViewRenderer_Bootstrap $viewRenderer = null)
     {
         if ($viewRenderer === null) {
-            $viewRenderer = $this->Collection()->get('ViewRenderer');
+            $collection = $this->Collection();
+            if ($collection !== null) {
+                $viewRenderer = $collection->get('ViewRenderer');
+            }
         }
 
         $this->viewRenderer = $viewRenderer;
@@ -209,7 +218,7 @@ class Enlight_Controller_Plugins_ScriptRenderer_Bootstrap extends Enlight_Plugin
      */
     private function inflectPath($module, $controller, $file)
     {
-        return sprintf(
+        return \sprintf(
             '%s/%s/%s.js',
             mb_strtolower($this->camelCaseToUnderScore($module)),
             mb_strtolower($this->camelCaseToUnderScore($controller)),

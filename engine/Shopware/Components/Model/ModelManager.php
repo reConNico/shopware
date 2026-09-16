@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Model;
@@ -30,6 +30,8 @@ use Doctrine\DBAL\Query\QueryBuilder as DBALQueryBuilder;
 use Doctrine\Inflector\Inflector;
 use Doctrine\Inflector\NoopWordInflector;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\MismatchedEventManager;
+use Doctrine\ORM\Exception\MissingMappingDriverImplementation;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\ORMException;
 use Doctrine\ORM\Proxy\Proxy;
@@ -38,7 +40,7 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use InvalidArgumentException;
 use ReflectionProperty;
 use RuntimeException;
-use Shopware\Components\Model\Query\SqlWalker;
+use Shopware\Components\Model\Query\SqlWalker\ForceIndexWalker;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Traversable;
@@ -63,17 +65,14 @@ class ModelManager extends EntityManager
     public function __construct(
         Connection $conn,
         Configuration $config,
-        QueryOperatorValidator $operatorValidator,
-        EventManager $eventManager
+        QueryOperatorValidator $operatorValidator
     ) {
         $this->operatorValidator = $operatorValidator;
-        parent::__construct($conn, $config, $eventManager);
+        parent::__construct($conn, $config);
     }
 
     /**
      * Factory method to create EntityManager instances.
-     *
-     * @param EventManager $eventManager
      *
      * @throws ORMException
      *
@@ -82,22 +81,22 @@ class ModelManager extends EntityManager
     public static function createInstance(
         Connection $conn,
         Configuration $config,
-        EventManager $eventManager = null,
-        QueryOperatorValidator $operatorValidator = null
+        ?EventManager $eventManager = null,
+        ?QueryOperatorValidator $operatorValidator = null
     ) {
         if (!$config->getMetadataDriverImpl()) {
-            throw ORMException::missingMappingDriverImpl();
+            throw new MissingMappingDriverImplementation();
         }
 
         if ($eventManager !== null && $conn->getEventManager() !== $eventManager) {
-            throw ORMException::mismatchedEventManager();
+            throw new MismatchedEventManager();
         }
 
         if ($operatorValidator === null) {
             $operatorValidator = new QueryOperatorValidator();
         }
 
-        return new self($conn, $config, $operatorValidator, $conn->getEventManager());
+        return new self($conn, $config, $operatorValidator);
     }
 
     /**
@@ -131,6 +130,8 @@ class ModelManager extends EntityManager
     /**
      * Returns the total count of the passed query builder.
      *
+     * @param Query<ModelEntity|array<string, mixed>> $query
+     *
      * @return int|null
      */
     public function getQueryCount(Query $query)
@@ -144,11 +145,13 @@ class ModelManager extends EntityManager
      * This method should be used instead of
      * new \Doctrine\ORM\Tools\Pagination\Paginator($query).
      *
-     * As of SW 4.2 $paginator->setUseOutputWalkers(false) will be set here.
-     *
      * @since 4.1.4
      *
-     * @return Paginator
+     * @template TModel of (ModelEntity|array<string, mixed>)
+     *
+     * @param Query<TModel> $query
+     *
+     * @return Paginator<TModel>
      */
     public function createPaginator(Query $query)
     {
@@ -213,8 +216,12 @@ class ModelManager extends EntityManager
 
         $attributeMetaData = [];
         foreach ($allMetaData as $metaData) {
+            if (!$metaData instanceof ClassMetadata) {
+                continue;
+            }
+
             $tableName = $metaData->getTableName();
-            if (strpos($tableName, '_attributes') === false) {
+            if (!str_contains($tableName, '_attributes')) {
                 continue;
             }
             if (!empty($tableNames) && !\in_array($tableName, $tableNames, true)) {
@@ -238,24 +245,27 @@ class ModelManager extends EntityManager
     /**
      * Helper function to add mysql specified command to increase the sql performance.
      *
-     * @param mixed|null $index        Name of the forced index
-     * @param bool       $straightJoin true or false. Allow to add STRAIGHT_JOIN select condition
-     * @param bool       $sqlNoCache
+     * @template TModel of (ModelEntity|array<string, mixed>)
      *
-     * @return Query
+     * @param Query<TModel> $query
+     * @param mixed|null    $index        Name of the forced index
+     * @param bool          $straightJoin true or false. Allow to add STRAIGHT_JOIN select condition
+     * @param bool          $sqlNoCache
+     *
+     * @return Query<TModel>
      */
     public function addCustomHints(Query $query, $index = null, $straightJoin = false, $sqlNoCache = false)
     {
-        $query->setHint(Query::HINT_CUSTOM_OUTPUT_WALKER, SqlWalker\ForceIndexWalker::class);
+        $query->setHint(Query::HINT_CUSTOM_OUTPUT_WALKER, ForceIndexWalker::class);
 
         if ($straightJoin === true) {
-            $query->setHint(SqlWalker\ForceIndexWalker::HINT_STRAIGHT_JOIN, true);
+            $query->setHint(ForceIndexWalker::HINT_STRAIGHT_JOIN, true);
         }
         if ($index !== null) {
-            $query->setHint(SqlWalker\ForceIndexWalker::HINT_FORCE_INDEX, $index);
+            $query->setHint(ForceIndexWalker::HINT_FORCE_INDEX, $index);
         }
         if ($sqlNoCache === true) {
-            $query->setHint(SqlWalker\ForceIndexWalker::HINT_SQL_NO_CACHE, true);
+            $query->setHint(ForceIndexWalker::HINT_SQL_NO_CACHE, true);
         }
 
         return $query;
@@ -292,13 +302,11 @@ class ModelManager extends EntityManager
      */
     public function createModelGenerator()
     {
-        $generator = new Generator(
+        return new Generator(
             $this->getConnection()->getSchemaManager(),
             $this->getConfiguration()->getAttributeDir(),
             Shopware()->AppPath('Models')
         );
-
-        return $generator;
     }
 
     /**
@@ -312,7 +320,7 @@ class ModelManager extends EntityManager
      *
      * @param ModelEntity|null $entity
      *
-     * @return array
+     * @return array<string, mixed>
      */
     protected function serializeEntity($entity)
     {
@@ -335,7 +343,7 @@ class ModelManager extends EntityManager
 
         foreach ($metadata->fieldMappings as $field => $mapping) {
             if (!($metadata->reflFields[$field] instanceof ReflectionProperty)) {
-                throw new InvalidArgumentException(sprintf('Expected an instance of %s', ReflectionProperty::class));
+                throw new InvalidArgumentException(\sprintf('Expected an instance of %s', ReflectionProperty::class));
             }
 
             $data[$field] = $metadata->reflFields[$field]->getValue($entity);
@@ -343,7 +351,7 @@ class ModelManager extends EntityManager
 
         foreach ($metadata->associationMappings as $field => $mapping) {
             if (!($metadata->reflFields[$field] instanceof ReflectionProperty)) {
-                throw new InvalidArgumentException(sprintf('Expected an instance of %s', ReflectionProperty::class));
+                throw new InvalidArgumentException(\sprintf('Expected an instance of %s', ReflectionProperty::class));
             }
 
             $key = $inflector->tableize($field);
@@ -353,13 +361,11 @@ class ModelManager extends EntityManager
                     $data[$key] = $this->serializeEntity($data[$key]);
                 }
             } elseif ($mapping['isOwningSide'] && $mapping['type'] & ClassMetadata::TO_ONE) {
-                if ($metadata->reflFields[$field]->getValue($entity) !== null) {
-                    $data[$key] = $this->getUnitOfWork()->getEntityIdentifier(
-                        $metadata->reflFields[$field]->getValue($entity)
-                    );
+                $association = $metadata->reflFields[$field]->getValue($entity);
+                if (\is_object($association) && $this->getUnitOfWork()->isInIdentityMap($association)) {
+                    $data[$key] = $this->getUnitOfWork()->getEntityIdentifier($association);
                 } else {
-                    // In some case the relationship may not exist, but we want
-                    // to know about it
+                    // In some case the relationship may not exist, but we want to know about it
                     $data[$key] = null;
                 }
             }

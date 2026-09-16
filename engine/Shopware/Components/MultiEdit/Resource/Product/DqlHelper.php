@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\MultiEdit\Resource\Product;
@@ -145,10 +145,16 @@ class DqlHelper
 
     protected $entityToPrefix = [];
 
+    /**
+     * @var array<class-string<ModelEntity>>
+     */
     protected $prefixToEntity = [];
 
     protected $columns = [];
 
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     protected $columnInfo = [];
 
     public function __construct(
@@ -242,6 +248,8 @@ class DqlHelper
      * e.g. article => \Shopware\Models\Article\Article
      *
      * @param string $prefix
+     *
+     * @return class-string<ModelEntity>
      */
     public function getEntityForPrefix($prefix)
     {
@@ -262,7 +270,7 @@ class DqlHelper
     /**
      * Returns a list of columns which are always visible in the default filter view
      *
-     * @return array
+     * @return list<string>
      */
     public function getDefaultColumns()
     {
@@ -283,7 +291,7 @@ class DqlHelper
      *
      * Columns having "allowInGrid" set to true, are selected for the main product listing.
      *
-     * @return array
+     * @return array<string, array<string, mixed>>
      */
     public function getColumnsForProductListing()
     {
@@ -294,6 +302,8 @@ class DqlHelper
      * Returns a single row with (almost) all possibly relevant information of a product
      *
      * @param int $detailId
+     *
+     * @return array<string, mixed>|null
      */
     public function getProductForListing($detailId)
     {
@@ -305,9 +315,9 @@ class DqlHelper
     /**
      * Returns a multiple row with (almost) all possibly relevant information of products
      *
-     * @param int[] $ids
+     * @param array<int> $ids
      *
-     * @return array[]
+     * @return array<array<string, mixed>>
      */
     public function getProductsForListing(array $ids)
     {
@@ -387,6 +397,8 @@ class DqlHelper
 
     /**
      * Build some basic mappings
+     *
+     * @return void
      */
     public function buildMapping()
     {
@@ -421,6 +433,8 @@ class DqlHelper
      * Build a list which holds the configuration for all known columns - e.g. name, data type, associated table…
      *
      * Columns having "allowInGrid" set to true, are selected for the main product listing.
+     *
+     * @return array<string, array<string, mixed>>
      */
     public function buildColumnInfo()
     {
@@ -959,7 +973,7 @@ class DqlHelper
                 );
         }
 
-        throw new RuntimeException(sprintf('Foreign table %s not defined, yet. Please report this error.', $foreignPrefix));
+        throw new RuntimeException(\sprintf('Foreign table %s not defined, yet. Please report this error.', $foreignPrefix));
     }
 
     /**
@@ -1011,9 +1025,9 @@ class DqlHelper
      *  * a category
      *  * images?
      *
-     * @param array[] $articles
+     * @param array<array<string, mixed>> $articles
      *
-     * @return array[]
+     * @return array<array<string, mixed>>
      */
     protected function addInfo(array $articles)
     {
@@ -1071,12 +1085,8 @@ class DqlHelper
      *
      * Use the filter event SwagMultiEdit_Product_DqlHelper_getColumnsForProductListing_filterColumns
      * in order to overwrite the selectable columns
-     *
-     * @param array $column
-     *
-     * @return bool
      */
-    private function showColumnInGrid($column)
+    private function showColumnInGrid(array $column): bool
     {
         $entitiesToShow = [
             'Article',

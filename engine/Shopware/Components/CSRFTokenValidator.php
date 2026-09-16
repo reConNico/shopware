@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components;
@@ -41,47 +42,30 @@ class CSRFTokenValidator implements SubscriberInterface
     public const CSRF_TOKEN_ARGUMENT = '__csrf_token';
 
     public const CSRF_TOKEN_HEADER = 'X-CSRF-Token';
+    public const CSRF_TOKEN_RESPONSE_HEADER = 'x-csrf-token';
 
     private const CSRF_WAS_VALIDATED = 'isValidated';
 
-    /**
-     * @var ContainerInterface
-     */
-    private $container;
+    private ContainerInterface $container;
 
-    /**
-     * @var string
-     */
-    private $tokenName = self::CSRF_TOKEN_HEADER;
+    private bool $isEnabledFrontend;
 
-    /**
-     * @var bool
-     */
-    private $isEnabledFrontend;
-
-    /**
-     * @var bool
-     */
-    private $isEnabledBackend;
+    private bool $isEnabledBackend;
 
     private ContextServiceInterface $contextService;
 
     private Shopware_Components_Config $componentsConfig;
 
-    /**
-     * @param bool $isEnabledFrontend
-     * @param bool $isEnabledBackend
-     */
     public function __construct(
         ContainerInterface $container,
         ContextServiceInterface $contextService,
         Shopware_Components_Config $componentsConfig,
-        $isEnabledFrontend = true,
-        $isEnabledBackend = true
+        bool $isEnabledFrontend = true,
+        bool $isEnabledBackend = true
     ) {
         $this->container = $container;
-        $this->isEnabledFrontend = (bool) $isEnabledFrontend;
-        $this->isEnabledBackend = (bool) $isEnabledBackend;
+        $this->isEnabledFrontend = $isEnabledFrontend;
+        $this->isEnabledBackend = $isEnabledBackend;
         $this->contextService = $contextService;
         $this->componentsConfig = $componentsConfig;
     }
@@ -115,15 +99,18 @@ class CSRFTokenValidator implements SubscriberInterface
             return;
         }
 
-        $expected = $this->container->get('backendsession')->offsetGet($this->tokenName);
-        $token = $controller->Request()->getHeader($this->tokenName);
+        $expected = $this->container->get('backendsession')->offsetGet(self::CSRF_TOKEN_HEADER);
+        if (!\is_string($expected)) {
+            throw new CSRFTokenValidationException('The backend session does not contain a valid CSRF token');
+        }
+        $token = $controller->Request()->getHeader(self::CSRF_TOKEN_HEADER);
 
         if (empty($token)) {
             $token = $controller->Request()->getParam(self::CSRF_TOKEN_ARGUMENT);
         }
 
         if (!hash_equals($expected, $token)) {
-            throw new CSRFTokenValidationException(sprintf('The provided CSRF-Token is invalid. If you\'re sure that the request to path "%s" should be valid, the called controller action needs to be whitelisted using the CSRFWhitelistAware interface.', $controller->Request()->getRequestUri()));
+            throw new CSRFTokenValidationException(\sprintf('The provided CSRF-Token is invalid. If you\'re sure that the request to path "%s" should be valid, the called controller action needs to be whitelisted using the CSRFWhitelistAware interface.', $controller->Request()->getRequestUri()));
         }
     }
 
@@ -161,7 +148,7 @@ class CSRFTokenValidator implements SubscriberInterface
         }
 
         if (!$this->checkRequest($request)) {
-            throw new CSRFTokenValidationException(sprintf('The provided X-CSRF-Token for path "%s" is invalid. Please go back, reload the page and try again.', $request->getRequestUri()));
+            throw new CSRFTokenValidationException(\sprintf('The provided X-CSRF-Token for path "%s" is invalid. Please go back, reload the page and try again.', $request->getRequestUri()));
         }
 
         // mark request as validated to avoid double validation
@@ -173,23 +160,22 @@ class CSRFTokenValidator implements SubscriberInterface
         $shop = $this->contextService->getShopContext()->getShop();
         $name = $this->getCsrfName();
 
-        $front = $this->container->get('front');
-        $response = $front->Response();
-        $response->headers->clearCookie(
+        $response = $this->container->get('front')->Response();
+        $response->headers->setCookie(new Cookie(
             $name,
-            sprintf('%s/', $shop->getPath() ?: ''),
+            Random::getAlphanumericString(30),
+            0,
+            \sprintf('%s/', $shop->getPath() ?: ''),
             '',
             $shop->getSecure(),
             false
-        );
+        ));
     }
 
     /**
      * Check if the submitted CSRF token matches with the token stored in the cookie or header
-     *
-     * @return bool
      */
-    private function checkRequest(Request $request)
+    private function checkRequest(Request $request): bool
     {
         $name = $this->getCsrfName();
 
@@ -236,7 +222,7 @@ class CSRFTokenValidator implements SubscriberInterface
         $whitelistedActions = $controller->getWhitelistedCSRFActions();
         $whitelistedActions = array_map('strtolower', $whitelistedActions);
 
-        return \in_array($calledAction, $whitelistedActions);
+        return \in_array($calledAction, $whitelistedActions, true);
     }
 
     /**
@@ -254,6 +240,6 @@ class CSRFTokenValidator implements SubscriberInterface
         $protectedActions = $controller->getCSRFProtectedActions();
         $protectedActions = array_map('strtolower', $protectedActions);
 
-        return \in_array($calledAction, $protectedActions);
+        return \in_array($calledAction, $protectedActions, true);
     }
 }

@@ -1,28 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Pimple\Container;
+use Shopware\Recovery\Common\Middelware\XssMiddleware;
+use Shopware\Recovery\Common\SystemLocker;
 use Shopware\Recovery\Common\Utils;
 use Shopware\Recovery\Install\ContainerProvider;
 use Shopware\Recovery\Install\DatabaseFactory;
@@ -39,9 +41,12 @@ use Shopware\Recovery\Install\Service\LocalLicenseUnpackService;
 use Shopware\Recovery\Install\Service\ShopService;
 use Shopware\Recovery\Install\Service\ThemeService;
 use Shopware\Recovery\Install\Service\TranslationService;
+use Shopware\Recovery\Install\Struct\AdminUser;
 use Shopware\Recovery\Install\Struct\DatabaseConnectionInformation;
 use Shopware\Recovery\Install\Struct\LicenseUnpackRequest;
+use Shopware\Recovery\Install\Struct\Shop;
 use Slim\Slim;
+use voku\helper\AntiXSS;
 
 $config = require __DIR__ . '/../config/production.php';
 $container = new Container();
@@ -73,7 +78,7 @@ if (isset($_SESSION['databaseConnectionInfo'])) {
 
         // Init db in container
         $container->offsetSet('db', $connection);
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         // Jump to form
         throw $e;
     }
@@ -143,18 +148,21 @@ function localeForLanguage($language)
     return strtolower($language) . '_' . strtoupper($language);
 }
 
-function prefixSessionVars(Slim $app)
+function prefixSessionVars(Slim $app, Container $container)
 {
+    /** @var AntiXSS $antiXss */
+    $antiXss = $container->offsetGet('anti.xss');
+
     // Save post parameters starting with 'c_' to session
     $params = $app->request()->params();
     foreach ($params as $key => $value) {
         if (strpos($key, 'c_') !== false) {
-            $_SESSION['parameters'][$key] = $value;
+            $_SESSION['parameters'][$key] = $antiXss->xss_clean($value);
         }
     }
 }
 
-prefixSessionVars($app);
+prefixSessionVars($app, $container);
 $selectedLanguage = selectLanguage($container->offsetGet('config')['languages']);
 $translations = require __DIR__ . "/../data/lang/$selectedLanguage.php";
 
@@ -180,6 +188,8 @@ $app->view()->setData('error', false);
 $app->view()->setData('parameters', $_SESSION['parameters']);
 
 $app->setCookie('installed-locale', localeForLanguage($selectedLanguage), time() + 7200, '/');
+
+$app->add(new XssMiddleware());
 
 $app->error(function (Exception $e) use ($app) {
     if (!$app->request()->isAjax()) {
@@ -308,7 +318,7 @@ $app->map('/database-configuration/', function () use ($app, $container, $menuHe
     try {
         $databaseFactory = new DatabaseFactory();
         $databaseFactory->createPDOConnection($connectionInfo); // check connection
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $app->render('database-configuration.php', ['error' => $e->getMessage()]);
 
         return;
@@ -320,7 +330,7 @@ $app->map('/database-configuration/', function () use ($app, $container, $menuHe
         /** @var ConfigWriter $configWriter */
         $configWriter = $container->offsetGet('config.writer');
         $configWriter->writeConfig($connectionInfo);
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $app->render('database-configuration.php', ['error' => $e->getMessage()]);
 
         return;
@@ -338,9 +348,9 @@ $app->map('/database-import/', function () use ($app, $container, $menuHelper) {
     }
 
     try {
-        /** @var \PDO $connection */
+        /** @var PDO $connection */
         $connection = $container->offsetGet('db');
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $menuHelper->setCurrent('database-configuration');
         $app->render(
             'database-configuration.php',
@@ -353,7 +363,7 @@ $app->map('/database-import/', function () use ($app, $container, $menuHelper) {
     try {
         $connection->query('SELECT * FROM s_schema_version')->fetchAll();
         $hasSchema = true;
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $hasSchema = false;
     }
 
@@ -366,7 +376,7 @@ $app->map('/edition/', function () use ($app, $translations, $container, $menuHe
 
     try {
         $container->offsetGet('db');
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $menuHelper->setCurrent('database-configuration');
         $app->render('database-configuration.php', ['error' => 'Please fill in all fields']);
 
@@ -393,7 +403,7 @@ $app->map('/edition/', function () use ($app, $translations, $container, $menuHe
 
             try {
                 $licenseInformation = $licenseUnpackService->evaluateLicense($unpackRequest, $translationService);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $app->view()->setData('error', $e->getMessage());
                 $app->render('/edition.php');
 
@@ -424,7 +434,7 @@ $app->map('/configuration/', function () use ($app, $translationService, $contai
 
     try {
         $db = $container->offsetGet('db');
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $menuHelper->setCurrent('database-configuration');
         $app->render('database-configuration.php', ['error' => 'Please fill in all fields']);
 
@@ -432,7 +442,7 @@ $app->map('/configuration/', function () use ($app, $translationService, $contai
     }
 
     if ($app->request()->isPost()) {
-        $adminUser = new \Shopware\Recovery\Install\Struct\AdminUser([
+        $adminUser = new AdminUser([
             'email' => $_SESSION['parameters']['c_config_admin_email'],
             'username' => $_SESSION['parameters']['c_config_admin_username'],
             'name' => $_SESSION['parameters']['c_config_admin_name'],
@@ -440,7 +450,7 @@ $app->map('/configuration/', function () use ($app, $translationService, $contai
             'locale' => localeForLanguage($_SESSION['language']),
         ]);
 
-        $shop = new \Shopware\Recovery\Install\Struct\Shop([
+        $shop = new Shop([
             'name' => $_SESSION['parameters']['c_config_shopName'],
             'locale' => $_SESSION['parameters']['c_config_shop_language'],
             'currency' => $_SESSION['parameters']['c_config_shop_currency'],
@@ -463,7 +473,7 @@ $app->map('/configuration/', function () use ($app, $translationService, $contai
             $currencyService->updateCurrency($shop);
             $shopService->updateConfig($shop);
             $localeSettingsService->updateLocaleSettings($locale);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $hasErrors = true;
             $app->view()->setData('error', $e->getMessage());
         }
@@ -505,7 +515,7 @@ $app->map('/finish/', function () use ($app, $menuHelper, $container) {
 
     $basepath = str_replace('/recovery/install/index.php', '', $_SERVER['SCRIPT_NAME']);
 
-    /** @var \Shopware\Recovery\Common\SystemLocker $systemLocker */
+    /** @var SystemLocker $systemLocker */
     $systemLocker = $container->offsetGet('system.locker');
     $systemLocker();
 
@@ -536,10 +546,10 @@ $app->map('/database-import/importDatabase', function () use ($app, $container) 
     $response->header('Content-Type', 'application/json');
     $response->status(200);
 
-    /** @var \PDO $db */
+    /** @var PDO $db */
     $db = $container->offsetGet('db');
 
-    /** @var \Shopware\Recovery\Common\DumpIterator $dump */
+    /** @var Shopware\Recovery\Common\DumpIterator $dump */
     $dump = $container->offsetGet('database.dump_iterator');
 
     $offset = (int) $request->get('offset', 0);
@@ -552,13 +562,13 @@ $app->map('/database-import/importDatabase', function () use ($app, $container) 
     // How many queries should be executed per http request?
     $batchSize = 100;
 
-    /** @var Shopware\Recovery\Install\Service\DatabaseService $databaseService */
+    /** @var DatabaseService $databaseService */
     $databaseService = $container->offsetGet('database.service');
 
     // For end users, we hide the error if we can not create the database or alter it.
     try {
         $databaseService->createDatabase($_SESSION['parameters']['c_database_schema']);
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
     }
 
     $preSql = <<<'EOD'
@@ -621,7 +631,7 @@ $app->map('/database-import/importSnippets', function () use ($app, $container) 
     $response->header('Content-Type', 'application/json');
     $response->status(200);
 
-    /** @var \Shopware\Recovery\Common\DumpIterator $dump */
+    /** @var Shopware\Recovery\Common\DumpIterator $dump */
     $dump = $container->offsetGet('database.snippet_dump_iterator');
     $offset = (int) $app->request()->get('offset', 0);
     $totalCount = (int) $app->request()->get('totalCount', 0);
@@ -630,7 +640,7 @@ $app->map('/database-import/importSnippets', function () use ($app, $container) 
         $totalCount = $dump->count();
     }
 
-    /** @var \PDO $conn */
+    /** @var PDO $conn */
     $conn = $container->offsetGet('db');
 
     $preSql = '
@@ -655,7 +665,7 @@ $app->map('/database-import/importSnippets', function () use ($app, $container) 
         try {
             $conn->exec($current);
             $dump->next();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $data = [
                 'query' => $sql,
                 'success' => false,
@@ -694,7 +704,7 @@ $app->post('/check-database-connection', function () use ($container, $app) {
     try {
         $databaseFactory = new DatabaseFactory();
         $connection = $databaseFactory->createPDOConnection($connectionInfo);
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $response->header('Content-Type', 'application/json');
         $response->status(200);
         $response->body(json_encode([]));

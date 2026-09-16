@@ -18,6 +18,7 @@
  */
 
 use PhpCsFixer\Config;
+use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 use PhpCsFixerCustomFixers\Fixer\NoSuperfluousConcatenationFixer;
 use PhpCsFixerCustomFixers\Fixer\NoUselessCommentFixer;
 use PhpCsFixerCustomFixers\Fixer\NoUselessDirnameCallFixer;
@@ -56,6 +57,7 @@ return (new Config())
     ->registerCustomFixers(new Fixers())
     ->setRiskyAllowed(true)
     ->setCacheFile('var/cache/php-cs-fixer-enlight')
+    ->setParallelConfig(ParallelConfigFactory::detect())
     ->setRules([
         '@PSR12' => true,
         '@Symfony' => true,
@@ -72,6 +74,7 @@ return (new Config())
         'no_useless_else' => true,
         'no_useless_return' => true,
         'no_superfluous_phpdoc_tags' => true,
+        'nullable_type_declaration_for_default_null_value' => true,
         'operator_linebreak' => ['only_booleans' => true],
         'ordered_class_elements' => true,
         'phpdoc_line_span' => true,

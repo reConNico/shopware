@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\StoreFrontBundle;
@@ -49,10 +48,10 @@ class ConfiguratorServiceTest extends TestCase
     {
         $configuratorSet = $this->createConfiguratorSet();
         $combinations = [
-            self::OPTION_ID_1 => [0 => ''],
-            self::OPTION_ID_2 => [0 => ''],
-            self::OPTION_ID_3 => [0 => ''],
-            self::OPTION_ID_4 => [0 => ''],
+            self::OPTION_ID_1 => [[self::OPTION_ID_1]],
+            self::OPTION_ID_2 => [[self::OPTION_ID_2]],
+            self::OPTION_ID_3 => [[self::OPTION_ID_3]],
+            self::OPTION_ID_4 => [[self::OPTION_ID_4]],
         ];
         $configuratorService = $this->createConfiguratorService($configuratorSet, $combinations);
 
@@ -72,14 +71,14 @@ class ConfiguratorServiceTest extends TestCase
     }
 
     /**
-     * @param array<int, array<string>> $combinations
+     * @param array<int, array<int, array<int, int>>> $combinations
      */
     private function createConfiguratorService(Set $configuratorSet, array $combinations): ConfiguratorService
     {
         $productConfigurationGateway = $this->createMock(ProductConfigurationGatewayInterface::class);
         $configuratorGateway = $this->createMock(ConfiguratorGatewayInterface::class);
         $configuratorGateway->method('get')->willReturn($configuratorSet);
-        $configuratorGateway->method('getProductCombinations')->willReturn($combinations);
+        $configuratorGateway->method('getAvailableConfigurations')->willReturn($combinations);
 
         return new ConfiguratorService(
             $productConfigurationGateway,

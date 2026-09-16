@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\ORM\AbstractQuery;
 use Shopware\Bundle\AttributeBundle\Repository\SearchCriteria;
+use Shopware\Bundle\AttributeBundle\Service\CrudServiceInterface;
 use Shopware\Bundle\ContentTypeBundle\Services\FrontendTypeTranslatorInterface;
 use Shopware\Bundle\ContentTypeBundle\Services\RepositoryInterface;
 use Shopware\Bundle\ContentTypeBundle\Services\TypeProvider;
@@ -79,14 +80,14 @@ class sRewriteTable implements Enlight_Hook
      *
      * @var PDOStatement
      */
-    protected $preparedUpdate = null;
+    protected $preparedUpdate;
 
     /**
      * Prepared insert PDOStatement for the s_core_rewrite_urls table.
      *
      * @var PDOStatement
      */
-    protected $preparedInsert = null;
+    protected $preparedInsert;
 
     /**
      * Database connection which used for each database operation in this class.
@@ -133,30 +134,19 @@ class sRewriteTable implements Enlight_Hook
     private $translationComponent;
 
     /**
-     * @param Enlight_Components_Db_Adapter_Pdo_Mysql $db
-     * @param Shopware_Components_Config              $config
-     * @param ModelManager                            $modelManager
-     * @param sSystem                                 $systemModule
-     * @param Enlight_Template_Manager                $template
-     * @param Shopware_Components_Modules             $moduleManager
-     * @param SlugInterface                           $slug
-     * @param ContextServiceInterface                 $contextService
-     * @param ShopPageServiceInterface                $shopPageService
-     * @param Shopware_Components_Translation         $translationComponent
-     *
      * @throws Exception
      */
     public function __construct(
-        Enlight_Components_Db_Adapter_Pdo_Mysql $db = null,
-        Shopware_Components_Config $config = null,
-        ModelManager $modelManager = null,
-        sSystem $systemModule = null,
-        Enlight_Template_Manager $template = null,
-        Shopware_Components_Modules $moduleManager = null,
-        SlugInterface $slug = null,
-        ContextServiceInterface $contextService = null,
-        ShopPageServiceInterface $shopPageService = null,
-        Shopware_Components_Translation $translationComponent = null
+        ?Enlight_Components_Db_Adapter_Pdo_Mysql $db = null,
+        ?Shopware_Components_Config $config = null,
+        ?ModelManager $modelManager = null,
+        ?sSystem $systemModule = null,
+        ?Enlight_Template_Manager $template = null,
+        ?Shopware_Components_Modules $moduleManager = null,
+        ?SlugInterface $slug = null,
+        ?ContextServiceInterface $contextService = null,
+        ?ShopPageServiceInterface $shopPageService = null,
+        ?Shopware_Components_Translation $translationComponent = null
     ) {
         $this->db = $db ?: Shopware()->Db();
         $this->config = $config ?: Shopware()->Config();
@@ -241,7 +231,7 @@ class sRewriteTable implements Enlight_Hook
      * @param string $lastUpdate
      *
      * @throws SmartyException
-     * @throws \Enlight_Event_Exception
+     * @throws Enlight_Event_Exception
      * @throws Zend_Db_Adapter_Exception
      * @throws Exception
      *
@@ -410,7 +400,7 @@ class sRewriteTable implements Enlight_Hook
      * @param int    $offset
      *
      * @throws Zend_Db_Adapter_Exception
-     * @throws \Enlight_Event_Exception
+     * @throws Enlight_Event_Exception
      *
      * @return string
      */
@@ -488,12 +478,18 @@ class sRewriteTable implements Enlight_Hook
      */
     public function getSeoArticleQuery()
     {
-        return "
+        $attributesList = Shopware()->Container()->get(CrudServiceInterface::class)->getList('s_articles_attributes');
+        $attributes = [];
+        foreach ($attributesList as $attribute) {
+            if ($attribute->isIdentifier()) {
+                continue;
+            }
+            $attributes[] = 'at.' . $attribute->getColumnName();
+        }
+
+        return '
             SELECT a.*, d.ordernumber, d.suppliernumber, s.name AS supplier, a.datum AS date,
-                d.releasedate, a.changetime AS changed, ct.objectdata, ctf.objectdata AS objectdataFallback, at.attr1, at.attr2,
-                at.attr3, at.attr4, at.attr5, at.attr6, at.attr7, at.attr8, at.attr9,
-                at.attr10,at.attr11, at.attr12, at.attr13, at.attr14, at.attr15, at.attr16,
-                at.attr17, at.attr18, at.attr19, at.attr20
+                d.releasedate, a.changetime AS changed, ct.objectdata, ctf.objectdata AS objectdataFallback, ' . implode(',', $attributes) . "
             FROM s_articles a
 
             INNER JOIN s_articles_categories_ro ac
@@ -536,13 +532,13 @@ class sRewriteTable implements Enlight_Hook
      * @param int|null $offset
      * @param int|null $limit
      */
-    public function sCreateRewriteTableBlog($offset = null, $limit = null, ShopContextInterface $context = null)
+    public function sCreateRewriteTableBlog($offset = null, $limit = null, ?ShopContextInterface $context = null)
     {
         $query = $this->modelManager->getRepository(Category::class)
             ->getBlogCategoriesByParentQuery(Shopware()->Shop()->get('parentID'));
         $blogCategories = $query->getArrayResult();
 
-        //get all blog category ids
+        // get all blog category ids
         $blogCategoryIds = [];
         foreach ($blogCategories as $blogCategory) {
             $blogCategoryIds[] = $blogCategory['id'];
@@ -694,12 +690,12 @@ class sRewriteTable implements Enlight_Hook
      *
      * @throws Exception
      */
-    public function sCreateRewriteTableContent($offset = null, $limit = null, ShopContextInterface $context = null)
+    public function sCreateRewriteTableContent($offset = null, $limit = null, ?ShopContextInterface $context = null)
     {
-        //form urls
+        // form urls
         $this->insertFormUrls($offset, $limit, $context);
 
-        //static pages urls
+        // static pages urls
         $this->insertStaticPageUrls($offset, $limit, $context);
     }
 
@@ -749,7 +745,7 @@ class sRewriteTable implements Enlight_Hook
                 $path = $this->template->fetch('string:' . $type->getSeoUrlTemplate(), ['type' => $typeArray, 'item' => $item, 'context' => $context]);
                 $path = $this->sCleanupPath($path);
 
-                $org_path = sprintf('sViewport=%s&sAction=detail&id=%d', $type->getControllerName(), $item['id']);
+                $org_path = \sprintf('sViewport=%s&sAction=detail&id=%d', $type->getControllerName(), $item['id']);
                 $this->sInsertUrl($org_path, $path);
             }
         }
@@ -872,7 +868,7 @@ class sRewriteTable implements Enlight_Hook
      */
     public function getData()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return $this->data;
     }
@@ -985,13 +981,12 @@ class sRewriteTable implements Enlight_Hook
     /**
      * Generates and inserts the form seo urls
      *
-     * @param int                  $offset
-     * @param int                  $limit
-     * @param ShopContextInterface $context
+     * @param int $offset
+     * @param int $limit
      *
      * @throws Exception
      */
-    private function insertFormUrls($offset, $limit, ShopContextInterface $context = null)
+    private function insertFormUrls($offset, $limit, ?ShopContextInterface $context = null)
     {
         $context = $this->createFallbackContext($context);
         $shopId = $context->getShop()->getId();
@@ -1037,15 +1032,14 @@ class sRewriteTable implements Enlight_Hook
     /**
      * Generates and inserts static page urls
      *
-     * @param int                  $offset
-     * @param int                  $limit
-     * @param ShopContextInterface $context
+     * @param int $offset
+     * @param int $limit
      *
      * @throws Exception
      * @throws SmartyException
      * @throws Zend_Db_Statement_Exception
      */
-    private function insertStaticPageUrls($offset, $limit, ShopContextInterface $context = null)
+    private function insertStaticPageUrls($offset, $limit, ?ShopContextInterface $context = null)
     {
         $context = $this->createFallbackContext($context);
         $shopId = $context->getShop()->getId();
@@ -1155,7 +1149,7 @@ class sRewriteTable implements Enlight_Hook
      *
      * @return ShopContextInterface
      */
-    private function createFallbackContext(ShopContextInterface $context = null)
+    private function createFallbackContext(?ShopContextInterface $context = null)
     {
         if ($context) {
             return $context;

@@ -1,28 +1,30 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
+use Shopware\Components\Api\Exception\NotFoundException;
 use Shopware\Components\Api\Resource\CustomerStream as CustomerStreamApi;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Models\CustomerStream\CustomerStream;
@@ -38,7 +40,11 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
 
     public function delete($id)
     {
-        $this->getApiResource()->delete($id);
+        try {
+            $this->getApiResource()->delete((int) $id);
+        } catch (NotFoundException $e) {
+            return ['success' => false, 'error' => 'The passed id parameter exists no more.'];
+        }
 
         return ['success' => true];
     }
@@ -59,7 +65,7 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
         }
 
         if ($data['id']) {
-            $entity = $this->getApiResource()->update($data['id'], $data);
+            $entity = $this->getApiResource()->update((int) $data['id'], $data);
         } else {
             $entity = $this->getApiResource()->create($data);
         }
@@ -127,7 +133,7 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
         $this->View()->assign([
             'success' => true,
             'finish' => false,
-            'text' => sprintf($snippets->get('refresh_stream'), $handled, $total),
+            'text' => \sprintf($snippets->get('refresh_stream'), $handled, $total),
             'progress' => $handled / $total,
         ]);
     }
@@ -187,7 +193,7 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
             'success' => true,
             'finish' => false,
             'params' => ['lastId' => (int) array_pop($ids)],
-            'text' => sprintf($snippets->get('refresh_customer'), $handled, $total),
+            'text' => \sprintf($snippets->get('refresh_customer'), $handled, $total),
             'progress' => $handled / $total,
         ]);
     }
@@ -199,12 +205,16 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
     {
         $request = $this->Request();
 
+        $streamId = $request->getParam('streamId');
+        if ($streamId !== null) {
+            $streamId = (int) $streamId;
+        }
         $result = $this->getApiResource()->getOne(
-            $request->getParam('streamId'),
+            $streamId,
             (int) $request->getParam('start', 0),
             (int) $request->getParam('limit', 50),
-            $request->getParam('conditions'),
-            $request->getParam('sorting')
+            $request->getParam('conditions', ''),
+            $request->getParam('sorting', '')
         );
 
         $data = $this->container->get(CustomerStreamRepositoryInterface::class)->fetchBackendListing($result->getIds());

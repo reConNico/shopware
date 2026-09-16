@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
@@ -29,29 +29,35 @@ use Shopware\Bundle\PluginInstallerBundle\Exception\StoreException;
 use Shopware\Bundle\PluginInstallerBundle\Service\AccountManagerService;
 use Shopware\Bundle\PluginInstallerBundle\Service\PluginLicenceService;
 use Shopware\Bundle\PluginInstallerBundle\Struct\AccessTokenStruct;
+use Shopware\Components\CacheManager;
+use ShopwarePlugins\SwagUpdate\Components\PluginCheck;
 
 class Shopware_Controllers_Backend_UpdateWizard extends Shopware_Controllers_Backend_ExtJs
 {
+    /**
+     * @return void
+     */
     public function indexAction()
     {
         /** @var Connection $connection */
-        $connection = $this->get(\Doctrine\DBAL\Connection::class);
+        $connection = $this->get(Connection::class);
         $sql = "INSERT IGNORE INTO `s_core_config_elements` (`id`, `form_id`, `name`, `value`, `label`, `description`, `type`, `required`, `position`, `scope`)
                 VALUES (NULL, '0', 'updateWizardStarted', 'b:1;', '', '', 'checkbox', '0', '0', '1');";
-        $connection->executeUpdate($sql);
+        $connection->executeStatement($sql);
 
-        Shopware()->Container()->get(\Shopware\Components\CacheManager::class)->clearConfigCache();
+        Shopware()->Container()->get(CacheManager::class)->clearConfigCache();
     }
 
+    /**
+     * @return void
+     */
     public function updateAction()
     {
-        $pluginCheck = new \ShopwarePlugins\SwagUpdate\Components\PluginCheck($this->container);
+        $pluginCheck = new PluginCheck($this->container);
 
-        /** @var PluginLicenceService $licenceService */
-        $licenceService = $this->get(\Shopware\Bundle\PluginInstallerBundle\Service\PluginLicenceService::class);
+        $licenceService = $this->get(PluginLicenceService::class);
 
-        /** @var AccountManagerService $accountService */
-        $accountService = $this->get(\Shopware\Bundle\PluginInstallerBundle\Service\AccountManagerService::class);
+        $accountService = $this->get(AccountManagerService::class);
 
         $request = new UpdateLicencesRequest(
             $this->getVersion(),
@@ -70,12 +76,12 @@ class Shopware_Controllers_Backend_UpdateWizard extends Shopware_Controllers_Bac
 
         $plugins = $pluginCheck->checkInstalledPluginsAvailableForNewVersion($this->getVersion());
 
-        $updatable = array_filter($plugins, function ($plugin) {
-            return $plugin['updatable'];
+        $updatable = array_filter($plugins, static function ($plugin) {
+            return (bool) $plugin['updatable'];
         });
 
-        $notUpdatable = array_filter($plugins, function ($plugin) {
-            return $plugin['inStore'] == false;
+        $notUpdatable = array_filter($plugins, static function ($plugin) {
+            return !(bool) $plugin['inStore'];
         });
 
         $this->View()->assign([
@@ -87,10 +93,7 @@ class Shopware_Controllers_Backend_UpdateWizard extends Shopware_Controllers_Bac
         ]);
     }
 
-    /**
-     * @return string
-     */
-    private function getLocale()
+    private function getLocale(): string
     {
         return $this->container->get('auth')->getIdentity()->locale->getLocale();
     }
@@ -100,19 +103,16 @@ class Shopware_Controllers_Backend_UpdateWizard extends Shopware_Controllers_Bac
         $version = $this->container->getParameter('shopware.release.version');
 
         if (!\is_string($version)) {
-            throw new \RuntimeException('Parameter shopware.release.version has to be an string');
+            throw new RuntimeException('Parameter shopware.release.version has to be an string');
         }
 
         return $version;
     }
 
-    /**
-     * @return AccessTokenStruct|null
-     */
-    private function getAccessToken()
+    private function getAccessToken(): AccessTokenStruct
     {
         if (!$this->get('backendsession')->offsetExists('store_token')) {
-            return null;
+            throw new RuntimeException('Store token not found. Please log into the account in the plugin manager.');
         }
 
         $allowedClassList = [
@@ -125,7 +125,7 @@ class Shopware_Controllers_Backend_UpdateWizard extends Shopware_Controllers_Bac
         );
     }
 
-    private function handleException(Exception $e)
+    private function handleException(Exception $e): void
     {
         if (!($e instanceof StoreException)) {
             $this->View()->assign(['success' => false, 'message' => $e->getMessage()]);
@@ -145,12 +145,8 @@ class Shopware_Controllers_Backend_UpdateWizard extends Shopware_Controllers_Bac
         ]);
     }
 
-    /**
-     * @return mixed|string
-     */
-    private function getExceptionMessage(StoreException $exception)
+    private function getExceptionMessage(StoreException $exception): string
     {
-        /** @var \Enlight_Components_Snippet_Namespace $namespace */
         $namespace = $this->get('snippets')
             ->getNamespace('backend/plugin_manager/exceptions');
 

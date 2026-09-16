@@ -5,33 +5,32 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Model;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query\Expr\Comparison;
 use Doctrine\ORM\Query\Parameter;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Model\QueryBuilder;
 use Shopware\Components\Model\QueryOperatorValidator;
 
@@ -42,7 +41,7 @@ class QueryBuilderTest extends TestCase
     protected function setUp(): void
     {
         // Create a stub for the SomeClass class.
-        $emMock = $this->createMock(EntityManager::class);
+        $emMock = $this->createMock(ModelManager::class);
 
         $queryBuilder = new QueryBuilder($emMock, new QueryOperatorValidator(['foo', 'bar']));
 
@@ -345,7 +344,7 @@ class QueryBuilderTest extends TestCase
     {
         $this->querybuilder->resetDQLParts();
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(sprintf('\'%s\' is no valid operator', $filter['expression']));
+        $this->expectExceptionMessage(\sprintf('\'%s\' is no valid operator', $filter['expression']));
         $this->querybuilder->addFilter([$filter]);
     }
 

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\MultiEdit\Resource;
@@ -33,6 +33,7 @@ use Shopware\Components\MultiEdit\Resource\Product\Grammar;
 use Shopware\Components\MultiEdit\Resource\Product\Queue;
 use Shopware\Components\MultiEdit\Resource\Product\Value;
 use Shopware\Models\Article\Detail;
+use Shopware\Models\Article\Price;
 
 /**
  * The main product resource will delegate the controller requests to the corresponding classes
@@ -40,40 +41,19 @@ use Shopware\Models\Article\Detail;
  */
 class Product implements ResourceInterface
 {
-    /**
-     * @var Product\DqlHelper
-     */
-    private $dqlHelper;
+    private DqlHelper $dqlHelper;
 
-    /**
-     * @var Product\Grammar
-     */
-    private $grammar;
+    private Grammar $grammar;
 
-    /**
-     * @var Product\Value
-     */
-    private $value;
+    private Value $value;
 
-    /**
-     * @var Product\Filter
-     */
-    private $filter;
+    private Filter $filter;
 
-    /**
-     * @var Product\BatchProcess
-     */
-    private $batchProcess;
+    private BatchProcess $batchProcess;
 
-    /**
-     * @var Product\Queue
-     */
-    private $queue;
+    private Queue $queue;
 
-    /**
-     * @var Product\Backup
-     */
-    private $backup;
+    private Backup $backup;
 
     public function __construct(DqlHelper $dqlHelper, Grammar $grammar, Value $value, Filter $filter, BatchProcess $batchProcess, Queue $queue, Backup $backup)
     {
@@ -168,7 +148,7 @@ class Product implements ResourceInterface
             $entity = $this->dqlHelper->getEntityForPrefix($prefix);
 
             // All models except price
-            if ($prefix !== 'price') {
+            if ($entity !== Price::class) {
                 $model = $entityManager->find($entity, $primaryIdentifiers[$prefix]);
                 if ($model === null) {
                     continue;

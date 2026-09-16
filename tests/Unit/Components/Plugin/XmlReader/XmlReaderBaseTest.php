@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Plugin\XmlReader;
@@ -62,7 +61,6 @@ class XmlReaderBaseTest extends TestCase
     {
         $data = (new XmlConfigReader())->read(__DIR__ . '/examples/base/config.xml');
 
-        static::assertIsArray($data);
         static::assertCount(3, $data);
     }
 
@@ -131,7 +129,7 @@ class XmlReaderBaseTest extends TestCase
 
     public function testValidateBooleanAttribute(): void
     {
-        //required="true"
+        // required="true"
         $element1 = $this->xpath->query('//config/elements/element');
         static::assertInstanceOf(DOMNodeList::class, $element1);
         $element1 = $element1->item(0);
@@ -140,10 +138,9 @@ class XmlReaderBaseTest extends TestCase
             $element1->getAttribute('required')
         );
 
-        static::assertIsBool($element1Result);
         static::assertTrue($element1Result);
 
-        //required not given - passed default value
+        // required not given - passed default value
         $element2 = $this->xpath->query('//config/elements/element');
         static::assertInstanceOf(DOMNodeList::class, $element2);
         $element2 = $element2->item(1);
@@ -152,13 +149,12 @@ class XmlReaderBaseTest extends TestCase
             $element2->getAttribute('required')
         );
 
-        static::assertIsBool($element2Result);
         static::assertFalse($element2Result);
     }
 
     public function testParseStoreNodeList(): void
     {
-        //ExtJs Store
+        // ExtJs Store
         $store1 = $this->xpath->query('//config/elements/element[3]/store');
         static::assertInstanceOf(DOMNodeList::class, $store1);
         $store1Result = XmlReaderBase::parseStoreNodeList($store1);
@@ -166,7 +162,7 @@ class XmlReaderBaseTest extends TestCase
         static::assertIsString($store1Result);
         static::assertEquals('EXTJS-STORE', $store1Result);
 
-        //Xml Store
+        // Xml Store
         $store2 = $this->xpath->query('//config/elements/element[4]/store');
         static::assertInstanceOf(DOMNodeList::class, $store2);
         $store2Result = XmlReaderBase::parseStoreNodeList($store2);
@@ -176,7 +172,7 @@ class XmlReaderBaseTest extends TestCase
         static::assertEquals('value2', $store2Result[1][0]);
         static::assertEquals('label2', $store2Result[1][1]['en']);
 
-        //No store found
+        // No store found
         $store3 = $this->xpath->query('//config/elements/element[5]/store');
         static::assertInstanceOf(DOMNodeList::class, $store3);
         $store3Result = XmlReaderBase::parseStoreNodeList($store3);
@@ -200,7 +196,7 @@ class XmlReaderBaseTest extends TestCase
 
     public function testParseOptionsNodeListNoOptions(): void
     {
-        //cannot test with file because of the xsd validation
+        // cannot test with file because of the xsd validation
         $dom = new DOMDocument();
         $dom->loadXML('<element></element>');
 
@@ -212,7 +208,7 @@ class XmlReaderBaseTest extends TestCase
 
     public function testParseOptionsNodeListEmptyOptions(): void
     {
-        //cannot test with file because of the xsd validation
+        // cannot test with file because of the xsd validation
         $dom = new DOMDocument();
         $dom->loadXML('<element><options></options></element>');
 
@@ -246,13 +242,13 @@ class XmlReaderBaseTest extends TestCase
 
     public function testGetElementChildValueByNameThrowsException(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Element with invalid not found');
-
         $options = $this->xpath->query('//config/elements/element[6]/options');
         static::assertInstanceOf(DOMNodeList::class, $options);
         $option = $options->item(0);
         static::assertInstanceOf(DOMElement::class, $option);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Element with name "invalid" not found in file ".*\/tests\/Unit\/Components\/Plugin\/XmlReader\/examples\/base\/config_invalid\.xml"/');
         XmlReaderBase::getElementChildValueByName($option, 'invalid', true);
     }
 

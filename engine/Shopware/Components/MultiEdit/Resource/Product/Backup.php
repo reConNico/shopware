@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\MultiEdit\Resource\Product;
 
 use DateTime;
 use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\Query;
 use Exception;
 use PDO;
 use RuntimeException;
@@ -126,7 +127,7 @@ class Backup
             }
 
             if (!is_dir($this->backupPath)) {
-                throw new RuntimeException(sprintf('Could not find nor create "%s"', $this->backupPath));
+                throw new RuntimeException(\sprintf('Could not find nor create "%s"', $this->backupPath));
             }
         }
     }
@@ -137,16 +138,18 @@ class Backup
      * @param int $offset
      * @param int $limit
      *
-     * @return array
+     * @return array{totalCount: int, data: array<array<string, mixed>>}
      */
     public function getList($offset, $limit)
     {
-        $query = $this->getDqlHelper()->getEntityManager()->getRepository(BackupModel::class)->getBackupListQuery($offset, $limit);
+        /** @var Query<array<string, mixed>> $query */
+        $query = $this->getDqlHelper()->getEntityManager()->getRepository(BackupModel::class)
+            ->getBackupListQuery($offset, $limit);
         $query->setHydrationMode(AbstractQuery::HYDRATE_ARRAY);
         $paginator = Shopware()->Models()->createPaginator($query);
         $totalCount = $paginator->count();
 
-        $backups = $paginator->getIterator()->getArrayCopy();
+        $backups = iterator_to_array($paginator);
 
         return [
             'totalCount' => $totalCount,
@@ -222,28 +225,23 @@ class Backup
      *
      * @throws RuntimeException
      *
-     * @return array
+     * @return array{totalCount: int, offset: int, done: bool}
      */
     public function restore($id, $offset = 0)
     {
         $entityManager = $this->getDqlHelper()->getEntityManager();
         $backup = $entityManager->find(BackupModel::class, $id);
 
-        if (!$backup) {
-            throw new RuntimeException(sprintf('Backup by id %d not found', $id));
+        if (!$backup instanceof BackupModel) {
+            throw new RuntimeException(\sprintf('Backup by id %d not found', $id));
         }
 
         $path = $backup->getPath();
         $dir = \dirname($path);
 
-        if ($offset === 0) {
-            $zip = new ZipArchive();
-            $zip->open($path);
-            $success = $zip->extractTo($dir);
-            if (!$success) {
-                throw new RuntimeException(sprintf('Could not extract %s to %s', $path, $dir));
-            }
-            $zip->close();
+        // Only unzip at the first time
+        if ((int) $offset === 0) {
+            $this->extractedFilesFromZip($path, $dir);
         }
 
         // Get list of data sql files
@@ -309,7 +307,7 @@ class Backup
         $backup = $entityManager->find(BackupModel::class, $id);
 
         if (!$backup) {
-            throw new RuntimeException(sprintf('Backup by id %d not found', $id));
+            throw new RuntimeException(\sprintf('Backup by id %d not found', $id));
         }
 
         $dir = \dirname($backup->getPath());
@@ -411,7 +409,7 @@ class Backup
         $fields = [];
         // Create a assoc array of tables and their fields
         foreach ($operations as $operation) {
-            list($prefix, $field) = explode('.', $operation['column']);
+            [$prefix, $field] = explode('.', $operation['column']);
             $prefix = ucfirst(strtolower($prefix));
             $prefixes[] = $prefix;
 
@@ -462,7 +460,7 @@ class Backup
         $prefix = $this->affectedTables[$table]['prefix'];
 
         if (!$prefix) {
-            throw new RuntimeException(sprintf('Empty prefix for %s', $table));
+            throw new RuntimeException(\sprintf('Empty prefix for %s', $table));
         }
 
         return $prefix;
@@ -480,7 +478,7 @@ class Backup
         $columns = $this->affectedTables[$table]['columns'];
 
         if (!$columns) {
-            throw new RuntimeException(sprintf('Empty column for %s', $table));
+            throw new RuntimeException(\sprintf('Empty column for %s', $table));
         }
 
         return $columns;
@@ -551,7 +549,7 @@ class Backup
 
         $fileHandle = fopen($outFileData, 'w');
         if (!\is_resource($fileHandle)) {
-            throw new RuntimeException(sprintf('Could not open stream at "%s"', $outFileData));
+            throw new RuntimeException(\sprintf('Could not open stream at "%s"', $outFileData));
         }
 
         $columns = $this->getAffectedColumns($table);
@@ -657,7 +655,7 @@ class Backup
         $zip = new ZipArchive();
 
         if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
-            throw new RuntimeException(sprintf('Could not open %s, please check the permissions.', $zipPath));
+            throw new RuntimeException(\sprintf('Could not open %s, please check the permissions.', $zipPath));
         }
 
         $files = $this->getDirectoryList($this->outputPath);
@@ -694,5 +692,16 @@ class Backup
         }
 
         return $files;
+    }
+
+    private function extractedFilesFromZip(string $path, string $dir): void
+    {
+        $zip = new ZipArchive();
+        $zip->open($path);
+        $success = $zip->extractTo($dir);
+        if (!$success) {
+            throw new RuntimeException(\sprintf('Could not extract %s to %s', $path, $dir));
+        }
+        $zip->close();
     }
 }

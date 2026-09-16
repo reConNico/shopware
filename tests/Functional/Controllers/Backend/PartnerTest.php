@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Controllers\Backend;
@@ -94,7 +93,7 @@ class PartnerTest extends Enlight_Components_Test_Controller_TestCase
      */
     public function testGetList(): void
     {
-        //delete old data
+        // delete old data
         $repositoryData = $this->repository->findBy(['company' => $this->dummyData['company']]);
         foreach ($repositoryData as $testDummy) {
             $this->manager->remove($testDummy);
@@ -128,14 +127,14 @@ class PartnerTest extends Enlight_Components_Test_Controller_TestCase
     public function testSavePartner(): int
     {
         $params = $this->dummyData;
-        //test new partner
+        // test new partner
         $this->Request()->setParams($params);
         $this->dispatch('backend/Partner/savePartner');
         static::assertTrue($this->View()->getAssign('success'));
         static::assertCount(19, $this->View()->getAssign('data'));
         static::assertEquals('streetDummy', $this->View()->getAssign('data')['street']);
 
-        //test update partner
+        // test update partner
         $params['id'] = $this->View()->getAssign('data')['id'];
         $params['street'] = $this->updateStreet;
         $this->Request()->setParams($params);
@@ -210,7 +209,7 @@ class PartnerTest extends Enlight_Components_Test_Controller_TestCase
         $body = $this->Response()->getBody();
         static::assertEmpty($body);
 
-        //delete the new dummy
+        // delete the new dummy
         $this->manager->remove($newDummy);
         $this->manager->flush();
 

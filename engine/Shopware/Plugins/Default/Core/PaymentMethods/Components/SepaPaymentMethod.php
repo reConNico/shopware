@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace ShopwarePlugin\PaymentMethods\Components;
@@ -31,7 +32,10 @@ use Enlight_Exception;
 use Exception;
 use Mpdf\Mpdf;
 use Shopware\Bundle\MailBundle\Service\LogEntryBuilder;
+use Shopware\Models\Customer\Customer;
 use Shopware\Models\Customer\PaymentData;
+use Shopware\Models\Order\Order;
+use Shopware\Models\Payment\Payment;
 use Zend_Mime;
 
 /**
@@ -47,13 +51,13 @@ class SepaPaymentMethod extends GenericPaymentMethod
         $sErrorFlag = [];
         $sErrorMessages = [];
 
-        if (!$paymentData['sSepaIban'] || trim($paymentData['sSepaIban']) === '') {
+        if (empty($paymentData['sSepaIban']) || trim($paymentData['sSepaIban']) === '') {
             $sErrorFlag['sSepaIban'] = true;
         }
-        if (Shopware()->Config()->get('sepaShowBic') && Shopware()->Config()->get('sepaRequireBic') && (!$paymentData['sSepaBic'] || trim($paymentData['sSepaBic']) === '')) {
+        if (Shopware()->Config()->get('sepaShowBic') && Shopware()->Config()->get('sepaRequireBic') && (empty($paymentData['sSepaBic']) || trim($paymentData['sSepaBic']) === '')) {
             $sErrorFlag['sSepaBic'] = true;
         }
-        if (Shopware()->Config()->get('sepaShowBankName') && Shopware()->Config()->get('sepaRequireBankName') && (!$paymentData['sSepaBankName'] || trim($paymentData['sSepaBankName']) === '')) {
+        if (Shopware()->Config()->get('sepaShowBankName') && Shopware()->Config()->get('sepaRequireBankName') && (empty($paymentData['sSepaBankName']) || trim($paymentData['sSepaBankName']) === '')) {
             $sErrorFlag['sSepaBankName'] = true;
         }
 
@@ -66,7 +70,7 @@ class SepaPaymentMethod extends GenericPaymentMethod
             $sErrorMessages[] = Shopware()->Snippets()->getNamespace('frontend/account/internalMessages')->get('ErrorFillIn', 'Please fill in all red fields');
         }
 
-        if ($paymentData['sSepaIban'] && !$this->validateIBAN($paymentData['sSepaIban'])) {
+        if (isset($paymentData['sSepaIban']) && !$this->validateIBAN((string) $paymentData['sSepaIban'])) {
             $sErrorMessages[] = Shopware()->Snippets()->getNamespace('frontend/plugins/payment/sepa')->get('ErrorIBAN', 'Invalid IBAN');
             $sErrorFlag['sSepaIban'] = true;
         }
@@ -88,13 +92,13 @@ class SepaPaymentMethod extends GenericPaymentMethod
     {
         $lastPayment = $this->getCurrentPaymentDataAsArray($userId);
 
-        $paymentMean = Shopware()->Models()->getRepository(\Shopware\Models\Payment\Payment::class)->
+        $paymentMean = Shopware()->Models()->getRepository(Payment::class)->
         getAllPaymentsQuery(['name' => 'Sepa'])->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
 
         $data = [
             'use_billing_data' => ($request->getParam('sSepaUseBillingData') === 'true' ? 1 : 0),
             'bankname' => $request->getParam('sSepaBankName'),
-            'iban' => preg_replace('/\s+|\./', '', $request->getParam('sSepaIban')),
+            'iban' => preg_replace('/\s+|\./', '', (string) $request->getParam('sSepaIban')),
             'bic' => $request->getParam('sSepaBic'),
         ];
 
@@ -153,17 +157,26 @@ class SepaPaymentMethod extends GenericPaymentMethod
      */
     public function createPaymentInstance($orderId, $userId, $paymentId)
     {
+        $userId = (int) $userId;
         $order = Shopware()->Models()->createQueryBuilder()
             ->select(['orders.invoiceAmount', 'orders.number'])
-            ->from('Shopware\Models\Order\Order', 'orders')
+            ->from(Order::class, 'orders')
             ->where('orders.id = ?1')
             ->setParameter(1, $orderId)
             ->getQuery()
             ->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
 
-        $addressData = Shopware()->Models()->getRepository('Shopware\Models\Customer\Customer')
+        $addressData = Shopware()->Models()->getRepository(Customer::class)
             ->find($userId)->getDefaultBillingAddress();
         $paymentData = $this->getCurrentPaymentDataAsArray($userId);
+        if (!\is_array($paymentData)) {
+            $paymentData = [
+                'sSepaUseBillingData' => null,
+                'sSepaBankName' => null,
+                'sSepaBic' => null,
+                'sSepaIban' => null,
+            ];
+        }
 
         $date = new DateTime();
         $data = [
@@ -200,13 +213,16 @@ class SepaPaymentMethod extends GenericPaymentMethod
         return true;
     }
 
-    private function validateIBAN($value)
+    private function validateIBAN(string $value): bool
     {
-        if ($value === null || $value === '') {
+        if ($value === '') {
             return false;
         }
 
         $teststring = preg_replace('/\s+|\./', '', $value);
+        if (!\is_string($teststring)) {
+            return false;
+        }
 
         if (\strlen($teststring) < 4) {
             return false;
@@ -217,8 +233,8 @@ class SepaPaymentMethod extends GenericPaymentMethod
             . (string) (\ord($teststring[1]) - 55)
             . substr($teststring, 2, 2);
 
-        $teststring = (string) preg_replace_callback('/[A-Za-z]/', function ($letter) {
-            return (int) (\ord(strtolower($letter[0])) - 87);
+        $teststring = (string) preg_replace_callback('/[A-Za-z]/', function ($letter): string {
+            return (string) (\ord(strtolower($letter[0])) - 87);
         }, $teststring);
 
         $rest = 0;
@@ -235,7 +251,10 @@ class SepaPaymentMethod extends GenericPaymentMethod
         return true;
     }
 
-    private function sendSepaEmail($orderNumber, $userId, $data)
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function sendSepaEmail(string $orderNumber, int $userId, array $data): void
     {
         $mail = Shopware()->TemplateMail()->createMail('sORDERSEPAAUTHORIZATION', [
             'paymentInstance' => [
@@ -245,9 +264,9 @@ class SepaPaymentMethod extends GenericPaymentMethod
             ],
         ]);
 
-        $customerEmail = Shopware()->Models()->createQueryBuilder()
+        $customerEmail = (string) Shopware()->Models()->createQueryBuilder()
             ->select('customer.email')
-            ->from('Shopware\Models\Customer\Customer', 'customer')
+            ->from(Customer::class, 'customer')
             ->where('customer.id = ?1')
             ->setParameter(1, $userId)
             ->getQuery()
@@ -299,7 +318,7 @@ class SepaPaymentMethod extends GenericPaymentMethod
         try {
             $mail->send();
         } catch (Exception $e) {
-            //TODO: Handle email sending failure
+            // TODO: Handle email sending failure
         }
     }
 }

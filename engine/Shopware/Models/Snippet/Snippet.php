@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Snippet;
@@ -120,7 +120,7 @@ class Snippet extends ModelEntity
     /**
      * @param string $namespace
      *
-     * @return \Shopware\Models\Snippet\Snippet
+     * @return Snippet
      */
     public function setNamespace($namespace)
     {
@@ -140,7 +140,7 @@ class Snippet extends ModelEntity
     /**
      * @param int $shopid
      *
-     * @return \Shopware\Models\Snippet\Snippet
+     * @return Snippet
      */
     public function setShopId($shopid)
     {
@@ -160,7 +160,7 @@ class Snippet extends ModelEntity
     /**
      * @param int $localeid
      *
-     * @return \Shopware\Models\Snippet\Snippet
+     * @return Snippet
      */
     public function setLocaleId($localeid)
     {
@@ -180,7 +180,7 @@ class Snippet extends ModelEntity
     /**
      * @param string $name
      *
-     * @return \Shopware\Models\Snippet\Snippet
+     * @return Snippet
      */
     public function setName($name)
     {
@@ -200,7 +200,7 @@ class Snippet extends ModelEntity
     /**
      * @param string $value
      *
-     * @return \Shopware\Models\Snippet\Snippet
+     * @return Snippet
      */
     public function setValue($value)
     {
@@ -220,7 +220,7 @@ class Snippet extends ModelEntity
     /**
      * @param DateTimeInterface|string $created
      *
-     * @return \Shopware\Models\Snippet\Snippet
+     * @return Snippet
      */
     public function setCreated($created = 'now')
     {
@@ -244,7 +244,7 @@ class Snippet extends ModelEntity
     /**
      * @param DateTimeInterface|string $updated
      *
-     * @return \Shopware\Models\Snippet\Snippet
+     * @return Snippet
      */
     public function setUpdated($updated = 'now')
     {

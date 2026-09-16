@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\DependencyInjection\Bridge;
@@ -73,7 +73,7 @@ class Session
     /**
      * @return Enlight_Components_Session_Namespace
      */
-    public function createSession(Container $container, SessionHandlerInterface $saveHandler = null)
+    public function createSession(Container $container, ?SessionHandlerInterface $saveHandler = null)
     {
         // If another session is already started, save and close it before starting the frontend session below.
         // We need to do this, because the other session would use the session id of the frontend session and thus write
@@ -114,7 +114,9 @@ class Session
         $sessionOptions['cookie_path'] = empty($basePath) ? '/' : $basePath;
 
         if ($saveHandler) {
-            session_set_save_handler($saveHandler);
+            if (empty($sessionOptions['unitTestEnabled'])) {
+                session_set_save_handler($saveHandler);
+            }
             unset($sessionOptions['save_handler']);
         }
 

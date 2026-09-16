@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Password\Encoder;
 
+use DomainException;
 use PHPUnit\Framework\TestCase;
 use Shopware\Components\Password\Encoder\Sha256;
 
@@ -51,7 +52,7 @@ class Sha256Test extends TestCase
     /**
      * Test case
      */
-    public function testIsAvailable()
+    public function testIsAvailable(): void
     {
         static::assertInstanceOf(Sha256::class, $this->hasher);
     }
@@ -59,7 +60,7 @@ class Sha256Test extends TestCase
     /**
      * Test case
      */
-    public function testGetNameShouldReturnName()
+    public function testGetNameShouldReturnName(): void
     {
         static::assertEquals('Sha256', $this->hasher->getName());
     }
@@ -67,7 +68,7 @@ class Sha256Test extends TestCase
     /**
      * Test case
      */
-    public function testGenerateShouldReturnString()
+    public function testGenerateShouldReturnString(): void
     {
         static::assertIsString($this->hasher->encodePassword('foobar'));
     }
@@ -75,7 +76,7 @@ class Sha256Test extends TestCase
     /**
      * Test case
      */
-    public function testGenerateShouldReturnDifferentHashesForSamePlaintextString()
+    public function testGenerateShouldReturnDifferentHashesForSamePlaintextString(): void
     {
         static::assertNotEquals($this->hasher->encodePassword('foobar'), $this->hasher->encodePassword('foobar'));
     }
@@ -83,7 +84,7 @@ class Sha256Test extends TestCase
     /**
      * Test case
      */
-    public function testVerifyShouldReturnTrueForMatchingHash()
+    public function testVerifyShouldReturnTrueForMatchingHash(): void
     {
         $hash = $this->hasher->encodePassword('foobar');
 
@@ -93,7 +94,7 @@ class Sha256Test extends TestCase
     /**
      * Test case
      */
-    public function testVerifyShouldReturnFalseForNotMatchingHash()
+    public function testVerifyShouldReturnFalseForNotMatchingHash(): void
     {
         $hash = $this->hasher->encodePassword('foobar');
 
@@ -103,7 +104,7 @@ class Sha256Test extends TestCase
     /**
      * Test case
      */
-    public function testRehash()
+    public function testRehash(): void
     {
         $hash = $this->hasher->encodePassword('foobar');
 
@@ -113,7 +114,7 @@ class Sha256Test extends TestCase
     /**
      * Test case
      */
-    public function testRehash2()
+    public function testRehash2(): void
     {
         $hash = $this->hasher->encodePassword('foobar');
         $this->hasher = new Sha256([
@@ -122,5 +123,11 @@ class Sha256Test extends TestCase
         ]);
 
         static::assertTrue($this->hasher->isReencodeNeeded($hash));
+    }
+
+    public function testIsPasswordValidWithInvalidHash(): void
+    {
+        $this->expectException(DomainException::class);
+        $this->hasher->isPasswordValid('password', 'invalid');
     }
 }

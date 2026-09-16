@@ -1,51 +1,48 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Controllers\Backend;
 
-use Enlight_Components_Test_Controller_TestCase;
+use Enlight_Controller_Request_RequestTestCase;
+use Enlight_Template_Manager;
+use Enlight_View_Default;
+use PHPUnit\Framework\TestCase;
+use Shopware\Tests\Functional\Traits\ContainerTrait;
+use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
+use Shopware_Controllers_Backend_MediaManager;
 
-class MediaManagerTest extends Enlight_Components_Test_Controller_TestCase
+class MediaManagerTest extends TestCase
 {
-    /**
-     * Standard set up for every test - just disable auth
-     */
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        // Disable auth and acl
-        Shopware()->Plugins()->Backend()->Auth()->setNoAuth();
-        Shopware()->Plugins()->Backend()->Auth()->setNoAcl();
-    }
+    use ContainerTrait;
+    use DatabaseTransactionBehaviour;
 
     /**
      * Creates a new album,
      * checks if the new album has inherited the parents settings
-     * and deletes it afterwards
+     * and deletes it afterward
      */
-    public function testAlbumInheritance()
+    public function testAlbumInheritance(): void
     {
         $params = [
             'albumID' => '',
@@ -57,25 +54,36 @@ class MediaManagerTest extends Enlight_Components_Test_Controller_TestCase
             'parentId' => '-11',
             'position' => '',
             'text' => 'PHPUNIT_ALBUM',
-            'thumbnailSize' => '',
+            'thumbnailSize' => [],
         ];
 
-        $this->Request()->setMethod('POST')->setPost($params);
-        $this->dispatch('/backend/MediaManager/saveAlbum');
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParams($params);
 
-        $jsonBody = $this->View()->getAssign();
+        $controller = $this->getController();
+        $controller->setRequest($request);
+        $controller->saveAlbumAction();
+
+        $jsonBody = $controller->View()->getAssign();
         static::assertTrue($jsonBody['success']);
 
-        $this->resetRequest();
-        $this->resetResponse();
-        $this->Request()->setMethod('GET')->setParams(['albumId' => '-11']);
-        $this->dispatch('/backend/MediaManager/getAlbums');
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParams(['albumId' => '-11']);
+        $controller = $this->getController();
+        $controller->getAlbumsAction();
 
-        $jsonBody = $this->View()->getAssign();
+        $jsonBody = $controller->View()->getAssign();
         static::assertTrue($jsonBody['success']);
 
-        $parentNode = $jsonBody['data'][0];
-        $newAlbum = $parentNode['data'][\count($parentNode['data']) - 1];
+        $parentNode = null;
+        foreach ($jsonBody['data'] as $nodes) {
+            if ($nodes['id'] === -11) {
+                $parentNode = $nodes;
+                break;
+            }
+        }
+
+        $newAlbum = $parentNode['data'][0];
 
         static::assertEquals($parentNode['thumbnailSize'], $newAlbum['thumbnailSize']);
         static::assertEquals($parentNode['thumbnailHighDpi'], $newAlbum['thumbnailHighDpi']);
@@ -86,14 +94,77 @@ class MediaManagerTest extends Enlight_Components_Test_Controller_TestCase
         static::assertEquals(1, $newAlbum['leaf']);
         static::assertEquals('sprite-target', $newAlbum['iconCls']);
 
-        $this->resetRequest();
-        $this->resetResponse();
-        $this->Request()->setMethod('POST')->setPost([
-            'albumID' => $newAlbum['id'],
-        ]);
-        $this->dispatch('/backend/MediaManager/removeAlbum');
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParam('albumID', $newAlbum['id']);
+        $controller = $this->getController();
+        $controller->setRequest($request);
+        $controller->removeAlbumAction();
+        $jsonBody = $controller->View()->getAssign();
 
-        $jsonBody = $this->View()->getAssign();
         static::assertTrue($jsonBody['success']);
+    }
+
+    public function testResolveAlbumDataRemoveWhiteSpaces(): void
+    {
+        $params = [
+            'albumID' => '',
+            'createThumbnails' => '',
+            'iconCls' => 'sprite-target',
+            'id' => '',
+            'leaf' => false,
+            'mediaCount' => '',
+            'position' => '',
+            'text' => 'PHPUNIT_ALBUM',
+            'thumbnailSize' => [
+                [
+                    'index' => 6,
+                    'value' => '50 x 50',
+                ],
+            ],
+        ];
+
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParams($params);
+
+        $controller = $this->getController();
+        $controller->setRequest($request);
+        $controller->saveAlbumAction();
+
+        $jsonBody = $controller->View()->getAssign();
+        static::assertTrue($jsonBody['success']);
+
+        $albumId = $jsonBody['data']['id'];
+        $db = $this->getContainer()->get('dbal_connection');
+
+        $thumbnailSize = $db->fetchOne('SELECT thumbnail_size FROM s_media_album_settings WHERE albumID = ?;', [$albumId]);
+
+        static::assertStringContainsString('50x50', $thumbnailSize);
+        static::assertStringNotContainsString('50 x 50', $thumbnailSize);
+    }
+
+    public function testGetAlbumsDoesNotThrowErrorIfNoDataIsAvailable(): void
+    {
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParam('albumFilter', 'foo');
+
+        $controller = $this->getController();
+        $controller->setRequest($request);
+        $controller->getAlbumsAction();
+        $results = $controller->View()->getAssign();
+
+        static::assertTrue($results['success']);
+        static::assertEmpty($results['data']);
+        static::assertSame(0, $results['total']);
+    }
+
+    public function getController(): Shopware_Controllers_Backend_MediaManager
+    {
+        $view = new Enlight_View_Default(new Enlight_Template_Manager());
+
+        $controller = $this->getContainer()->get('shopware_controllers_backend_mediamanager');
+        $controller->setView($view);
+        $controller->setContainer($this->getContainer());
+
+        return $controller;
     }
 }

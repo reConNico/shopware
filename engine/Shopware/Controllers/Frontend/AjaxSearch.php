@@ -1,30 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Bundle\SearchBundle\Criteria;
+use Shopware\Bundle\SearchBundle\ProductSearchInterface;
 use Shopware\Bundle\SearchBundle\ProductSearchResult;
 use Shopware\Bundle\SearchBundle\SearchTermPreProcessorInterface;
+use Shopware\Bundle\SearchBundle\StoreFrontCriteriaFactoryInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\ListProduct;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 use Shopware\Components\Compatibility\LegacyStructConverter;
@@ -41,8 +45,7 @@ class Shopware_Controllers_Frontend_AjaxSearch extends Enlight_Controller_Action
     {
         $this->View()->loadTemplate('frontend/search/ajax.tpl');
 
-        /** @var SearchTermPreProcessorInterface $processor */
-        $processor = $this->get(\Shopware\Bundle\SearchBundle\SearchTermPreProcessorInterface::class);
+        $processor = $this->get(SearchTermPreProcessorInterface::class);
         $term = $processor->process($this->Request()->getParam('sSearch'));
 
         if (!$term || \strlen($term) < Shopware()->Config()->get('MinSearchLenght')) {
@@ -52,9 +55,9 @@ class Shopware_Controllers_Frontend_AjaxSearch extends Enlight_Controller_Action
         $this->setDefaultSorting();
 
         /** @var ShopContextInterface $context */
-        $context = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->getShopContext();
+        $context = $this->get(ContextServiceInterface::class)->getShopContext();
 
-        $criteria = $this->get(\Shopware\Bundle\SearchBundle\StoreFrontCriteriaFactoryInterface::class)
+        $criteria = $this->get(StoreFrontCriteriaFactoryInterface::class)
             ->createAjaxSearchCriteria($this->Request(), $context);
 
         $result = $this->search($term, $criteria, $context);
@@ -79,7 +82,7 @@ class Shopware_Controllers_Frontend_AjaxSearch extends Enlight_Controller_Action
         foreach ($result->getProducts() as $product) {
             $productArray = $this->get(LegacyStructConverter::class)->convertListProductStruct($product);
 
-            $productArray['link'] = $this->Front()->Router()->assemble([
+            $productArray['link'] = $this->Front()->ensureRouter()->assemble([
                 'controller' => 'detail',
                 'sArticle' => $product->getId(),
                 'number' => $product->getNumber(),
@@ -98,7 +101,7 @@ class Shopware_Controllers_Frontend_AjaxSearch extends Enlight_Controller_Action
             return;
         }
 
-        $sortings = $this->container->get(\Shopware_Components_Config::class)->get('searchSortings');
+        $sortings = $this->container->get(Shopware_Components_Config::class)->get('searchSortings');
         $sortings = array_filter(explode('|', $sortings));
         $this->Request()->setParam('sSort', array_shift($sortings));
     }
@@ -113,10 +116,10 @@ class Shopware_Controllers_Frontend_AjaxSearch extends Enlight_Controller_Action
         $result = null;
 
         // If the search for product numbers is active, do that first
-        if ((int) $this->get(\Shopware_Components_Config::class)->get('activateNumberSearch') === 1) {
+        if ((int) $this->get(Shopware_Components_Config::class)->get('activateNumberSearch') === 1) {
             // Check if search-term is a valid product-number
             /** @var ListProduct|null $directHit */
-            $directHit = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface::class)
+            $directHit = $this->get(ListProductServiceInterface::class)
                 ->get($term, $context);
 
             if ($directHit) {
@@ -127,7 +130,7 @@ class Shopware_Controllers_Frontend_AjaxSearch extends Enlight_Controller_Action
 
         // If number search is inactive or didn't find anything, do a regular search
         if (!$result || $result->getTotalCount() === 0) {
-            $result = $this->get(\Shopware\Bundle\SearchBundle\ProductSearchInterface::class)->search($criteria, $context);
+            $result = $this->get(ProductSearchInterface::class)->search($criteria, $context);
         }
 
         return $result;

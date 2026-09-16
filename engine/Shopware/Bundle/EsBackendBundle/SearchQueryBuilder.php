@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EsBackendBundle;
@@ -49,7 +49,7 @@ class SearchQueryBuilder
             }
         }
 
-        //use combination for more precision
+        // use combination for more precision
         foreach ($combines as $token) {
             foreach ($fields as $field => $priority) {
                 $bool->add(new MatchQuery($field, $token, ['boost' => $priority * 2]), BoolQuery::SHOULD);
@@ -73,7 +73,7 @@ class SearchQueryBuilder
         $tokens = array_unique(explode(' ', $string));
         $tokens = array_map('trim', $tokens);
 
-        return array_filter(
+        return array_values(
             array_filter(
                 $tokens,
                 function ($token) {
@@ -95,7 +95,9 @@ class SearchQueryBuilder
         for ($i = 1; $i < 3; ++$i) {
             $combination = [];
             for ($x = 0; $x <= $i; ++$x) {
-                $combination[] = $items[$x];
+                if (\array_key_exists($x, $items)) {
+                    $combination[] = $items[$x];
+                }
             }
 
             $result[] = implode(' ', $combination);

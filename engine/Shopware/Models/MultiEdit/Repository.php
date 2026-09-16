@@ -1,30 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\MultiEdit;
 
+use Doctrine\ORM\Query;
 use Shopware\Components\Model\ModelRepository;
+use Shopware\Components\Model\QueryBuilder;
 
 /**
  * @extends ModelRepository<Backup|Filter|Queue|QueueArticle>
@@ -36,7 +38,7 @@ class Repository extends ModelRepository
      *
      * @param string|null $filter
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Filter>
      */
     public function getListQuery($filter = null)
     {
@@ -51,24 +53,22 @@ class Repository extends ModelRepository
      *
      * @param string|null $filter
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getListQueryBuilder($filter)
     {
-        $builder = $this->getEntityManager()->createQueryBuilder()
+        return $this->getEntityManager()->createQueryBuilder()
             ->select('filter')
-            ->from('Shopware\Models\MultiEdit\Filter', 'filter');
-
-        return $builder;
+            ->from(Filter::class, 'filter');
     }
 
     /**
      * Returns an instance of the \Doctrine\ORM\Query object which selects all backup entities
      *
-     * @param int $offset
-     * @param int $limit
+     * @param int|null $offset
+     * @param int      $limit
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Backup>
      */
     public function getBackupListQuery($offset, $limit)
     {
@@ -86,15 +86,13 @@ class Repository extends ModelRepository
      * Helper function to create the query builder for the "getBackupListQuery" function.
      * This function can be hooked to modify the query builder of the query object.
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getBackupListQueryBuilder()
     {
-        $builder = $this->getEntityManager()->createQueryBuilder()
+        return $this->getEntityManager()->createQueryBuilder()
             ->select('backup')
-            ->from('Shopware\Models\MultiEdit\Backup', 'backup')
+            ->from(Backup::class, 'backup')
             ->orderBy('backup.date', 'DESC');
-
-        return $builder;
     }
 }

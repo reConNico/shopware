@@ -2,58 +2,333 @@
 
 This changelog references changes done in Shopware 5.7 patch versions.
 
-## 5.7.10
+## 5.7.21
 
-[View all changes from v5.7.9...v5.7.10](https://github.com/shopware/shopware/compare/v5.7.9...v5.7.10)
+[View all changes from v5.7.20...v5.7.21](https://github.com/shopware5/shopware/compare/v5.7.20...v5.7.21)
+
+### Additions
+
+* Added compatibility with PHP 8.3
+* Added new polyfill `symfony/polyfill-php83` to be able to use PHP 8.3 features
+
+### Changes
+
+* Changed behaviour of the translation transfer while setting a product variant as the main variant
+* Changed the test kernel, so PHPUnit tests do no longer ignore PHP warnings and notices and are failing instead
+* Changed the `plugin.xsd` complexType `pluginType` so it could be validated again with newer `libxml2` versions
+
+* Updated `beberlei/assert` to version 3.3.3
+* Updated `beberlei/doctrineextensions` to version 1.4.0
+* Updated `cocur/slugify` to version 4.6.0 for PHP 8.0 and newer
+* Updated `doctrine/annotations` to version 1.14.4
+* Updated `doctrine/common` to version 3.5.0
+* Updated `doctrine/inflector` to version 2.0.10
+* Updated `doctrine/orm` to version 2.15.5
+* Updated `doctrine/persistence` to version 3.4.0
+* Updated `elasticsearch/elasticsearch` to version 7.17.3
+* Updated `friendsofphp/proxy-manager-lts` to version 1.0.18
+* Updated `google/cloud-storage` to version 1.39.0
+* Updated `guzzlehttp/guzzle` to version 7.9.2
+* Updated `guzzlehttp/psr7` to version 2.7.0
+* Updated `monolog/monolog` to version 2.10.0
+* Updated `mpdf/mpdf` to version 8.2.5
+* Updated `laminas/laminas-code` to version 4.16.0 for PHP 8.1 and newer
+* Updated `laminas/laminas-escaper` to version 2.16.0 for PHP 8.1 and newer
+* Updated `phpunit/phpunit` to version 9.6.29
+* Updated `setasign/fpdf` to version 1.8.6
+* Updated `setasign/fpdi` to version 2.6.4
+* Updated `symfony/polyfill-php80` to version 1.33.0
+* Updated `symfony/polyfill-php81` to version 1.33.0
+* Updated `symfony/polyfill-php82` to version 1.33.0
+* Updated `symfony/polyfill-php83` to version 1.33.0
+* Updated `symfony/process` to version 5.4.47
+* Updated `symfony/http-kernel` to version 4.4.51
+* Updated `symfony/serializer` to version 5.4.45
+* Updated `voku/anti-xss` to version 4.1.42
+* Updated `wikimedia/less.php` to version 5.1.2
+* Updated several indirect dependencies
+* Updated npm dependencies in `themes/package.json`
+* Updated npm dependencies in `themes/Frontend/Responsive/package.json`
+* Updated devenv dependencies
+
+### Removals
+
+* Removed development dependency `phpspec/prophecy-phpunit` as it is no longer used due to a refactoring of `Shopware\Tests\Unit\Components\DependencyInjection\ContainerTest`
+
+## 5.7.20
+
+[View all changes from v5.7.19...v5.7.20](https://github.com/shopware5/shopware/compare/v5.7.19...v5.7.20)
+
+### Changes
+
+* Changed the removal of font files provided by mPDF from the `vendor` directory so that `DejaVu` font is kept as default.
+
+### Removals
+
+* Removed the font files from `engine/Library/Mpdf/ttfonts` and their loading. Provide the font on your own, if you still need them.
+
+## 5.7.19
+
+[View all changes from v5.7.18...v5.7.19](https://github.com/shopware5/shopware/compare/v5.7.18...v5.7.19)
+
+## 5.7.18
+
+[View all changes from v5.7.17...v5.7.18](https://github.com/shopware5/shopware/compare/v5.7.17...v5.7.18)
+
+### Additions
+
+* Added new input field that does not allow values, that contain URLs
 
 ### Deprecations
+
+* Deprecated `\Shopware\Bundle\SearchBundleDBAL\SearchBundleDBALSubscriber`, it will be removed with Shopware 5.8, because it is not used.
+
+### Changes
+
+* Changed newsletter registration so that it does not allow URLs as value for first and last name
+* Changed customer registration so that it does not allow URLs as value for first and last name
+* Updated `behat/behat` to version 3.13.0
+* Updated `doctrine/dbal` to version 2.13.9
+* Updated `doctrine/orm` to version 2.15.2
+* Updated `doctrine/persistence` to version 3.2.0
+* Updated `elasticsearch/elasticsearch` to version 7.17.2
+* Updated `friendsofphp/proxy-manager-lts` to version 1.0.16
+* Updated `google/cloud-storage` to version 1.31.2
+* Updated `guzzlehttp/guzzle` to version 7.7.0
+* Updated `guzzlehttp/psr7` to version 2.5.0
+* Updated `laminas/laminas-code` to version 4.11.0 for PHP 8.1 and newer
+* Updated `mpdf/mpdf` to version 8.1.6
+* Updated `phpunit/phpunit` to version 9.6.8
+* Updated `setasign/fpdi` to version 2.3.7
+* Updated `symfony/serializer` to version 5.4.23
+* Updated `voku/anti-xss` to version 4.1.41
+* Updated `wikimedia/less.php` to version 4.1.0
+* Updated several indirect dependencies
+
+### Removals
+
+* Removed the feedback popup at first login, as the feedback is no longer used.
+* Removed the Shopware BI feature, as it will be shut down.
+
+## 5.7.17
+
+[View all changes from v5.7.16...v5.7.17](https://github.com/shopware5/shopware/compare/v5.7.16...v5.7.17)
+
+### Additions
+
+* Added version `4.8.0` to version constraint of `laminas/laminas-code` to allow installation on PHP 8.2
+* Added new polyfill `symfony/polyfill-php82` to be able to use PHP 8.2 features
+
+### Deprecations
+
+* Deprecated `\Shopware\Bundle\StoreFrontBundle\Gateway\ConfiguratorGatewayInterface::getProductCombinations`, it will be removed in the next minor version v5.8.
+
+### Changes
+
+* Updated `bcremer/line-reader` to version 1.3.0
+* Updated `behat/behat` to version 3.12.0
+* Updated `cocur/slugify` to version 4.3.0
+* Updated `doctrine/annotations` to version 1.14.3
+* Updated `doctrine/collections` to version 1.8.0
+* Updated `doctrine/common` to version 3.4.3
+* Updated `doctrine/event-manager` to version 1.2.0
+* Updated `doctrine/orm` to version 2.14.1
+* Updated `doctrine/persistence` to version 3.1.3
+* Updated `elasticsearch/elasticsearch` to version 7.17.1
+* Updated `friendsofphp/proxy-manager-lts` to version 1.0.14
+* Updated `google/cloud-storage` to version 1.30.1
+* Updated `guzzlehttp/psr7` to version 2.4.3
+* Updated `laminas/laminas-code` to version 4.7.1
+* Updated `laminas/laminas-escaper` to version 2.12.0
+* Updated `league/flysystem` to version 1.1.10
+* Updated `monolog/monolog` to version 2.9.1
+* Updated `mpdf/mpdf` to version 8.1.4
+* Updated `phpunit/phpunit` to version 9.6.3
+* Updated `sensiolabs/behat-page-object-extension` to version 2.3.7
+* Updated `setasign/fpdf` to version 1.8.5
+* Updated `symfony/console` to version 4.4.49
+* Updated `symfony/dependency-injection` to version 4.4.49
+* Updated `symfony/expression-language` to version 4.4.47
+* Updated `symfony/form` to version 4.4.48
+* Updated `symfony/http-foundation` to version 4.4.49
+* Updated `symfony/http-kernel` to version 4.4.50
+* Updated `symfony/polyfill-php80` to version 1.27.0
+* Updated `symfony/polyfill-php81` to version 1.27.0
+* Updated `symfony/serializer` to version 5.4.17
+* Updated `symfony/validator` to version 4.4.48
+* Updated `wikimedia/less.php` to version 3.2.0
+* Updated several indirect dependencies
+* Updated npm dependencies in `themes/package.json`
+* Updated npm dependencies in `themes/Frontend/Responsive/package.json`
+
+## 5.7.16
+
+[View all changes from v5.7.15...v5.7.16](https://github.com/shopware5/shopware/compare/v5.7.15...v5.7.16)
+
+### Additions
+
+* Added new block `backend/mail_log/model/filter/fields` in `themes/Backend/ExtJs/backend/mail_log/model/filter.js` to be able to extend the model fields
+* Added missing dependency `doctrine/inflector`, which was an indirect dependency before
+
+### Changes
+
+* Changed the following block names, because they were duplicated and could have caused errors
+
+| file path                                                                                                 | old block name                                                                | new block name                                                                    |
+|-----------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| themes/Backend/ExtJs/backend/analytics/view/table/partner_revenue.js                                      | backend/analytics/view/table/referrer_revenue                                 | backend/analytics/view/table/partner_revenue                                      |
+| themes/Backend/ExtJs/backend/base/model/product_box_layout.js                                             | backend/base/model/product_box_layout                                         | backend/base/model/product_box_layout/fields                                      |
+| themes/Backend/ExtJs/backend/config/model/main/value.js                                                   | backend/config/model/main/navigation/fields                                   | backend/config/model/main/value/fields                                            |
+| themes/Backend/ExtJs/backend/config/view/custom_search/sorting/classes/product_number_sorting.js          | backend/config/view/custom_search/sorting/classes/product_name_sorting        | backend/config/view/custom_search/sorting/classes/product_number_sorting          |
+| themes/Backend/ExtJs/backend/config/view/main/fieldset.js                                                 | backend/config/view/main/form                                                 | backend/config/view/main/fields_set                                               |
+| themes/Backend/ExtJs/backend/customer/model/batch.js                                                      | backend/customer/model/customer                                               | backend/customer/model/batch                                                      |
+| themes/Backend/ExtJs/backend/customer/model/batch.js                                                      | backend/customer/model/customer/fields                                        | backend/customer/model/batch/fields                                               |
+| themes/Backend/ExtJs/backend/customer/view/customer_stream/conditions/not_registered_in_shop_condition.js | backend/customer/view/customer_stream/conditions/registered_in_shop_condition | backend/customer/view/customer_stream/conditions/not_registered_in_shop_condition |
+| themes/Backend/ExtJs/backend/mail_log/model/filter.js                                                     | backend/performance/model/filter                                              | backend/mail_log/model/filter                                                     |
+| themes/Backend/ExtJs/backend/media_manager/view/replace/grid.js                                           | backend/media_manager/view/replace/window                                     | backend/media_manager/view/replace/grid                                           |
+| themes/Backend/ExtJs/backend/media_manager/view/replace/upload.js                                         | backend/media_manager/view/replace/row                                        | backend/media_manager/view/replace/upload                                         |
+| themes/Backend/ExtJs/backend/newsletter_manager/model/container.js                                        | backend/newsletter_manager/model/sender/fields                                | backend/newsletter_manager/model/container/fields                                 |
+| themes/Backend/ExtJs/backend/order/model/detail_batch.js                                                  | backend/order/model/batch                                                     | backend/order/model/detail_batch                                                  |
+| themes/Backend/ExtJs/backend/performance/controller/direct.js                                             | backend/performance/controller/main                                           | backend/performance/controller/direct                                             |
+| themes/Backend/ExtJs/backend/performance/model/seo.js                                                     | backend/performance/model/top_seller/fields                                   | backend/performance/model/seo/fields                                              |
+| themes/Backend/ExtJs/backend/product_feed/model/shop.js                                                   | backend/product_feed/model/main                                               | backend/product_feed/model/shop                                                   |
+| themes/Backend/ExtJs/backend/product_stream/view/condition_list/field/attribute_date_time.js              | backend/product_stream/view/condition_list/condition/attribute_date           | backend/product_stream/view/condition_list/condition/attribute_date_time          |
+| themes/Backend/ExtJs/backend/shipping/store/tax.js                                                        | backend/shipping/store/country                                                | backend/shipping/store/tax                                                        |
+| themes/Backend/ExtJs/backend/site/store/selected.js                                                       | backend/site/store/groups                                                     | backend/site/store/selected                                                       |
+| themes/Backend/ExtJs/backend/snippet/view/main/translate_window.js                                        | backend/snippet/view/main/edit_form                                           | backend/snippet/view/main/translate_window                                        |
+| themes/Backend/ExtJs/backend/systeminfo/controller/systeminfo.js                                          | backend/systeminfo/controller/main                                            | backend/systeminfo/controller/systeminfo                                          |
+| themes/Backend/ExtJs/backend/translation/view/main/services.js                                            | backend/translation/view/main/window                                          | backend/translation/view/main/services                                            |
+| themes/Backend/ExtJs/backend/user_manager/model/user_detail.js                                            | backend/user_manager/model/detail                                             | backend/user_manager/model/user_detail                                            |
+| themes/Backend/ExtJs/backend/user_manager/model/user_detail.js                                            | backend/user_manager/model/detail/fields                                      | backend/user_manager/model/user_detail/fields                                     |
+| themes/Frontend/Bare/frontend/blog/comment/form.tpl                                                       | frontend_blog_comments_input_captcha_placeholder                              | frontend_blog_comments_input_captcha_notice                                       |
+| themes/Frontend/Bare/frontend/blog/comments.tpl                                                           | frontend_blog_comments_form                                                   | frontend_blog_comments_form_action                                                |
+| themes/Frontend/Bare/frontend/checkout/finish.tpl                                                         | frontend_checkout_confirm_information_addresses_billing_panel_title           | frontend_checkout_finish_information_addresses_billing_panel_title                |
+| themes/Frontend/Bare/frontend/compare/add_article.tpl                                                     | product_compare_error_title                                                   | product_compare_error_message                                                     |
+| themes/Frontend/Bare/frontend/compare/col.tpl                                                             | frontend_listing_box_article_price_regulation                                 | frontend_compare_price_regulation                                                 |
+| themes/Frontend/Bare/frontend/compare/col.tpl                                                             | frontend_listing_box_article_price_discount_before                            | frontend_compare_price_regulation_before                                          |
+| themes/Frontend/Bare/frontend/compare/col.tpl                                                             | frontend_listing_box_article_price_discount_after                             | frontend_compare_price_regulation_after                                           |
+| themes/Frontend/Bare/frontend/compare/col_description.tpl                                                 | frontend_compare_article_name                                                 | frontend_compare_article_name_header                                              |
+| themes/Frontend/Bare/frontend/compare/col_description.tpl                                                 | frontend_compare_votings                                                      | frontend_compare_votings_header                                                   |
+| themes/Frontend/Bare/frontend/compare/col_description.tpl                                                 | frontend_compare_description                                                  | frontend_compare_description_header                                               |
+| themes/Frontend/Bare/frontend/compare/col_description.tpl                                                 | frontend_compare_price                                                        | frontend_compare_price_header                                                     |
+| themes/Frontend/Bare/frontend/compare/col_description.tpl                                                 | frontend_compare_properties                                                   | frontend_compare_properties_header                                                |
+| themes/Frontend/Bare/frontend/detail/data.tpl                                                             | frontend_detail_data_pseudo_price_discount_content                            | frontend_detail_data_regulation_price_content                                     |
+| themes/Frontend/Bare/frontend/listing/product-box/box-minimal.tpl                                         | frontend_listing_box_article_price_discount_before                            | frontend_listing_box_article_price_regulation_before                              |
+| themes/Frontend/Bare/frontend/listing/product-box/box-minimal.tpl                                         | frontend_listing_box_article_price_discount_after                             | frontend_listing_box_article_price_regulation_after                               |
+| themes/Frontend/Bare/frontend/listing/product-box/product-price.tpl                                       | frontend_listing_box_article_price_discount_before                            | frontend_listing_box_article_price_regulation_before                              |
+| themes/Frontend/Bare/frontend/listing/product-box/product-price.tpl                                       | frontend_listing_box_article_price_discount_after                             | frontend_listing_box_article_price_regulation_after                               |
+| themes/Frontend/Bare/frontend/newsletter/detail.tpl                                                       | frontend_newsletter_listing_error_message                                     | frontend_newsletter_detail_error_message                                          |
+| themes/Frontend/Bare/frontend/plugins/notification/index.tpl                                              | frontend_account_index_form_captcha                                           | frontend_detail_index_notification_captcha                                        |
+
+* Changed the following jQuery event names, because they were duplicated and could have caused errors
+
+| file path                                                                       | method                           | old event name                                      | new event name                                             |
+|---------------------------------------------------------------------------------|----------------------------------|-----------------------------------------------------|------------------------------------------------------------|
+| themes/Frontend/Responsive/frontend/_public/src/js/jquery.image-slider.js       | onThumbnailSlideMove             | plugin/swImageSlider/onThumbnailSlideTouch          | plugin/swImageSlider/onThumbnailSlideMove                  |
+| themes/Frontend/Responsive/frontend/_public/src/js/jquery.infinite-scrolling.js | generateButton                   | plugin/swInfiniteScrolling/onLoadMore               | plugin/swInfiniteScrolling/onGenerateButton                |
+| themes/Frontend/Responsive/frontend/_public/src/js/jquery.listing-actions.js    | setCategoryParamsFromTopLocation | plugin/swListingActions/onSetCategoryParamsFromData | plugin/swListingActions/onSetCategoryParamsFromTopLocation |
+| themes/Frontend/Responsive/frontend/_public/src/js/jquery.listing-actions.js    | getLabelIcon                     | plugin/swListingActions/onCreateStarLabel           | plugin/swListingActions/onGetLabelIcon                     |
+
+* Updated `cocur/slugify` to version 4.2.0
+* Updated `doctrine/annotations` to version 1.13.3
+* Updated `doctrine/collections` to version 1.7.3
+* Updated `doctrine/common` to version 3.4.0
+* Updated `doctrine/event-manager` to version 1.1.2
+* Updated `doctrine/orm` to version 2.13.1
+* Updated `doctrine/persistence` to version 2.5.4
+* Updated `google/cloud-storage` to version 1.28.1
+* Updated `guzzlehttp/guzzle` to version 7.5.0
+* Updated `guzzlehttp/psr7` to version 2.4.1
+* Updated `laminas/laminas-code` to version 4.6.0
+* Updated `league/flysystem-aws-s3-v3` to version 1.0.30
+* Updated `monolog/monolog` to version 2.8.0
+* Updated `phpunit/phpunit` to version 9.5.23
+* Updated `symfony/config` to version 4.4.44
+* Updated `symfony/console` to version 4.4.45
+* Updated `symfony/dependency-injection` to version 4.4.44
+* Updated `symfony/expression-language` to version 4.4.44
+* Updated `symfony/finder` to version 4.4.44
+* Updated `symfony/form` to version 4.4.45
+* Updated `symfony/http-foundation` to version 4.4.45
+* Updated `symfony/http-kernel` to version 4.4.45
+* Updated `symfony/options-resolver` to version 4.4.44
+* Updated `symfony/process` to version 4.4.44
+* Updated `symfony/serializer` to version 5.4.12
+* Updated `symfony/validator` to version 4.4.45
+* Updated several indirect dependencies
+
+## 5.7.15
+
+[View all changes from v5.7.14...v5.7.15](https://github.com/shopware5/shopware/compare/v5.7.14...v5.7.15)
+
+## 5.7.14
+
+[View all changes from v5.7.13...v5.7.14](https://github.com/shopware5/shopware/compare/v5.7.13...v5.7.14)
+
+## 5.7.13
+
+[View all changes from v5.7.12...v5.7.13](https://github.com/shopware5/shopware/compare/v5.7.12...v5.7.13)
+
+## 5.7.12
+
+[View all changes from v5.7.11...v5.7.12](https://github.com/shopware5/shopware/compare/v5.7.11...v5.7.12)
 
 ### Additions
 
 * Added missing dependency `doctrine/annotations`, which was an indirect dependency before
+* Added new optional parameter `dateTime` to `\Shopware\Components\Logger::addRecord` method to be compatible with parent `\Monolog\Logger::addRecord` method
+* Added requirement `composer-runtime-api ^2.0` which was already added indirectly in version [5.7.8](#5.7.8)
 
 ### Changes
 
 * Updated `bamarni/composer-bin-plugin` to version 1.5.0
 * Updated `behat/mink` to version 1.10.0
 * Updated `behat/mink-selenium2-driver` to version 1.6.0
+* Updated `doctrine/cache` to version 1.13.0
 * Updated `doctrine/common` to version 3.3.0
 * Updated `doctrine/dbal` to version 2.13.8
-* Updated `doctrine/persistence` to version 2.5.1
+* Updated `doctrine/orm` to version 2.12.3
+* Updated `doctrine/persistence` to version 2.5.3
 * Updated `elasticsearch/elasticsearch` to version 7.17.0
-* Updated `friendsofphp/proxy-manager-lts` to version 1.0.7
-* Updated `google/cloud-storage` to version 1.26.2
-* Updated `guzzlehttp/guzzle` to version 7.4.2
+* Updated `friendsofphp/proxy-manager-lts` to version 1.0.12
+* Updated `google/cloud-storage` to version 1.27.1
+* Updated `guzzlehttp/guzzle` to version 7.4.5
+* Updated `guzzlehttp/psr7` to version 2.4.0
 * Updated `laminas/laminas-escaper` to version 2.10.0
-* Updated `monolog/monolog` to version 2.5.0
+* Updated `monolog/monolog` to version 2.7.0
 * Updated `mpdf/mpdf` to version 8.1.1
-* Updated `phpunit/phpunit` to version 9.5.20
+* Updated `phpunit/phpunit` to version 9.5.21
 * Updated `symfony/browser-kit` to version 4.4.37
-* Updated `symfony/config` to version 4.4.41
-* Updated `symfony/console` to version 4.4.41
-* Updated `symfony/dependency-injection` to version 4.4.41
-* Updated `symfony/dom-crawler` to version 4.4.39
+* Updated `symfony/config` to version 4.4.42
+* Updated `symfony/console` to version 4.4.42
+* Updated `symfony/dependency-injection` to version 4.4.42
+* Updated `symfony/dom-crawler` to version 4.4.42
 * Updated `symfony/expression-language` to version 4.4.41
-* Updated `symfony/filesystem` to version 4.4.39
+* Updated `symfony/filesystem` to version 4.4.42
 * Updated `symfony/finder` to version 4.4.41
-* Updated `symfony/form` to version 4.4.41
-* Updated `symfony/http-foundation` to version 4.4.41
-* Updated `symfony/http-kernel` to version 4.4.41
+* Updated `symfony/form` to version 4.4.42
+* Updated `symfony/http-foundation` to version 4.4.42
+* Updated `symfony/http-kernel` to version 4.4.42
 * Updated `symfony/options-resolver` to version 4.4.37
-* Updated `symfony/polyfill-php80` to version 1.25.0
-* Updated `symfony/polyfill-php81` to version 1.25.0
+* Updated `symfony/polyfill-php80` to version 1.26.0
+* Updated `symfony/polyfill-php81` to version 1.26.0
 * Updated `symfony/process` to version 4.4.41
-* Updated `symfony/serializer` to version 5.4.8
+* Updated `symfony/serializer` to version 5.4.9
 * Updated `symfony/validator` to version 4.4.41
 * Updated `symfony/web-link` to version 4.4.37
 * Updated several indirect dependencies
 
-### Removals
+## 5.7.11
 
+[View all changes from v5.7.10...v5.7.11](https://github.com/shopware5/shopware/compare/v5.7.10...v5.7.11)
+
+## 5.7.10
+
+[View all changes from v5.7.9...v5.7.10](https://github.com/shopware5/shopware/compare/v5.7.9...v5.7.10)
 
 ## 5.7.9
 
-[View all changes from v5.7.8...v5.7.9](https://github.com/shopware/shopware/compare/v5.7.8...v5.7.9)
+[View all changes from v5.7.8...v5.7.9](https://github.com/shopware5/shopware/compare/v5.7.8...v5.7.9)
 
 ### Changes
 
@@ -63,7 +338,7 @@ This changelog references changes done in Shopware 5.7 patch versions.
 
 ## 5.7.8
 
-[View all changes from v5.7.7...v5.7.8](https://github.com/shopware/shopware/compare/v5.7.7...v5.7.8)
+[View all changes from v5.7.7...v5.7.8](https://github.com/shopware5/shopware/compare/v5.7.7...v5.7.8)
 
 ### Additions
 
@@ -122,7 +397,7 @@ This changelog references changes done in Shopware 5.7 patch versions.
 
 ## 5.7.7
 
-[View all changes from v5.7.6...v5.7.7](https://github.com/shopware/shopware/compare/v5.7.6...v5.7.7)
+[View all changes from v5.7.6...v5.7.7](https://github.com/shopware5/shopware/compare/v5.7.6...v5.7.7)
 
 ### Deprecations
 
@@ -174,7 +449,7 @@ to log in again.**
 
 ## 5.7.6
 
-[View all changes from v5.7.5...v5.7.6](https://github.com/shopware/shopware/compare/v5.7.5...v5.7.6)
+[View all changes from v5.7.5...v5.7.6](https://github.com/shopware5/shopware/compare/v5.7.5...v5.7.6)
 
 ### Additions
 
@@ -182,11 +457,11 @@ to log in again.**
 
 ## 5.7.5
 
-[View all changes from v5.7.4...v5.7.5](https://github.com/shopware/shopware/compare/v5.7.4...v5.7.5)
+[View all changes from v5.7.4...v5.7.5](https://github.com/shopware5/shopware/compare/v5.7.4...v5.7.5)
 
 ## 5.7.4
 
-[View all changes from v5.7.3...v5.7.4](https://github.com/shopware/shopware/compare/v5.7.3...v5.7.4)
+[View all changes from v5.7.3...v5.7.4](https://github.com/shopware5/shopware/compare/v5.7.3...v5.7.4)
 
 ### Deprecations
 
@@ -250,7 +525,7 @@ please extend the `frontend_listing_actions_filter_include` block from now on in
 
 ## 5.7.3
 
-[View all changes from v5.7.2...v5.7.3](https://github.com/shopware/shopware/compare/v5.7.2...v5.7.3)
+[View all changes from v5.7.2...v5.7.3](https://github.com/shopware5/shopware/compare/v5.7.2...v5.7.3)
 
 ### Changes
 
@@ -263,7 +538,7 @@ please extend the `frontend_listing_actions_filter_include` block from now on in
 
 ## 5.7.2
 
-[View all changes from v5.7.1...v5.7.2](https://github.com/shopware/shopware/compare/v5.7.1...v5.7.2)
+[View all changes from v5.7.1...v5.7.2](https://github.com/shopware5/shopware/compare/v5.7.1...v5.7.2)
 
 ### Changes
 
@@ -271,7 +546,7 @@ please extend the `frontend_listing_actions_filter_include` block from now on in
 
 ## 5.7.1
 
-[View all changes from v5.7.0...v5.7.1](https://github.com/shopware/shopware/compare/v5.7.0...v5.7.1)
+[View all changes from v5.7.0...v5.7.1](https://github.com/shopware5/shopware/compare/v5.7.0...v5.7.1)
 
 ### Additions
 
@@ -288,7 +563,7 @@ please extend the `frontend_listing_actions_filter_include` block from now on in
 
 ## 5.7.0
 
-[View all changes from v5.6.10...v5.7.0](https://github.com/shopware/shopware/compare/v5.6.10...v5.7.0)
+[View all changes from v5.6.10...v5.7.0](https://github.com/shopware5/shopware/compare/v5.6.10...v5.7.0)
 
 ### Breaks
 

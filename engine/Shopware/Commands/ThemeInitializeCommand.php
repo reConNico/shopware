@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use Doctrine\DBAL\Connection;
 use RuntimeException;
 use Shopware\Components\Theme\Installer;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,7 +33,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ThemeInitializeCommand extends ShopwareCommand
 {
     /**
-     * @var \Doctrine\DBAL\Connection
+     * @var Connection
      */
     private $conn;
 
@@ -51,11 +52,10 @@ class ThemeInitializeCommand extends ShopwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var Installer $themeInstaller */
-        $themeInstaller = $this->container->get(\Shopware\Components\Theme\Installer::class);
+        $themeInstaller = $this->container->get(Installer::class);
         $themeInstaller->synchronize();
 
-        $this->conn = $this->container->get(\Doctrine\DBAL\Connection::class);
+        $this->conn = $this->container->get(Connection::class);
 
         $templateId = $this->getResponsiveTemplateId();
         $this->updateDefaultTemplateId($templateId);

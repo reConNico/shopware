@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Plugin\XmlReader;
@@ -43,7 +43,7 @@ class XmlMenuReader extends XmlReaderBase
         $entries = (new DOMXPath($xml))->query('//entries/entry');
 
         if (!$entries instanceof DOMNodeList || $entries->length === 0) {
-            throw new RuntimeException('Required element "entry" is missing.');
+            throw new RuntimeException(\sprintf('Required element "entry" is missing in file "%s".', static::$xmlFile));
         }
 
         $menu = [];
@@ -60,10 +60,7 @@ class XmlMenuReader extends XmlReaderBase
     {
         $menuEntry = [];
 
-        $menuEntry['isRootMenu'] = self::validateBooleanAttribute(
-            $entry->getAttribute('isRootMenu'),
-            false
-        );
+        $menuEntry['isRootMenu'] = self::validateBooleanAttribute($entry->getAttribute('isRootMenu'));
 
         $label = self::parseTranslatableElement($entry, 'label');
 
@@ -71,14 +68,15 @@ class XmlMenuReader extends XmlReaderBase
             $menuEntry['label'] = $label;
         }
 
-        $simpleFields = ['name', 'controller', 'action', 'class', 'onclick'];
-        foreach ($simpleFields as $simpleField) {
-            if (($fieldValue = self::getElementChildValueByName($entry, $simpleField)) !== null) {
+        foreach (['name', 'controller', 'action', 'class', 'onclick'] as $simpleField) {
+            $fieldValue = self::getElementChildValueByName($entry, $simpleField);
+            if ($fieldValue !== null) {
                 $menuEntry[$simpleField] = $fieldValue;
             }
         }
 
-        if (($parent = $entry->getElementsByTagName('parent')->item(0)) !== null) {
+        $parent = $entry->getElementsByTagName('parent')->item(0);
+        if ($parent !== null) {
             $identifiedBy = self::validateTextAttribute(
                 $parent->getAttribute('identifiedBy'),
                 'controller'
@@ -89,17 +87,21 @@ class XmlMenuReader extends XmlReaderBase
             ];
         }
 
-        if ($active = self::getElementChildValueByName($entry, 'active')) {
+        $active = self::getElementChildValueByName($entry, 'active');
+        if ($active !== null) {
             $menuEntry['active'] = (bool) XmlUtils::phpize($active);
         }
 
-        if ($position = self::getElementChildValueByName($entry, 'position')) {
+        $position = self::getElementChildValueByName($entry, 'position');
+        if ($position !== null) {
             $menuEntry['position'] = (int) $position;
         }
 
-        if (($children = $entry->getElementsByTagName('children')) !== null && $children->length) {
+        $children = $entry->getElementsByTagName('children');
+        if ($children !== null && $children->length) {
             $children = $children->item(0);
-            foreach (XmlReaderBase::getChildren($children, 'entry') as $child) {
+            $menuEntry['children'] = [];
+            foreach (self::getChildren($children, 'entry') as $child) {
                 $menuEntry['children'][] = $this->parseEntry($child);
             }
         }

@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Emotion;
 
 use DateTime;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder as DBALQueryBuilder;
 use Doctrine\ORM\Query;
 use Shopware\Components\Model\ModelRepository;
 use Shopware\Components\Model\QueryBuilder;
@@ -43,7 +44,7 @@ class Repository extends ModelRepository
      * @param string                                                        $filter
      * @param string|array<array{property: string, direction: string}>|null $orderBy
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getListQueryBuilder($filter = null, $orderBy = null)
     {
@@ -72,7 +73,7 @@ class Repository extends ModelRepository
      * @param string|null $filterBy
      * @param int|null    $categoryId
      *
-     * @return \Doctrine\DBAL\Query\QueryBuilder
+     * @return DBALQueryBuilder
      */
     public function getListingQuery($filter = null, $filterBy = null, $categoryId = null)
     {
@@ -199,7 +200,7 @@ class Repository extends ModelRepository
      * @param int       $offset
      * @param int       $limit
      *
-     * @return Query
+     * @return Query<Emotion>
      */
     public function getNameListQuery($filter = null, $orderBy = null, $offset = null, $limit = null)
     {
@@ -219,7 +220,7 @@ class Repository extends ModelRepository
      * @param bool                                                          $filter
      * @param string|array<array{property: string, direction: string}>|null $orderBy
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getNameListQueryBuilder($filter = null, $orderBy = null)
     {
@@ -249,7 +250,7 @@ class Repository extends ModelRepository
      *
      * @param int $emotionId
      *
-     * @return Query
+     * @return Query<Emotion>
      */
     public function getEmotionDetailQuery($emotionId)
     {
@@ -264,7 +265,7 @@ class Repository extends ModelRepository
      *
      * @param int $emotionId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getEmotionDetailQueryBuilder($emotionId)
     {
@@ -290,7 +291,7 @@ class Repository extends ModelRepository
      * @param int $elementId
      * @param int $componentId
      *
-     * @return Query
+     * @return Query<Data>
      */
     public function getElementDataQuery($elementId, $componentId)
     {
@@ -306,7 +307,7 @@ class Repository extends ModelRepository
      * @param int $elementId
      * @param int $componentId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getElementDataQueryBuilder($elementId, $componentId)
     {
@@ -348,7 +349,7 @@ class Repository extends ModelRepository
      *
      * @param int $emotionId
      *
-     * @return Query
+     * @return Query<EmotionAttribute>
      */
     public function getEmotionAttributesQuery($emotionId)
     {
@@ -363,7 +364,7 @@ class Repository extends ModelRepository
      *
      * @param int $emotionId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getEmotionAttributesQueryBuilder($emotionId)
     {
@@ -379,7 +380,7 @@ class Repository extends ModelRepository
     /**
      * @param int $categoryId
      *
-     * @return Query
+     * @return Query<Emotion>
      */
     public function getCategoryBaseEmotionsQuery($categoryId)
     {
@@ -391,7 +392,7 @@ class Repository extends ModelRepository
     /**
      * @param int $categoryId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getCategoryBaseEmotionsQueryBuilder($categoryId)
     {
@@ -435,7 +436,7 @@ class Repository extends ModelRepository
      * @param int $offset
      * @param int $limit
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getCampaigns($offset = null, $limit = null)
     {
@@ -455,7 +456,7 @@ class Repository extends ModelRepository
     /**
      * @param int $shopId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getCampaignsByShopId($shopId)
     {
@@ -491,7 +492,7 @@ class Repository extends ModelRepository
     /**
      * @param int[] $elementIds
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     private function getElementViewportsQueryBuilder($elementIds)
     {

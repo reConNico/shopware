@@ -1,38 +1,37 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Plugin\XmlReader;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Shopware\Components\Plugin\XmlReader\XmlPluginReader;
 
 class XmlPluginReaderTest extends TestCase
 {
-    /**
-     * @var XmlPluginReader
-     */
-    private $pluginReader;
+    private XmlPluginReader $pluginReader;
 
     protected function setUp(): void
     {
@@ -41,9 +40,7 @@ class XmlPluginReaderTest extends TestCase
 
     public function testReadFile(): void
     {
-        $result = $this->readFile('plugin.xml');
-
-        static::assertIsArray($result);
+        $result = $this->readFile();
 
         static::assertArrayHasKey('label', $result);
         static::assertArrayHasKey('en', $result['label']);
@@ -106,10 +103,24 @@ class XmlPluginReaderTest extends TestCase
         static::assertArrayNotHasKey('blacklist', $secondRequiredPlugin);
     }
 
-    private function readFile(string $file): array
+    public function testReadFileWithoutVersion(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Element with name "version" not found in file ".*\/tests\/Unit\/Components\/Plugin\/XmlReader\/examples\/plugin\/plugin_missing_version\.xml"/');
+        $this->readFile('plugin_missing_version');
+    }
+
+    public function testReadFileWithMultipleVersion(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Element with name "version" found multiple times in file ".*\/tests\/Unit\/Components\/Plugin\/XmlReader\/examples\/plugin\/plugin_multiple_versions\.xml", but expected to be there only once/');
+        $this->readFile('plugin_multiple_versions');
+    }
+
+    private function readFile(string $fileName = 'plugin'): array
     {
         return $this->pluginReader->read(
-            sprintf('%s/examples/plugin/%s', __DIR__, $file)
+            \sprintf('%s/examples/plugin/%s.xml', __DIR__, $fileName)
         );
     }
 }

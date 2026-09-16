@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\ORM\AbstractQuery;
@@ -74,6 +74,9 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
      */
     protected $blogBaseUrl;
 
+    /**
+     * @return void
+     */
     public function init()
     {
         $this->blogBaseUrl = Shopware()->Config()->get('baseFile');
@@ -142,15 +145,17 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
 
     /**
      * Index action method
+     *
+     * @return void
      */
     public function indexAction()
     {
         $categoryId = (int) $this->Request()->getQuery('sCategory');
         $page = (int) $this->request->getParam('sPage', 1);
         $page = $page >= 1 ? $page : 1;
-        $filterDate = urldecode($this->Request()->getParam('sFilterDate'));
-        $filterAuthor = urldecode($this->Request()->getParam('sFilterAuthor'));
-        $filterTags = urldecode($this->Request()->getParam('sFilterTags'));
+        $filterDate = urldecode($this->Request()->getParam('sFilterDate', ''));
+        $filterAuthor = urldecode($this->Request()->getParam('sFilterAuthor', ''));
+        $filterTags = urldecode($this->Request()->getParam('sFilterTags', ''));
 
         // Redirect if blog's category is not a child of the current shop's category
         $shopCategory = $this->get('shop')->getCategory();
@@ -182,7 +187,7 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
         $totalResult = $paginator->count();
 
         // Returns the blog article data
-        $blogArticles = $paginator->getIterator()->getArrayCopy();
+        $blogArticles = iterator_to_array($paginator);
 
         $blogArticles = $this->translateBlogArticles($blogArticles);
 
@@ -236,11 +241,13 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
 
         // Make sure the category exists and is a blog category
         if (empty($categoryContent) || !$categoryContent['blog']) {
-            throw new Enlight_Controller_Exception(sprintf('Blog category by id "%d" is invalid', $categoryId), 404);
+            throw new Enlight_Controller_Exception(\sprintf('Blog category by id "%d" is invalid', $categoryId), 404);
         }
 
         if (!empty($categoryContent['external'])) {
-            return $this->redirect($categoryContent['external'], ['code' => 301]);
+            $this->redirect($categoryContent['external'], ['code' => 301]);
+
+            return;
         }
 
         $assigningData = [
@@ -273,6 +280,8 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
      * Contains the logic for the detail page of a blog article
      *
      * @throws Enlight_Controller_Exception
+     *
+     * @return void
      */
     public function detailAction()
     {
@@ -291,7 +300,7 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
 
         // Redirect if the blog item is not available
         if (empty($blogArticleData) || empty($blogArticleData['active'])) {
-            throw new Enlight_Controller_Exception(sprintf('Blog article with id %d not found or inactive', $blogArticleId), 404);
+            throw new Enlight_Controller_Exception(\sprintf('Blog article with id %d not found or inactive', $blogArticleId), 404);
         }
 
         // Redirect if category is not available, inactive or external
@@ -309,7 +318,9 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
         }
 
         if (isset($location)) {
-            return $this->redirect($location, ['code' => 301]);
+            $this->redirect($location, ['code' => 301]);
+
+            return;
         }
 
         // Load the right template
@@ -320,11 +331,13 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
         $this->View()->assign('userLoggedIn', !empty(Shopware()->Session()->get('sUserId')));
         if (!empty(Shopware()->Session()->get('sUserId')) && empty($this->Request()->get('name'))
             && $this->Request()->getParam('__cache') === null) {
-            $userData = Shopware()->Modules()->Admin()->sGetUserData();
-            $this->View()->assign('sFormData', [
-                'eMail' => $userData['additional']['user']['email'],
-                'name' => $userData['billingaddress']['firstname'] . ' ' . $userData['billingaddress']['lastname'],
-            ]);
+            $customerData = Shopware()->Modules()->Admin()->sGetUserData();
+            if (\is_array($customerData)) {
+                $this->View()->assign('sFormData', [
+                    'eMail' => $customerData['additional']['user']['email'],
+                    'name' => $customerData['billingaddress']['firstname'] . ' ' . $customerData['billingaddress']['lastname'],
+                ]);
+            }
         }
 
         $mediaIds = array_column($blogArticleData['media'], 'mediaId');
@@ -355,7 +368,7 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
 
         // Generate breadcrumb
         $breadcrumb = $this->getCategoryBreadcrumb($blogArticleData['categoryId']);
-        $blogDetailLink = $this->Front()->Router()->assemble([
+        $blogDetailLink = $this->Front()->ensureRouter()->assemble([
             'sViewport' => 'blog', 'sCategory' => $blogArticleData['categoryId'],
             'action' => 'detail', 'blogArticle' => $blogArticleId,
         ]);
@@ -374,12 +387,13 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
      * Rating action method
      *
      * Save and review the blog comment and rating
+     *
+     * @return void
      */
     public function ratingAction()
     {
         $blogArticleId = (int) $this->Request()->getParam('blogArticle');
-        /** @var bool|array $sErrorFlag */
-        $sErrorFlag = null;
+        $sErrorFlag = [];
 
         if (!empty($blogArticleId)) {
             $blogArticleQuery = $this->getRepository()->getDetailQuery($blogArticleId, $this->get('shop')->getId());
@@ -401,13 +415,15 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
 
                     $this->sSaveComment($commentData, $blogArticleId);
 
-                    return $this->forward('detail');
+                    $this->forward('detail');
+
+                    return;
                 }
                 $sErrorFlag['invalidHash'] = true;
             }
 
             // Validation only occurs when entering data, but not on failed Double-Opt-In
-            if (!$sErrorFlag['invalidHash']) {
+            if (!($sErrorFlag['invalidHash'] ?? false)) {
                 if (empty($this->Request()->name)) {
                     $sErrorFlag['name'] = true;
                 }
@@ -451,14 +467,14 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
                     $this->get('models')->persist($blogCommentModel);
                     $this->get('models')->flush();
 
-                    $link = $this->Front()->Router()->assemble(['sViewport' => 'blog', 'action' => 'rating', 'blogArticle' => $blogArticleId, 'sConfirmation' => $hash]);
+                    $link = $this->Front()->ensureRouter()->assemble(['sViewport' => 'blog', 'action' => 'rating', 'blogArticle' => $blogArticleId, 'sConfirmation' => $hash]);
 
                     $context = ['sConfirmLink' => $link, 'sArticle' => ['title' => $blogArticleData['title']]];
                     $mail = Shopware()->TemplateMail()->createMail('sOPTINBLOGCOMMENT', $context);
                     $mail->addTo($this->Request()->getParam('eMail'));
                     $mail->send();
                 } else {
-                    //Save comment
+                    // Save comment
                     $commentData = $this->Request()->getPost();
                     $this->sSaveComment($commentData, $blogArticleId);
                 }
@@ -483,7 +499,7 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
      */
     public function getDateFilterData($blogCategoryIds, $selectedFilters, $shopId = null)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         // Date filter query
         $dateFilterData = $this->repository
@@ -506,7 +522,7 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
      */
     public function getAuthorFilterData($blogCategoryIds, $filter, $shopId = null)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         // Date filter query
         $filterData = $this->repository
@@ -529,7 +545,7 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
      */
     public function getTagsFilterData($blogCategoryIds, $filter, $shopId = null)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         // Date filter query
         $filterData = $this->repository
@@ -550,7 +566,7 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
      */
     public function getCategoryBreadcrumb($categoryId)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return array_reverse(Shopware()->Modules()->Categories()->sGetCategoriesByParent($categoryId));
     }
@@ -562,6 +578,8 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
      * @param int   $blogArticleId
      *
      * @throws Enlight_Exception
+     *
+     * @return void
      */
     protected function sSaveComment($commentData, $blogArticleId)
     {
@@ -627,19 +645,19 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
                 $userParams['sPage'] = $i;
 
                 $pages['numbers'][$i]['value'] = $i;
-                $pages['numbers'][$i]['link'] = $this->Front()->Router()->assemble($userParams);
+                $pages['numbers'][$i]['link'] = $this->Front()->ensureRouter()->assemble($userParams);
             }
             // Previous page
             if ($page !== 1) {
                 $userParams['sPage'] = $page - 1;
-                $pages['previous'] = $this->Front()->Router()->assemble($userParams);
+                $pages['previous'] = $this->Front()->ensureRouter()->assemble($userParams);
             } else {
                 $pages['previous'] = null;
             }
             // Next page
             if ($page !== $numberPages) {
                 $userParams['sPage'] = $page + 1;
-                $pages['next'] = $this->Front()->Router()->assemble($userParams);
+                $pages['next'] = $this->Front()->ensureRouter()->assemble($userParams);
             } else {
                 $pages['next'] = null;
             }
@@ -651,9 +669,12 @@ class Shopware_Controllers_Frontend_Blog extends Enlight_Controller_Action
     /**
      * Helper method to fill the data set with the right category link
      *
-     * @param string $requestParameterName
-     * @param string $requestParameterValue
-     * @param bool   $addRemoveProperty     | true to add a remove property to remove the selected filters
+     * @param array<array<string, mixed>> $filterData
+     * @param string                      $requestParameterName
+     * @param string                      $requestParameterValue
+     * @param bool                        $addRemoveProperty     | true to add a remove property to remove the selected filters
+     *
+     * @return array<array<string, mixed>>
      */
     protected function addLinksToFilter(array $filterData, $requestParameterName, $requestParameterValue, $addRemoveProperty = true)
     {

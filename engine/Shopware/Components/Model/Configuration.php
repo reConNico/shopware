@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Model;
@@ -32,8 +32,10 @@ use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\Common\Cache\RedisCache;
 use Doctrine\Common\Cache\XcacheCache;
 use Doctrine\Common\Proxy\AbstractProxyFactory;
+use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Configuration as BaseConfiguration;
+use Doctrine\ORM\ORMException;
 use Doctrine\ORM\Repository\RepositoryFactory;
 use DoctrineExtensions\Query\Mysql\DateFormat;
 use DoctrineExtensions\Query\Mysql\GroupConcat;
@@ -45,6 +47,9 @@ use Exception;
 use Redis;
 use RuntimeException;
 use Shopware\Components\CacheManager;
+use Shopware\Components\Model\DBAL\Types\AllowInvalidArrayType;
+use Shopware\Components\Model\DBAL\Types\DateStringType;
+use Shopware\Components\Model\DBAL\Types\DateTimeStringType;
 use Shopware\Components\ShopwareReleaseStruct;
 use Zend_Cache_Core;
 
@@ -72,8 +77,8 @@ class Configuration extends BaseConfiguration
     /**
      * @throws Exception
      * @throws RuntimeException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws ORMException
+     * @throws DBALException
      */
     public function __construct(array $options, Zend_Cache_Core $cache, RepositoryFactory $repositoryFactory, ShopwareReleaseStruct $release)
     {
@@ -89,9 +94,9 @@ class Configuration extends BaseConfiguration
 
         $this->setAttributeDir($options['attributeDir']);
 
-        Type::overrideType('datetime', \Shopware\Components\Model\DBAL\Types\DateTimeStringType::class);
-        Type::overrideType('date', \Shopware\Components\Model\DBAL\Types\DateStringType::class);
-        Type::overrideType('array', \Shopware\Components\Model\DBAL\Types\AllowInvalidArrayType::class);
+        Type::overrideType('datetime', DateTimeStringType::class);
+        Type::overrideType('date', DateStringType::class);
+        Type::overrideType('array', AllowInvalidArrayType::class);
 
         $this->addCustomStringFunction('DATE_FORMAT', DateFormat::class);
         $this->addCustomStringFunction('IFNULL', IfNull::class);
@@ -209,10 +214,10 @@ class Configuration extends BaseConfiguration
     {
         if (!is_dir($dir)) {
             if (@mkdir($dir, 0777, true) === false && !is_dir($dir)) {
-                throw new RuntimeException(sprintf("Unable to create the doctrine attribute directory (%s)\n", $dir));
+                throw new RuntimeException(\sprintf("Unable to create the doctrine attribute directory (%s)\n", $dir));
             }
         } elseif (!is_writable($dir)) {
-            throw new RuntimeException(sprintf("Unable to write in the doctrine attribute directory (%s)\n", $dir));
+            throw new RuntimeException(\sprintf("Unable to write in the doctrine attribute directory (%s)\n", $dir));
         }
 
         $dir = rtrim((string) realpath($dir), '\\/') . DIRECTORY_SEPARATOR;
@@ -241,10 +246,10 @@ class Configuration extends BaseConfiguration
     {
         if (!is_dir($dir)) {
             if (@mkdir($dir, 0777, true) === false && !is_dir($dir)) {
-                throw new RuntimeException(sprintf("Unable to create the doctrine proxy directory (%s)\n", $dir));
+                throw new RuntimeException(\sprintf("Unable to create the doctrine proxy directory (%s)\n", $dir));
             }
         } elseif (!is_writable($dir)) {
-            throw new RuntimeException(sprintf("Unable to write in the doctrine proxy directory (%s)\n", $dir));
+            throw new RuntimeException(\sprintf("Unable to write in the doctrine proxy directory (%s)\n", $dir));
         }
 
         parent::setProxyDir($dir);
@@ -292,7 +297,7 @@ class Configuration extends BaseConfiguration
         }
 
         if (!class_exists($provider)) {
-            throw new Exception(sprintf('Doctrine cache provider "%s" not found failure.', $provider));
+            throw new Exception(\sprintf('Doctrine cache provider "%s" not found failure.', $provider));
         }
 
         return new $provider();

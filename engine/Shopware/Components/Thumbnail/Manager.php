@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Thumbnail;
@@ -57,10 +57,7 @@ class Manager
      */
     protected $eventManager;
 
-    /**
-     * @var MediaServiceInterface
-     */
-    private $mediaService;
+    private MediaServiceInterface $mediaService;
 
     /**
      * The constructor for the thumbnail manager.
@@ -88,13 +85,15 @@ class Manager
      *
      * @param array $thumbnailSizes  - array of all sizes which needs to be generated
      * @param bool  $keepProportions - Whether or not keeping the proportions of the original image, the size can be affected when true
+     *
+     * @return void
      */
     public function createMediaThumbnail(Media $media, $thumbnailSizes = [], $keepProportions = false)
     {
         $imagePath = $media->getPath();
 
         if ($media->getType() !== $media::TYPE_IMAGE) {
-            throw new Exception(sprintf('File %s is not an image.', $imagePath));
+            throw new Exception(\sprintf('File %s is not an image.', $imagePath));
         }
 
         if (empty($thumbnailSizes)) {
@@ -142,11 +141,13 @@ class Manager
 
             $destinations = $this->getDestination($media, $suffix);
             foreach ($destinations as $destination) {
+                $width = max(1, (int) $size['width']);
+                $height = max(1, (int) $size['height']);
                 $this->generator->createThumbnail(
                     $parameters['path'],
                     $destination,
-                    $size['width'],
-                    $size['height'],
+                    $width,
+                    $height,
                     $parameters['keepProportions'],
                     $standardQuality
                 );
@@ -162,11 +163,13 @@ class Manager
 
             $destinations = $this->getDestination($media, $suffix);
             foreach ($destinations as $destination) {
+                $width = max(1, (int) ($size['width'] * 2));
+                $height = max(1, (int) ($size['height'] * 2));
                 $this->generator->createThumbnail(
                     $parameters['path'],
                     $destination,
-                    $size['width'] * 2,
-                    $size['height'] * 2,
+                    $width,
+                    $height,
                     $parameters['keepProportions'],
                     $highDpiQuality
                 );
@@ -181,7 +184,7 @@ class Manager
      * @param string $type
      * @param string $extension
      *
-     * @return array
+     * @return array<array{maxWidth: int, maxHeight: int, source: string, retinaSource: string}>
      */
     public function getMediaThumbnails($name, $type, $extension, array $sizes)
     {
@@ -215,6 +218,8 @@ class Manager
 
     /**
      * Deletes all thumbnails from the given media object
+     *
+     * @return void
      */
     public function removeMediaThumbnails(Media $media)
     {
@@ -282,7 +287,7 @@ class Manager
      * Brings the passed sizes into a uniform format.
      *
      * The passed param has to be an array with one or more sizes.
-     * These sizes can have following formats:
+     * These sizes can have the following formats:
      *
      * '100x110'
      * array(120, 130)
@@ -295,13 +300,13 @@ class Manager
      *
      * @param int[]|string[]|array<string[]>|array<int[]> $thumbnailSizes
      *
-     * @return array
+     * @return array<array{width: int, height: int}>
      */
     protected function uniformThumbnailSizes(array $thumbnailSizes)
     {
         foreach ($thumbnailSizes as &$size) {
             if (\is_string($size)) {
-                if (strpos($size, 'x') !== false) {
+                if (str_contains($size, 'x')) {
                     $size = $this->stringSizeToArray($size);
                 } else {
                     $size = ['width' => $size, 'height' => $size];
@@ -320,12 +325,7 @@ class Manager
         return $thumbnailSizes;
     }
 
-    /**
-     * @param string $type
-     *
-     * @return string
-     */
-    private function getPathOfType($type)
+    private function getPathOfType(string $type): string
     {
         return 'media/' . strtolower($type);
     }
@@ -333,12 +333,14 @@ class Manager
     /**
      * Returns an array with width and height gained
      * from a string in a format like 100x200
+     *
+     * @return array{width: int, height: int}
      */
     private function stringSizeToArray(string $size): array
     {
         $sizes = explode('x', $size);
 
-        return ['width' => $sizes[0], 'height' => $sizes[1]];
+        return ['width' => (int) $sizes[0], 'height' => (int) $sizes[1]];
     }
 
     /**

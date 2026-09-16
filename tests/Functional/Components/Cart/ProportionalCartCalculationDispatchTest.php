@@ -1,43 +1,45 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Cart;
 
-use Shopware\Tests\Functional\Components\CheckoutTest;
+use Doctrine\DBAL\Connection;
+use Shopware\Tests\Functional\Components\CheckoutTestCase;
 
 /**
  * @group Basket
  */
-class ProportionalCartCalculationDispatchTest extends CheckoutTest
+class ProportionalCartCalculationDispatchTest extends CheckoutTestCase
 {
     public function setUp(): void
     {
         parent::setUp();
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->beginTransaction();
+        Shopware()->Container()->get(Connection::class)->beginTransaction();
         $this->setConfig('proportionalTaxCalculation', true);
 
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->executeQuery('UPDATE s_premium_dispatch SET active = 0 WHERE id = 12');
+        Shopware()->Container()->get(Connection::class)->executeQuery('UPDATE s_premium_dispatch SET active = 0 WHERE id = 12');
     }
 
     protected function tearDown(): void
@@ -46,15 +48,15 @@ class ProportionalCartCalculationDispatchTest extends CheckoutTest
 
         $this->setConfig('proportionalTaxCalculation', false);
 
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->rollBack();
+        Shopware()->Container()->get(Connection::class)->rollBack();
     }
 
-    public function testSurchargeInDispatch()
+    public function testSurchargeInDispatch(): void
     {
         $this->setPaymentSurcharge(5);
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->executeQuery('UPDATE s_premium_dispatch SET surcharge_calculation = 0');
+        Shopware()->Container()->get(Connection::class)->executeQuery('UPDATE s_premium_dispatch SET surcharge_calculation = 0');
 
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 19.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 19.00));
 
         $this->dispatch('/checkout/cart');
 
@@ -77,13 +79,13 @@ class ProportionalCartCalculationDispatchTest extends CheckoutTest
         static::assertCount(1, $sBasket['content']);
     }
 
-    public function testSurchargeInDispatchMultipleTaxes()
+    public function testSurchargeInDispatchMultipleTaxes(): void
     {
         $this->setPaymentSurcharge(5);
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->executeQuery('UPDATE s_premium_dispatch SET surcharge_calculation = 0');
+        Shopware()->Container()->get(Connection::class)->executeQuery('UPDATE s_premium_dispatch SET surcharge_calculation = 0');
 
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 19.00), 1);
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 7.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 19.00));
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 7.00));
 
         $this->dispatch('/checkout/cart');
 
@@ -106,12 +108,12 @@ class ProportionalCartCalculationDispatchTest extends CheckoutTest
         static::assertCount(2, $sBasket['content']);
     }
 
-    public function testBasketDiscountIntroducedByDispatch()
+    public function testBasketDiscountIntroducedByDispatch(): void
     {
         $this->setPaymentSurcharge(0);
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->executeQuery('UPDATE s_premium_dispatch SET active = 1 WHERE id = 12');
+        Shopware()->Container()->get(Connection::class)->executeQuery('UPDATE s_premium_dispatch SET active = 1 WHERE id = 12');
 
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 19.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 19.00));
 
         $this->dispatch('/checkout/cart');
 
@@ -136,13 +138,13 @@ class ProportionalCartCalculationDispatchTest extends CheckoutTest
         $this->hasBasketItem($sBasket['content'], 'Warenkorbrabatt', -2, -1.6806722689076, 'SHIPPINGDISCOUNT');
     }
 
-    public function testBasketDiscountIntroducedByDispatchMultipleTaxes()
+    public function testBasketDiscountIntroducedByDispatchMultipleTaxes(): void
     {
         $this->setPaymentSurcharge(0);
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->executeQuery('UPDATE s_premium_dispatch SET active = 1 WHERE id = 12');
+        Shopware()->Container()->get(Connection::class)->executeQuery('UPDATE s_premium_dispatch SET active = 1 WHERE id = 12');
 
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 19.00), 1);
-        Shopware()->Modules()->Basket()->sAddArticle($this->createArticle(50, 7.00), 1);
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 19.00));
+        Shopware()->Modules()->Basket()->sAddArticle($this->createProduct(50, 7.00));
 
         $this->dispatch('/checkout/cart');
 
@@ -157,7 +159,7 @@ class ProportionalCartCalculationDispatchTest extends CheckoutTest
         static::assertEquals(3.9, $sBasket['sShippingcosts']);
         static::assertEquals(3.9, $sBasket['sShippingcostsWithTax']);
         static::assertEquals(19.0, $sBasket['sShippingcostsTax']);
-        static::assertEquals(3.4708433038255415, $sBasket['sShippingcostsNet']);
+        static::assertEquals(3.470843303825543, $sBasket['sShippingcostsNet']);
 
         static::assertTrue(isset($sBasket['sShippingcostsTaxProportional']));
         static::assertCount(2, $sBasket['sTaxRates']);

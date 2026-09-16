@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ESIndexingBundle\Product;
@@ -88,7 +88,7 @@ class ProductListingVariationLoader
         Shop $shop,
         array $products,
         array $configurations,
-        VariantFacet $variantFacet = null
+        ?VariantFacet $variantFacet = null
     ) {
         $combinationPrices = [];
 
@@ -156,7 +156,7 @@ class ProductListingVariationLoader
     public function getAvailability(
         array $products,
         array $configurations,
-        VariantFacet $variantFacet = null
+        ?VariantFacet $variantFacet = null
     ) {
         $combinationAvailability = [];
         $availability = $this->fetchAvailability($products);
@@ -309,7 +309,7 @@ class ProductListingVariationLoader
                     $tmp = array_merge($item, [$index => (int) $option->getId()]);
                     sort($tmp, SORT_NUMERIC);
 
-                    //check if this combination is a available combination (out of stock, not active)
+                    // check if this combination is a available combination (out of stock, not active)
                     $isAvailable = false;
                     foreach ($availability as $available) {
                         $available = '-' . $available . '-';
@@ -320,7 +320,7 @@ class ProductListingVariationLoader
                                 $allMatch = false;
                             }
                         }
-                        //all options matched? combination is available, break availability check
+                        // all options matched? combination is available, break availability check
                         if ($allMatch) {
                             $isAvailable = true;
                             break;
@@ -550,7 +550,7 @@ class ProductListingVariationLoader
         array $configuration,
         array $prices,
         array $combinations,
-        VariantFacet $variantFacet = null
+        ?VariantFacet $variantFacet = null
     ): array {
         $cheapestPrices = [];
 
@@ -573,17 +573,17 @@ class ProductListingVariationLoader
             // size combination => only consider prices with same size
             // size + color combination => only consider prices with same size and color like the current product
             // Only consider prices without the groups which should not expand
-            $tmp = array_values(array_keys(
+            $tmp = array_keys(
                 array_intersect(array_intersect(array_flip($options), $combination), $expandGroupIds)
-            ));
+            );
             sort($tmp, SORT_NUMERIC);
 
             // Get the options of the groups which should not expand
-            $excludedOptions = array_values(array_keys(
+            $excludedOptions = array_keys(
                 array_diff(array_intersect(array_flip($options), $combination), $expandGroupIds)
-            ));
+            );
 
-            //filter prices which has configuration matches the current variant configuration
+            // filter prices which has configuration matches the current variant configuration
             $affected = array_filter($prices, function (array $price) use ($tmp, $excludedOptions) {
                 $diff = array_values(array_intersect(array_diff($price['options'], $excludedOptions), $tmp));
 
@@ -592,8 +592,8 @@ class ProductListingVariationLoader
 
             $price = array_column($affected, 'price');
 
-            //build combination key by group ids
-            //store front filters to filtered group "sort by price for `color`"
+            // build combination key by group ids
+            // store front filters to filtered group "sort by price for `color`"
             $key = 'g' . implode('-', $combination);
 
             if (!empty($price)) {
@@ -608,7 +608,7 @@ class ProductListingVariationLoader
         array $configuration,
         array $availabilities,
         array $combinations,
-        VariantFacet $variantFacet = null
+        ?VariantFacet $variantFacet = null
     ): array {
         $availabilityList = [];
 
@@ -626,14 +626,14 @@ class ProductListingVariationLoader
         foreach ($combinations as $combination) {
             sort($combination, SORT_NUMERIC);
 
-            $tmp = array_values(array_keys(
+            $tmp = array_keys(
                 array_intersect(array_intersect(array_flip($options), $combination), $expandGroupIds)
-            ));
+            );
             sort($tmp, SORT_NUMERIC);
 
-            $excludedOptions = array_values(array_keys(
+            $excludedOptions = array_keys(
                 array_diff(array_intersect(array_flip($options), $combination), $expandGroupIds)
-            ));
+            );
 
             $affected = array_filter($availabilities, function (array $price) use ($tmp, $excludedOptions) {
                 $diff = array_values(array_intersect(array_diff($price['options'], $excludedOptions), $tmp));

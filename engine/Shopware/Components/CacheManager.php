@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components;
@@ -283,7 +283,7 @@ class CacheManager
 
     public function clearOpCache()
     {
-        if (\extension_loaded('Zend OPcache') && ini_get('opcache.enable')) {
+        if (\extension_loaded('Zend OPcache') && \ini_get('opcache.enable')) {
             opcache_reset();
         }
     }
@@ -413,16 +413,24 @@ class CacheManager
      */
     public function getOpCacheCacheInfo()
     {
-        $info = [];
-        if (\extension_loaded('Zend OPcache') && ini_get('opcache.enable')) {
-            $status = opcache_get_status(false);
-            $info['files'] = $status['opcache_statistics']['num_cached_scripts'];
-            $info['size'] = $this->encodeSize($status['memory_usage']['used_memory']);
-            $info['freeSpace'] = $this->encodeSize($status['memory_usage']['free_memory']);
-        } else {
+        $info = ['name' => 'Zend OPcache'];
+
+        if (!\function_exists('opcache_get_status')) {
             $info['message'] = 'Zend OPcache is not available';
+
+            return $info;
         }
-        $info['name'] = 'Zend OPcache';
+
+        $status = \opcache_get_status(false);
+        if ($status === false) {
+            $info['message'] = 'Zend OPcache status is not available';
+
+            return $info;
+        }
+
+        $info['files'] = $status['opcache_statistics']['num_cached_scripts'];
+        $info['size'] = $this->encodeSize($status['memory_usage']['used_memory']);
+        $info['freeSpace'] = $this->encodeSize($status['memory_usage']['free_memory']);
 
         return $info;
     }
@@ -440,7 +448,7 @@ class CacheManager
     {
         $info = [];
         $info['dir'] = str_replace($this->docRoot . '/', '', $dir);
-        $info['dir'] = str_replace(DIRECTORY_SEPARATOR, '/', $info['dir']);
+        $info['dir'] = str_replace(\DIRECTORY_SEPARATOR, '/', $info['dir']);
         $info['dir'] = rtrim($info['dir'], '/') . '/';
 
         if (!file_exists($dir) || !is_dir($dir)) {
@@ -575,14 +583,14 @@ class CacheManager
         $finder = new Finder();
 
         $tempFileExtension = 'sw_bak';
-        $tempFileName = sprintf('%s_%s.%s', $dir, uniqid(), $tempFileExtension);
+        $tempFileName = \sprintf('%s_%s.%s', $dir, uniqid(), $tempFileExtension);
 
         // Move the existing cache to a temporary new location prior to deletion, so it won't be written to in the meantime
         $fileSystem->rename($dir, $tempFileName);
 
         $finder->directories()
             ->in(\dirname($dir, 1))
-            ->name(sprintf('*.%s', $tempFileExtension));
+            ->name(\sprintf('*.%s', $tempFileExtension));
 
         if ($finder->hasResults()) {
             $fileSystem->remove($finder);

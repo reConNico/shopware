@@ -1,31 +1,36 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Shopware\Bundle\SearchBundle\ProductSearchInterface;
 use Shopware\Bundle\SearchBundle\ProductSearchResult;
 use Shopware\Bundle\SearchBundle\SearchTermPreProcessorInterface;
-use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
+use Shopware\Bundle\SearchBundle\StoreFrontCriteriaFactoryInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\CustomSortingServiceInterface;
+use Shopware\Components\Compatibility\LegacyStructConverter;
 use Shopware\Components\QueryAliasMapper;
+use Shopware\Components\Routing\RouterInterface;
 
 class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
 {
@@ -49,27 +54,27 @@ class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
         // Check if we have a one to one match for order number, then redirect
         $location = $this->searchFuzzyCheck($term);
         if (!empty($location)) {
-            return $this->redirect($location);
+            $this->redirect($location);
+
+            return;
         }
 
         $this->View()->loadTemplate('frontend/search/fuzzy.tpl');
 
-        $minLengthSearchTerm = $this->get(\Shopware_Components_Config::class)->get('minSearchLenght');
+        $minLengthSearchTerm = $this->get(Shopware_Components_Config::class)->get('minSearchLenght');
         if (\strlen($term) < (int) $minLengthSearchTerm) {
             return;
         }
 
-        /** @var ShopContextInterface $context */
-        $context = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->getShopContext();
+        $context = $this->get(ContextServiceInterface::class)->getShopContext();
 
-        $criteria = Shopware()->Container()->get(\Shopware\Bundle\SearchBundle\StoreFrontCriteriaFactoryInterface::class)
+        $criteria = Shopware()->Container()->get(StoreFrontCriteriaFactoryInterface::class)
             ->createSearchCriteria($this->Request(), $context);
 
-        /** @var ProductSearchResult $result */
-        $result = $this->get(\Shopware\Bundle\SearchBundle\ProductSearchInterface::class)->search($criteria, $context);
+        $result = $this->get(ProductSearchInterface::class)->search($criteria, $context);
         $products = $this->convertProducts($result);
 
-        if ($this->get(\Shopware_Components_Config::class)->get('traceSearch', true)) {
+        if ($this->get(Shopware_Components_Config::class)->get('traceSearch', true)) {
             $this->get('shopware_searchdbal.search_term_logger')->logResult(
                 $criteria,
                 $result,
@@ -77,18 +82,18 @@ class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
             );
         }
 
-        $pageCounts = $this->get(\Shopware_Components_Config::class)->get('fuzzySearchSelectPerPage');
+        $pageCounts = $this->get(Shopware_Components_Config::class)->get('fuzzySearchSelectPerPage');
 
         $request = $this->Request()->getParams();
         $request['sSearchOrginal'] = $term;
 
-        /** @var \Shopware\Components\QueryAliasMapper $mapper */
         $mapper = $this->get(QueryAliasMapper::class);
 
-        $service = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\CustomSortingServiceInterface::class);
+        $service = Shopware()->Container()->get(CustomSortingServiceInterface::class);
 
-        $sortingIds = $this->container->get(\Shopware_Components_Config::class)->get('searchSortings');
+        $sortingIds = $this->container->get(Shopware_Components_Config::class)->get('searchSortings');
         $sortingIds = array_filter(explode('|', $sortingIds));
+        $sortingIds = array_map('\intval', $sortingIds);
         $sortings = $service->getList($sortingIds, $context);
 
         $this->View()->assign([
@@ -108,7 +113,7 @@ class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
                 'sArticles' => $products,
                 'sArticlesCount' => $result->getTotalCount(),
             ],
-            'productBoxLayout' => $this->get(\Shopware_Components_Config::class)->get('searchProductBoxLayout'),
+            'productBoxLayout' => $this->get(Shopware_Components_Config::class)->get('searchProductBoxLayout'),
         ]);
     }
 
@@ -121,8 +126,7 @@ class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
      */
     protected function searchFuzzyCheck($search)
     {
-        /** @var Shopware_Components_Config $config */
-        $config = $this->get(\Shopware_Components_Config::class);
+        $config = $this->get(Shopware_Components_Config::class);
         if (!$config->get('activateNumberSearch')) {
             return false;
         }
@@ -140,7 +144,7 @@ class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
                 LIMIT 2
             ';
             $products = $this->get('db')->fetchAll($sql, [$search]);
-            if ($products[0]['configurator_set_id']) {
+            if (!empty($products[0]['configurator_set_id'])) {
                 $number = $products[0]['ordernumber'];
             }
 
@@ -159,7 +163,7 @@ class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
                 $products = $this->get('db')->fetchCol($sql, [$search, $like_search]);
             }
         }
-        if (!empty($products) && \count($products) == 1) {
+        if (!empty($products) && \count($products) === 1) {
             $sql = '
                 SELECT ac.articleID
                 FROM  s_articles_categories_ro ac
@@ -176,7 +180,7 @@ class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
                 $products[0],
             ]);
         }
-        if (!empty($products) && \count($products) == 1) {
+        if (!empty($products) && \count($products) === 1) {
             $assembleParams = [
                 'sViewport' => 'detail',
                 'sArticle' => $products[0],
@@ -190,20 +194,17 @@ class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
                 $assembleParams['sPartner'] = $partner;
             }
 
-            return $this->get(\Shopware\Components\Routing\RouterInterface::class)->assemble($assembleParams);
+            return $this->get(RouterInterface::class)->assemble($assembleParams);
         }
 
         return false;
     }
 
-    /**
-     * @return array|null
-     */
-    private function convertProducts(ProductSearchResult $result)
+    private function convertProducts(ProductSearchResult $result): ?array
     {
         $products = [];
         foreach ($result->getProducts() as $product) {
-            $productArray = $this->get(\Shopware\Components\Compatibility\LegacyStructConverter::class)->convertListProductStruct($product);
+            $productArray = $this->get(LegacyStructConverter::class)->convertListProductStruct($product);
 
             $products[] = $productArray;
         }
@@ -215,17 +216,11 @@ class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
         return $products;
     }
 
-    /**
-     * @return string
-     */
-    private function getSearchTerm()
+    private function getSearchTerm(): string
     {
         $term = $this->Request()->getParam('sSearch', '');
 
-        /** @var SearchTermPreProcessorInterface $processor */
-        $processor = $this->get(\Shopware\Bundle\SearchBundle\SearchTermPreProcessorInterface::class);
-
-        return $processor->process($term);
+        return $this->get(SearchTermPreProcessorInterface::class)->process($term);
     }
 
     private function setDefaultSorting()
@@ -234,7 +229,7 @@ class Shopware_Controllers_Frontend_Search extends Enlight_Controller_Action
             return;
         }
 
-        $sortings = $this->container->get(\Shopware_Components_Config::class)->get('searchSortings');
+        $sortings = $this->container->get(Shopware_Components_Config::class)->get('searchSortings');
         $sortings = array_filter(explode('|', $sortings));
         $this->Request()->setParam('sSort', array_shift($sortings));
     }

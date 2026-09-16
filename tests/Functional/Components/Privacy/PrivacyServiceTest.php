@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Privacy;
@@ -148,7 +147,7 @@ class PrivacyServiceTest extends TestCase
      */
     private function getUserFromDb(int $id)
     {
-        return $this->connection->executeQuery('SELECT id FROM s_user WHERE id = ' . $id)->fetchAssociative();
+        return $this->connection->executeQuery('SELECT id FROM s_user WHERE id = :id', ['id' => $id])->fetchAssociative();
     }
 
     /**
@@ -158,7 +157,7 @@ class PrivacyServiceTest extends TestCase
      */
     private function getOrdersByCustomerIdFromDb(int $customerId): array
     {
-        return $this->connection->executeQuery('SELECT id FROM s_order WHERE userID = "' . $customerId . '"')->fetchAllAssociative();
+        return $this->connection->executeQuery('SELECT id FROM s_order WHERE userID = :customerId', ['customerId' => $customerId])->fetchAllAssociative();
     }
 
     /**
@@ -168,7 +167,7 @@ class PrivacyServiceTest extends TestCase
      */
     private function getBasketsByCustomerIdFromDb(int $customerId): array
     {
-        return $this->connection->executeQuery('SELECT id FROM s_order_basket WHERE userID = "' . $customerId . '"')->fetchAllAssociative();
+        return $this->connection->executeQuery('SELECT id FROM s_order_basket WHERE userID = :customerId', ['customerId' => $customerId])->fetchAllAssociative();
     }
 
     /**
@@ -184,20 +183,20 @@ class PrivacyServiceTest extends TestCase
         $date = (new DateTime($sqlDate))->format('Y-m-d');
 
         $this->connection->insert('s_user', [
-                'password' => '098f6bcd4621d373cade4e832627b4f6',
-                'encoder' => 'md5',
-                'email' => uniqid('test', true) . '@test.com',
-                'accountmode' => 1,
-                'active' => '1',
-                'firstlogin' => $date,
-                'lastlogin' => $date,
-                'subshopID' => '1',
-                'customergroup' => 'EK',
-                'salutation' => 'mr',
-                'firstname' => '',
-                'lastname' => '',
-                'birthday' => '1990-01-01',
-            ]);
+            'password' => '098f6bcd4621d373cade4e832627b4f6',
+            'encoder' => 'md5',
+            'email' => uniqid('test', true) . '@test.com',
+            'accountmode' => 1,
+            'active' => '1',
+            'firstlogin' => $date,
+            'lastlogin' => $date,
+            'subshopID' => '1',
+            'customergroup' => 'EK',
+            'salutation' => 'mr',
+            'firstname' => '',
+            'lastname' => '',
+            'birthday' => '1990-01-01',
+        ]);
 
         return (int) $this->connection->lastInsertId();
     }

@@ -1,34 +1,39 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Api\Resource;
 
 use Exception;
-use Shopware\Components\Api\Exception as ApiException;
+use Shopware\Components\Api\Exception\NotFoundException;
+use Shopware\Components\Api\Exception\ParameterMissingException;
+use Shopware\Components\Api\Exception\ValidationException;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Country\Country as CountryModel;
 use Shopware\Models\Payment\Payment as PaymentModel;
+use Shopware\Models\Payment\Repository;
 use Shopware\Models\Plugin\Plugin;
+use Shopware\Models\Shop\Shop as ShopModel;
 
 /**
  * Payment API Resource
@@ -36,7 +41,7 @@ use Shopware\Models\Plugin\Plugin;
 class PaymentMethods extends Resource
 {
     /**
-     * @return \Shopware\Models\Payment\Repository
+     * @return Repository
      */
     public function getRepository()
     {
@@ -46,8 +51,8 @@ class PaymentMethods extends Resource
     /**
      * @param int $id
      *
-     * @throws \Shopware\Components\Api\Exception\ParameterMissingException
-     * @throws \Shopware\Components\Api\Exception\NotFoundException
+     * @throws ParameterMissingException
+     * @throws NotFoundException
      *
      * @return array|PaymentModel
      */
@@ -56,7 +61,7 @@ class PaymentMethods extends Resource
         $this->checkPrivilege('read');
 
         if (empty($id)) {
-            throw new ApiException\ParameterMissingException('id');
+            throw new ParameterMissingException('id');
         }
 
         $filters = [['property' => 'payment.id', 'expression' => '=', 'value' => $id]];
@@ -66,7 +71,7 @@ class PaymentMethods extends Resource
         $payment = $query->getOneOrNullResult($this->getResultMode());
 
         if (!$payment) {
-            throw new ApiException\NotFoundException(sprintf('Payment by id %d not found', $id));
+            throw new NotFoundException(\sprintf('Payment by id %d not found', $id));
         }
 
         return $payment;
@@ -87,17 +92,17 @@ class PaymentMethods extends Resource
 
         $paginator = $this->getManager()->createPaginator($query);
 
-        //returns the total count of the query
+        // returns the total count of the query
         $totalResult = $paginator->count();
 
-        //returns the category data
-        $payments = $paginator->getIterator()->getArrayCopy();
+        // returns the category data
+        $payments = iterator_to_array($paginator);
 
         return ['data' => $payments, 'total' => $totalResult];
     }
 
     /**
-     * @throws \Shopware\Components\Api\Exception\ValidationException
+     * @throws ValidationException
      * @throws Exception
      *
      * @return PaymentModel
@@ -117,7 +122,7 @@ class PaymentMethods extends Resource
         $violations = $this->getManager()->validate($payment);
 
         if ($violations->count() > 0) {
-            throw new ApiException\ValidationException($violations);
+            throw new ValidationException($violations);
         }
 
         $this->getManager()->persist($payment);
@@ -129,9 +134,9 @@ class PaymentMethods extends Resource
     /**
      * @param int $id
      *
-     * @throws \Shopware\Components\Api\Exception\ValidationException
-     * @throws \Shopware\Components\Api\Exception\NotFoundException
-     * @throws \Shopware\Components\Api\Exception\ParameterMissingException
+     * @throws ValidationException
+     * @throws NotFoundException
+     * @throws ParameterMissingException
      *
      * @return PaymentModel
      */
@@ -140,14 +145,14 @@ class PaymentMethods extends Resource
         $this->checkPrivilege('update');
 
         if (empty($id)) {
-            throw new ApiException\ParameterMissingException('id');
+            throw new ParameterMissingException('id');
         }
 
         /** @var PaymentModel|null $payment */
         $payment = $this->getRepository()->find($id);
 
         if (!$payment) {
-            throw new ApiException\NotFoundException(sprintf('Payment by id "%d" not found', $id));
+            throw new NotFoundException(\sprintf('Payment by id "%d" not found', $id));
         }
 
         $params = $this->preparePaymentData($params);
@@ -156,7 +161,7 @@ class PaymentMethods extends Resource
 
         $violations = $this->getManager()->validate($payment);
         if ($violations->count() > 0) {
-            throw new ApiException\ValidationException($violations);
+            throw new ValidationException($violations);
         }
 
         $this->flush();
@@ -167,8 +172,8 @@ class PaymentMethods extends Resource
     /**
      * @param int $id
      *
-     * @throws \Shopware\Components\Api\Exception\ParameterMissingException
-     * @throws \Shopware\Components\Api\Exception\NotFoundException
+     * @throws ParameterMissingException
+     * @throws NotFoundException
      *
      * @return PaymentModel
      */
@@ -177,14 +182,14 @@ class PaymentMethods extends Resource
         $this->checkPrivilege('delete');
 
         if (empty($id)) {
-            throw new ApiException\ParameterMissingException('id');
+            throw new ParameterMissingException('id');
         }
 
         /** @var PaymentModel|null $payment */
         $payment = $this->getRepository()->find($id);
 
         if (!$payment) {
-            throw new ApiException\NotFoundException("Payment by id $id not found");
+            throw new NotFoundException("Payment by id $id not found");
         }
 
         $this->getManager()->remove($payment);
@@ -196,7 +201,7 @@ class PaymentMethods extends Resource
     /**
      * @param array $params
      *
-     * @throws ApiException\NotFoundException
+     * @throws NotFoundException
      *
      * @return array
      */
@@ -227,9 +232,9 @@ class PaymentMethods extends Resource
 
         if (isset($params['countries'])) {
             foreach ($params['countries'] as &$country) {
-                $countryModel = $this->getContainer()->get(\Shopware\Components\Model\ModelManager::class)->find(CountryModel::class, $country['countryId']);
+                $countryModel = $this->getContainer()->get(ModelManager::class)->find(CountryModel::class, $country['countryId']);
                 if (!$countryModel) {
-                    throw new ApiException\NotFoundException(sprintf('Country by id %d not found', $country['countryId']));
+                    throw new NotFoundException(\sprintf('Country by id %d not found', $country['countryId']));
                 }
 
                 $country = $countryModel;
@@ -240,9 +245,9 @@ class PaymentMethods extends Resource
 
         if (isset($params['shops'])) {
             foreach ($params['shops'] as &$shop) {
-                $shopModel = $this->getContainer()->get(\Shopware\Components\Model\ModelManager::class)->find(\Shopware\Models\Shop\Shop::class, $shop['shopId']);
+                $shopModel = $this->getContainer()->get(ModelManager::class)->find(ShopModel::class, $shop['shopId']);
                 if (!$shopModel) {
-                    throw new ApiException\NotFoundException(sprintf('Shop by id %d not found', $shop['shopId']));
+                    throw new NotFoundException(\sprintf('Shop by id %d not found', $shop['shopId']));
                 }
 
                 $shop = $shopModel;
@@ -252,9 +257,9 @@ class PaymentMethods extends Resource
         }
 
         if (isset($params['pluginId'])) {
-            $params['plugin'] = $this->getContainer()->get(\Shopware\Components\Model\ModelManager::class)->find(Plugin::class, $params['pluginId']);
+            $params['plugin'] = $this->getContainer()->get(ModelManager::class)->find(Plugin::class, $params['pluginId']);
             if (empty($params['plugin'])) {
-                throw new ApiException\NotFoundException(sprintf('plugin by id %s not found', $params['pluginId']));
+                throw new NotFoundException(\sprintf('plugin by id %s not found', $params['pluginId']));
             }
         }
 

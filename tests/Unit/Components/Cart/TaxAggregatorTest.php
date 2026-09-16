@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Cart;
@@ -66,7 +65,7 @@ class TaxAggregatorTest extends TestCase
                     'fetchOne' => 'none',
                 ]
             ),
-            $this->createStub(ContextServiceInterface::class),
+            static::createStub(ContextServiceInterface::class),
             null,
             $discountTaxConfig,
             $taxAutoModeConfig
@@ -95,25 +94,12 @@ class TaxAggregatorTest extends TestCase
 
         yield 'Item with "tax_rate" set' => [
             [
-                sprintf('%.2f', self::REGULAR_TAX_RATE) => 1.1,
+                \sprintf('%.2f', self::REGULAR_TAX_RATE) => 1.1,
             ],
             self::MAXIMUM_TAX_RATE,
             [
                 [
                     'tax_rate' => self::REGULAR_TAX_RATE,
-                    'tax' => 1.1,
-                ],
-            ],
-        ];
-
-        yield 'Item with "taxPercent" set' => [
-            [
-                sprintf('%.2f', self::REGULAR_TAX_RATE) => 1.1,
-            ],
-            self::MAXIMUM_TAX_RATE,
-            [
-                [
-                    'taxPercent' => self::REGULAR_TAX_RATE,
                     'tax' => 1.1,
                 ],
             ],
@@ -141,9 +127,9 @@ class TaxAggregatorTest extends TestCase
         ];
 
         foreach ([true, false] as $taxAutoModeConfig) {
-            yield sprintf('Regular item without "tax_rate", taxAutoMode: %d', $taxAutoModeConfig) => [
+            yield \sprintf('Regular item without "tax_rate", taxAutoMode: %d', $taxAutoModeConfig) => [
                 [
-                    sprintf('%.2f', $taxAutoModeConfig ? self::MAXIMUM_TAX_RATE : self::DISCOUNT_TAX_RATE) => 1.1,
+                    \sprintf('%.2f', $taxAutoModeConfig ? self::MAXIMUM_TAX_RATE : self::DISCOUNT_TAX_RATE) => 1.1,
                 ],
                 self::MAXIMUM_TAX_RATE,
                 [
@@ -153,13 +139,13 @@ class TaxAggregatorTest extends TestCase
                     ],
                 ],
                 $taxAutoModeConfig ? '1' : null,
-                sprintf('%.2f', self::DISCOUNT_TAX_RATE),
+                \sprintf('%.2f', self::DISCOUNT_TAX_RATE),
             ];
         }
 
         yield 'Multiple items with "tax_rate" set' => [
             [
-                sprintf('%.2f', self::REGULAR_TAX_RATE) => self::DISCOUNT_TAX_RATE * 4,
+                \sprintf('%.2f', self::REGULAR_TAX_RATE) => self::DISCOUNT_TAX_RATE * 4,
             ],
             self::MAXIMUM_TAX_RATE,
             [
@@ -195,8 +181,8 @@ class TaxAggregatorTest extends TestCase
         ?array $shippingCostsTaxProportional = null
     ): void {
         $subject = new TaxAggregator(
-            $this->createStub(Connection::class),
-            $this->createStub(ContextServiceInterface::class)
+            static::createStub(Connection::class),
+            static::createStub(ContextServiceInterface::class)
         );
 
         $basket = [
@@ -227,7 +213,7 @@ class TaxAggregatorTest extends TestCase
 
         yield 'Proportional tax calculation' => [
             [
-                sprintf('%.2f', self::SHIPPING_COSTS_TAX_RATE) => 1.0,
+                \sprintf('%.2f', self::SHIPPING_COSTS_TAX_RATE) => 1.0,
             ],
             self::SHIPPING_COSTS_TAX_RATE,
             [
@@ -243,16 +229,16 @@ class TaxAggregatorTest extends TestCase
 
         yield 'Regular tax calculation' => [
             [
-                sprintf('%.2f', self::SHIPPING_COSTS_TAX_RATE) => self::SHIPPING_COSTS_WITH_TAX - self::SHIPPING_COSTS_NET,
+                \sprintf('%.2f', self::SHIPPING_COSTS_TAX_RATE) => self::SHIPPING_COSTS_WITH_TAX - self::SHIPPING_COSTS_NET,
             ],
             self::SHIPPING_COSTS_TAX_RATE,
         ];
 
         yield 'Proportional tax calculation with multiple positions and tax rates' => [
             [
-                sprintf('%.2f', self::SHIPPING_COSTS_TAX_RATE - 1) => 1.1,
-                sprintf('%.2f', self::SHIPPING_COSTS_TAX_RATE) => 2.2,
-                sprintf('%.2f', self::SHIPPING_COSTS_TAX_RATE + 1) => 2.2,
+                \sprintf('%.2f', self::SHIPPING_COSTS_TAX_RATE - 1) => 1.1,
+                \sprintf('%.2f', self::SHIPPING_COSTS_TAX_RATE) => 2.2,
+                \sprintf('%.2f', self::SHIPPING_COSTS_TAX_RATE + 1) => 2.2,
             ],
             self::SHIPPING_COSTS_TAX_RATE,
             [
@@ -356,9 +342,9 @@ class TaxAggregatorTest extends TestCase
     {
         // These datasets test, whether the config/fallback value is returned in case we provide the default or no tax mode
         foreach (['default', null, ''] as $voucherTaxMode) {
-            yield sprintf('Default voucher tax mode: "%s"', $voucherTaxMode ?? 'null') => [
+            yield \sprintf('Default voucher tax mode: "%s"', $voucherTaxMode ?? 'null') => [
                 [
-                    sprintf('%.2f', self::REGULAR_TAX_RATE) => 1.1,
+                    \sprintf('%.2f', self::REGULAR_TAX_RATE) => 1.1,
                 ],
                 [
                     [
@@ -368,14 +354,14 @@ class TaxAggregatorTest extends TestCase
                     ],
                 ],
                 $voucherTaxMode,
-                sprintf('%.2f', self::REGULAR_TAX_RATE),
+                \sprintf('%.2f', self::REGULAR_TAX_RATE),
             ];
         }
 
         // This dataset tests, whether the maximum tax rate is returned, when using tax mode "auto"
         yield 'Voucher tax mode: auto' => [
             [
-                sprintf('%.2f', self::MAXIMUM_TAX_RATE) => 1.1,
+                \sprintf('%.2f', self::MAXIMUM_TAX_RATE) => 1.1,
             ],
             [
                 [
@@ -403,7 +389,7 @@ class TaxAggregatorTest extends TestCase
         // This dataset tests, whether the method attempts to read the tax rate from context, when using any other tax mode
         yield 'Voucher tax mode: 19' => [
             [
-                sprintf('%.2f', self::REGULAR_TAX_RATE) => 1.1,
+                \sprintf('%.2f', self::REGULAR_TAX_RATE) => 1.1,
             ],
             [
                 [
@@ -412,7 +398,7 @@ class TaxAggregatorTest extends TestCase
                     'tax' => 1.1,
                 ],
             ],
-            sprintf('%d', self::REGULAR_TAX_RATE),
+            \sprintf('%d', self::REGULAR_TAX_RATE),
         ];
     }
 
@@ -425,8 +411,8 @@ class TaxAggregatorTest extends TestCase
     public function testTaxSum(array $expected, array $basket): void
     {
         $subject = new TaxAggregator(
-            $this->createStub(Connection::class),
-            $this->createStub(ContextServiceInterface::class)
+            static::createStub(Connection::class),
+            static::createStub(ContextServiceInterface::class)
         );
 
         static::assertSame(
@@ -447,7 +433,7 @@ class TaxAggregatorTest extends TestCase
 
         yield 'Basket with a few positions' => [
             [
-                sprintf('%.2f', self::REGULAR_TAX_RATE) => 4.4,
+                \sprintf('%.2f', self::REGULAR_TAX_RATE) => 4.4,
             ],
             [
                 'content' => [
@@ -477,7 +463,7 @@ class TaxAggregatorTest extends TestCase
 
         yield 'Basket with a few positions and shipping costs' => [
             [
-                sprintf('%.2f', self::REGULAR_TAX_RATE) => 10.4 + (self::SHIPPING_COSTS_WITH_TAX - self::SHIPPING_COSTS_NET),
+                \sprintf('%.2f', self::REGULAR_TAX_RATE) => 10.4 + (self::SHIPPING_COSTS_WITH_TAX - self::SHIPPING_COSTS_NET),
             ],
             [
                 'content' => [

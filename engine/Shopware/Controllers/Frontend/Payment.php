@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Bundle\CartBundle\CartKey;
@@ -74,7 +74,7 @@ abstract class Shopware_Controllers_Frontend_Payment extends Enlight_Controller_
      * @param int    $paymentStatusId
      * @param bool   $sendStatusMail
      *
-     * @return int|false
+     * @return string|false
      */
     public function saveOrder($transactionId, $paymentUniqueId, $paymentStatusId = null, $sendStatusMail = false)
     {
@@ -88,14 +88,17 @@ abstract class Shopware_Controllers_Frontend_Payment extends Enlight_Controller_
             AND status!=-1 AND userID=?
         ';
         $orderNumber = Shopware()->Db()->fetchOne($sql, [
-                $transactionId,
-                $paymentUniqueId,
-                Shopware()->Session()->get('sUserId'),
-            ]);
+            $transactionId,
+            $paymentUniqueId,
+            Shopware()->Session()->get('sUserId'),
+        ]);
 
         if (empty($orderNumber)) {
             $user = $this->getUser();
             $basket = $this->getBasket();
+            if (!\is_array($basket)) {
+                throw new RuntimeException('Cart must not be empty at this point');
+            }
 
             $order = Shopware()->Modules()->Order();
             $order->sUserData = $user;
@@ -138,9 +141,9 @@ abstract class Shopware_Controllers_Frontend_Payment extends Enlight_Controller_
             AND status!=-1
         ';
         $orderId = (int) Shopware()->Db()->fetchOne($sql, [
-                $transactionId,
-                $paymentUniqueId,
-            ]);
+            $transactionId,
+            $paymentUniqueId,
+        ]);
         $order = Shopware()->Modules()->Order();
         $order->setPaymentStatus($orderId, $paymentStatusId, $sendStatusMail);
     }
@@ -154,6 +157,9 @@ abstract class Shopware_Controllers_Frontend_Payment extends Enlight_Controller_
     {
         $user = $this->getUser();
         $basket = $this->getBasket();
+        if (!\is_array($basket)) {
+            return 0.0;
+        }
         if (!empty($user['additional']['charge_vat'])) {
             return empty($basket[CartKey::AMOUNT_WITH_TAX_NUMERIC]) ? $basket[CartKey::AMOUNT_NUMERIC] : $basket[CartKey::AMOUNT_WITH_TAX_NUMERIC];
         }
@@ -164,17 +170,20 @@ abstract class Shopware_Controllers_Frontend_Payment extends Enlight_Controller_
     /**
      * Returns shipment amount as float
      *
-     * @return string
+     * @return float
      */
     public function getShipment()
     {
         $user = $this->getUser();
         $basket = $this->getBasket();
+        if (!\is_array($basket)) {
+            return 0.0;
+        }
         if (!empty($user['additional']['charge_vat'])) {
             return $basket[CheckoutKey::SHIPPING_COSTS_WITH_TAX];
         }
 
-        return str_replace(',', '.', $basket[CheckoutKey::SHIPPING_COSTS]);
+        return (float) str_replace(',', '.', $basket[CheckoutKey::SHIPPING_COSTS]);
     }
 
     /**
@@ -261,7 +270,7 @@ abstract class Shopware_Controllers_Frontend_Payment extends Enlight_Controller_
         $data = $persister->load($signature);
 
         if (!$data) {
-            throw new RuntimeException(sprintf('Basket for signature %s not found', $signature));
+            throw new RuntimeException(\sprintf('Basket for signature %s not found', $signature));
         }
 
         $persister->delete($signature);
@@ -313,12 +322,11 @@ Order number: %s.<br>
 Payment transaction number: %s.
 EOD;
 
-        $content = sprintf($content, $paymentName, $orderNumber, $transactionNumber);
+        $content = \sprintf($content, $paymentName, $orderNumber, $transactionNumber);
 
         try {
-            /** @var Enlight_Components_Mail $mail */
             $mail = $this->get('mail');
-            $mail->addTo($this->get(\Shopware_Components_Config::class)->get('mail'));
+            $mail->addTo($this->get(Shopware_Components_Config::class)->get('mail'));
             $mail->setSubject('An invalid basket signature occured');
             $mail->setBodyHtml($content);
             $mail->setAssociation(LogEntryBuilder::ORDER_NUMBER_ASSOCIATION, $orderNumber);
@@ -326,7 +334,6 @@ EOD;
         } catch (Exception $e) {
         }
 
-        /** @var \Shopware\Components\Logger $logger */
         $logger = $this->get('corelogger');
         $logger->log('error', $content);
     }

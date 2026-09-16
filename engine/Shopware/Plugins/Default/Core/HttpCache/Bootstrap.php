@@ -1,29 +1,28 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\Common\EventArgs;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Proxy\Proxy;
 use Enlight_Controller_Request_Request as Request;
 use Enlight_Controller_Response_ResponseHttp as Response;
@@ -216,8 +215,6 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      * Enable plugin method
      * Although plugin is flagged as capability: enable => false,
      * it can still be enabled/disabled programmatically
-     *
-     * @return bool
      */
     public function enable()
     {
@@ -228,8 +225,6 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      * Disable plugin method
      * Although plugin is flagged as capability: enable => false,
      * it can still be enabled/disabled programmatically
-     *
-     * @return bool
      */
     public function disable()
     {
@@ -238,6 +233,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
 
     /**
      * Install config-form
+     *
+     * @return void
      */
     public function installForm()
     {
@@ -303,14 +300,12 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      * Fallback to auto-detection if proxy-url is not configured and $request is given.
      * Returns null if $request is not given or auto-detection fails.
      *
-     * @param Request $request
-     *
      * @return string|null
      */
-    public function getProxyUrl(Request $request = null)
+    public function getProxyUrl(?Request $request = null)
     {
-        $proxyUrl = trim($this->Config()->get('proxy'));
-        if (!empty($proxyUrl)) {
+        $proxyUrl = trim((string) $this->Config()->get('proxy', ''));
+        if ($proxyUrl !== '') {
             return $proxyUrl;
         }
 
@@ -321,16 +316,12 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
                    . $request->getBaseUrl() . '/';
         }
 
-        $em = $this->get(ModelManager::class);
-        $repository = $em->getRepository(Shop::class);
-
-        $shop = $repository->findOneBy(['default' => true]);
-
+        $shop = $this->get(ModelManager::class)->getRepository(Shop::class)->findOneBy(['default' => true]);
         if (!$shop->getHost()) {
             return null;
         }
 
-        return sprintf(
+        return \sprintf(
             '%s://%s%s/',
             $shop->getSecure() ? 'https' : 'http',
             $shop->getHost(),
@@ -340,6 +331,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
 
     /**
      * Do http caching jobs
+     *
+     * @return void
      */
     public function onPreDispatch(Enlight_Controller_ActionEventArgs $args)
     {
@@ -388,13 +381,15 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
             $params['nocache'] = 1;
         }
 
-        $url = sprintf('%s/?%s', $request->getBaseUrl(), http_build_query($params, '', '&'));
+        $url = \sprintf('%s/?%s', $request->getBaseUrl(), http_build_query($params, '', '&'));
 
         return '<esi:include src="' . $url . '" />';
     }
 
     /**
      * On post dispatch we try to find affected articleIds displayed during this request
+     *
+     * @return void
      */
     public function onPostDispatch(Enlight_Controller_ActionEventArgs $args)
     {
@@ -440,6 +435,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
         if ($this->clearCache()) {
             return "Cleared HTTP-Cache\n";
         }
+
+        return '';
     }
 
     /**
@@ -451,6 +448,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      * <code>
      * Shopware()->Events()->notify('Shopware_Plugins_HttpCache_ClearCache');
      * </code>
+     *
+     * @return void
      */
     public function onClearCache(Enlight_Event_EventArgs $args)
     {
@@ -471,6 +470,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      *     array('cacheId' => 'a123')
      * );
      * </code>
+     *
+     * @return void
      */
     public function onInvalidateCacheId(Enlight_Event_EventArgs $args)
     {
@@ -487,6 +488,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
 
     /**
      * Sets the Shopware cache headers
+     *
+     * @return bool
      */
     public function setCacheHeaders()
     {
@@ -526,7 +529,9 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
     }
 
     /**
-     * This methods sets the nocache-cookie if actions in the shop are triggered
+     * This method sets the nocache-cookie if actions in the shop are triggered
+     *
+     * @return void
      */
     public function setNoCacheCookie()
     {
@@ -551,6 +556,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      *
      * @param string $newTag
      * @param bool   $remove
+     *
+     * @return void
      */
     public function setNoCacheTag($newTag, $remove = false)
     {
@@ -591,6 +598,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      * Helper function to flag the request with cacheIds to invalidate the caching.
      *
      * @param array $cacheIds
+     *
+     * @return void
      */
     public function setCacheIdHeader($cacheIds = [])
     {
@@ -610,6 +619,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
 
     /**
      * Execute cache invalidation after Doctrine flush
+     *
+     * @return void
      */
     public function postFlush(EventArgs $eventArgs)
     {
@@ -622,6 +633,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
 
     /**
      * Cache invalidation based on model events
+     *
+     * @return void
      */
     public function onPostPersist(Enlight_Event_EventArgs $eventArgs)
     {
@@ -689,7 +702,6 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
             $this->cacheInvalidationBuffer[$cacheId] = true;
         }
 
-        /** @var EntityManager $entityManager */
         $entityManager = Shopware()->Container()->get(ModelManager::class);
         $entityManager->getEventManager()->addEventListener(['postFlush'], $this);
     }
@@ -699,6 +711,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      *
      * @param int   $cacheTime
      * @param array $cacheIds
+     *
+     * @return void
      */
     public function enableControllerCache($cacheTime = 3600, $cacheIds = [])
     {
@@ -708,13 +722,15 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
 
     /**
      * Helper function to disable the http cache for a single shopware controller
+     *
+     * @return void
      */
     public function disableControllerCache()
     {
         $this->response->headers->set('cache-control', 'private', true);
     }
 
-    private function getResponseCookie(Response $response)
+    private function getResponseCookie(Response $response): ?string
     {
         $cookies = $response->getCookies();
         foreach ($cookies as $cookie) {
@@ -728,10 +744,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
 
     /**
      * Clears the cache
-     *
-     * @return bool
      */
-    private function clearCache()
+    private function clearCache(): bool
     {
         return $this->invalidate();
     }
@@ -741,12 +755,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      *
      * This sends a http-ban-request to the proxyUrl containing
      * the $cacheId in the x-shopware-invalidates http-header
-     *
-     * @param string $cacheId
-     *
-     * @return bool
      */
-    private function invalidateCacheId($cacheId)
+    private function invalidateCacheId(string $cacheId): bool
     {
         if (!$this->Config()->get('proxyPrune')) {
             return false;
@@ -759,14 +769,14 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      * Will send BAN requests to all configured reverse proxies. If cacheId is provided,
      * the corresponding headers will be set.
      *
-     * @param string $cacheId If set, only pages including these cacheIds will be invalidated
+     * @param string|null $cacheId If set, only pages including these cacheIds will be invalidated
      *
      * @return bool True will be returned, if *all* operations succeeded
      */
-    private function invalidate($cacheId = null)
+    private function invalidate(?string $cacheId = null): bool
     {
-        $proxyUrl = trim($this->Config()->get('proxy'));
-        if (!empty($proxyUrl)) {
+        $proxyUrl = trim((string) $this->Config()->get('proxy', ''));
+        if ($proxyUrl !== '') {
             return $this->invalidateWithBANRequest($proxyUrl, $cacheId);
         }
 
@@ -784,12 +794,9 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
     }
 
     /**
-     * @param string $urls    Comma separated URLs
-     * @param string $cacheId
-     *
-     * @return bool
+     * @param string $urls Comma separated URLs
      */
-    private function invalidateWithBANRequest($urls, $cacheId)
+    private function invalidateWithBANRequest(string $urls, ?string $cacheId): bool
     {
         // Expand + trim proxies (comma separated)
         $urls = array_map(
@@ -825,12 +832,7 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
         return $success;
     }
 
-    /**
-     * @param string $cacheId
-     *
-     * @return bool
-     */
-    private function invalidateWithStore($cacheId = null)
+    private function invalidateWithStore(?string $cacheId = null): bool
     {
         /** @var HttpCache $httpCache */
         $httpCache = $this->get('httpcache');
@@ -852,7 +854,7 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      *
      * @param Response $response A Response instance
      */
-    private function addSurrogateControl(Response $response)
+    private function addSurrogateControl(Response $response): void
     {
         $response->headers->set('Surrogate-Control', 'content="ESI/1.0"', true);
     }
@@ -867,17 +869,17 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
     private function hasSurrogateEsiCapability(Request $request): bool
     {
         $value = $request->getHeader('Surrogate-Capability');
-        if ($value === false) {
+        if (empty($value)) {
             return false;
         }
 
-        return strpos($value, 'ESI/1.0') !== false;
+        return str_contains($value, 'ESI/1.0');
     }
 
     /**
      * Add context cookie
      */
-    private function addContextCookie(Request $request, Response $response)
+    private function addContextCookie(Request $request, Response $response): void
     {
         /** @var CacheControl $cacheControl */
         $cacheControl = $this->get('http_cache.cache_control');

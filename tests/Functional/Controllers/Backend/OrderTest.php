@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Controllers\Backend;
@@ -30,9 +29,15 @@ use DateTime;
 use DateTimeInterface;
 use DateTimeZone;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 use Enlight_Components_Test_Controller_TestCase as ControllerTestCase;
-use Exception;
+use Enlight_Controller_Request_RequestTestCase;
+use Enlight_Template_Manager;
+use Enlight_View_Default;
+use Generator;
+use RuntimeException;
 use Shopware\Components\Model\ModelManager;
+use Shopware\Models\Article\Detail as ArticleDetail;
 use Shopware\Models\Order\Detail;
 use Shopware\Models\Order\Order;
 use Shopware\Models\Shop\Locale;
@@ -40,6 +45,7 @@ use Shopware\Models\Shop\Shop;
 use Shopware\Models\Tax\Tax;
 use Shopware\Tests\Functional\Traits\ContainerTrait;
 use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
+use Shopware_Controllers_Backend_Order;
 use Shopware_Plugins_Backend_Auth_Bootstrap as AuthPlugin;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -48,11 +54,33 @@ class OrderTest extends ControllerTestCase
     use ContainerTrait;
     use DatabaseTransactionBehaviour;
 
-    private const TAX_RULE_ID = 9999;
     private const ORDER_DETAIL_ID = 6789;
     private const ORDER_ID = 12345;
+    private const ORDER_ID_DEMODATA_EK = 57;
+    private const ORDER_ID_DEMODATA_H = 15;
     private const CUSTOMER_ID = 9999;
     private const NEW_TAX_ID = 1234;
+    private const NEW_TAX = 20.50;
+    private const CUSTOMER_GROUP_ID_DEFAULT = 1;
+    private const CUSTOMER_GROUP_ID_MERCHANT = 2;
+    private const CUSTOMER_GROUP_KEY_DEFAULT = 'EK';
+    private const CUSTOMER_GROUP_KEY_MERCHANT = 'H';
+    private const GERMANY_COUNTRY_ID = 2;
+    private const NRW_STATE_ID = 3;
+    private const GERMANY_AREA_ID = 1;
+    private const ARTICLE_ID = 29;
+    private const ARTICLE_DETAIL_ID = 35;
+    private const ARTICLE_DETAIL_NUMBER = 'SW10028';
+    private const PRODUCT_GRADUATED_PRICES_DEMODATA_ORDER_NUMBER = 'SW10208';
+    private const PRODUCT_GRADUATED_PRICES_DEMODATA_PRODUCT_ID = 209;
+    private const PRODUCT_GRADUATED_PRICES_DEMODATA_PRODUCT_VARIANT_ID = 747;
+    private const PRODUCT_GRADUATED_PRICES_DEMODATA_NAME = 'Staffelpreise';
+    private const PRODUCT_GRADUATED_PRICES_VARIANT1_ORDER_NUMBER = 'SW10090.1';
+    private const PRODUCT_GRADUATED_PRICES_VARIANT1_PRODUCT_VARIANT_ID = 153;
+    private const PRODUCT_GRADUATED_PRICES_VARIANT2_ORDER_NUMBER = 'SW10090.2';
+    private const PRODUCT_GRADUATED_PRICES_VARIANT2_PRODUCT_VARIANT_ID = 154;
+    private const PRODUCT_GRADUATED_PRICES_VARIANT_NAME = 'Teigschaber';
+    private const PRODUCT_GRADUATED_PRICES_VARIANT_PRODUCT_ID = 89;
 
     private Connection $connection;
 
@@ -196,7 +224,7 @@ class OrderTest extends ControllerTestCase
 
         $orderTime = $data['orderTime'];
         $oldDate = clone $orderTime;
-        $orderTime->setTimezone(new DateTimeZone('US/Alaska'));
+        $orderTime->setTimezone(new DateTimeZone('America/Anchorage'));
 
         $data['orderTime'] = new DateTime($orderTime->format(DateTime::ATOM));
         if (isset($data['changed'])) {
@@ -215,15 +243,246 @@ class OrderTest extends ControllerTestCase
         static::assertSame($oldDate->getTimestamp(), $this->View()->getAssign('data')['orderTime']->getTimestamp());
     }
 
-    public function testSavePositionActionWithTaxRule(): void
+    /**
+     * @dataProvider provideProductParamsForSavePositionActionTestingGraduatedPrices
+     *
+     * @param array<string, mixed>     $params
+     * @param array<string, int|float> $expectedValues
+     *
+     * @throws Exception
+     */
+    public function testSavePositionActionReturnValuesForGraduatedPricesByAddingNewPositions(array $params, array $expectedValues): void
     {
-        $this->prepareTestSavePositionActionWithTaxRule();
+        $productPricesSql = file_get_contents(__DIR__ . '/_fixtures/article/graduatedPrices.sql');
+        static::assertIsString($productPricesSql);
+        $this->connection->executeQuery($productPricesSql);
+
+        $order = $this->modelManager->find(Order::class, $params['orderId']);
+        static::assertInstanceOf(Order::class, $order);
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParams(array_merge([
+            'id' => 0,
+            'mode' => 0,
+            'statusId' => 0,
+            'statusDescription' => '',
+            'taxId' => 1,
+            'taxRate' => 0,
+            'taxDescription' => '',
+            'inStock' => 0,
+            'changed' => $order->getChanged() ? $order->getChanged()->format(DateTimeInterface::ATOM) : '',
+        ], $params));
+
+        $controller = $this->getController();
+        $controller->setRequest($request);
+        $controller->savePositionAction();
+
+        $results = $controller->View()->getAssign();
+
+        static::assertSame($expectedValues['price'], $results['data']['price']);
+        static::assertSame($expectedValues['total'], $results['data']['total']);
+    }
+
+    /**
+     * @return Generator<array{params: array{orderId: int, articleNumber: string, articleName: string, articleId: int, articleDetailId: int, quantity: int}, expectedValues: array{price: float, total: int|float}}>
+     */
+    public function provideProductParamsForSavePositionActionTestingGraduatedPrices(): Generator
+    {
+        yield 'customer-group H with netto-shop-price-config has to return fallback prices for EK' => [
+            'params' => [
+                'orderId' => self::ORDER_ID_DEMODATA_H,
+                'articleNumber' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_ORDER_NUMBER,
+                'articleName' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_NAME,
+                'articleId' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_PRODUCT_ID,
+                'articleDetailId' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_PRODUCT_VARIANT_ID,
+                'quantity' => 30,
+            ],
+            'expectedValues' => [
+                'price' => 0.67,
+                'total' => 20.1,
+            ],
+        ];
+        yield 'customer-group EK' => [
+            'params' => [
+                'orderId' => self::ORDER_ID_DEMODATA_EK,
+                'articleNumber' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_ORDER_NUMBER,
+                'articleName' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_NAME,
+                'articleId' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_PRODUCT_ID,
+                'articleDetailId' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_PRODUCT_VARIANT_ID,
+                'quantity' => 30,
+            ],
+            'expectedValues' => [
+                'price' => 0.80,
+                'total' => 24.0,
+            ],
+        ];
+        yield 'product with variants - variant 1 - customer-group EK' => [
+            'params' => [
+                'orderId' => self::ORDER_ID_DEMODATA_EK,
+                'articleNumber' => self::PRODUCT_GRADUATED_PRICES_VARIANT1_ORDER_NUMBER,
+                'articleName' => self::PRODUCT_GRADUATED_PRICES_VARIANT_NAME,
+                'articleId' => self::PRODUCT_GRADUATED_PRICES_VARIANT_PRODUCT_ID,
+                'articleDetailId' => self::PRODUCT_GRADUATED_PRICES_VARIANT1_PRODUCT_VARIANT_ID,
+                'quantity' => 5,
+            ],
+            'expectedValues' => [
+                'price' => 1.99,
+                'total' => 9.95,
+            ],
+        ];
+        yield 'product with variants - variant 2 - customer-group EK' => [
+            'params' => [
+                'orderId' => self::ORDER_ID_DEMODATA_EK,
+                'articleNumber' => self::PRODUCT_GRADUATED_PRICES_VARIANT2_ORDER_NUMBER,
+                'articleName' => self::PRODUCT_GRADUATED_PRICES_VARIANT_NAME,
+                'articleId' => self::PRODUCT_GRADUATED_PRICES_VARIANT_PRODUCT_ID,
+                'articleDetailId' => self::PRODUCT_GRADUATED_PRICES_VARIANT2_PRODUCT_VARIANT_ID,
+                'quantity' => 21,
+            ],
+            'expectedValues' => [
+                'price' => 1.29,
+                'total' => 27.09,
+            ],
+        ];
+        yield 'product with variants - variant 1 - customer-group H - netto' => [
+            'params' => [
+                'orderId' => self::ORDER_ID_DEMODATA_H,
+                'articleNumber' => self::PRODUCT_GRADUATED_PRICES_VARIANT1_ORDER_NUMBER,
+                'articleName' => self::PRODUCT_GRADUATED_PRICES_VARIANT_NAME,
+                'articleId' => self::PRODUCT_GRADUATED_PRICES_VARIANT_PRODUCT_ID,
+                'articleDetailId' => self::PRODUCT_GRADUATED_PRICES_VARIANT1_PRODUCT_VARIANT_ID,
+                'quantity' => 10,
+            ],
+            'expectedValues' => [
+                'price' => 1.99,
+                'total' => 19.9,
+            ],
+        ];
+        yield 'product with variants - variant 2 - customer-group H - netto' => [
+            'params' => [
+                'orderId' => self::ORDER_ID_DEMODATA_H,
+                'articleNumber' => self::PRODUCT_GRADUATED_PRICES_VARIANT2_ORDER_NUMBER,
+                'articleName' => self::PRODUCT_GRADUATED_PRICES_VARIANT_NAME,
+                'articleId' => self::PRODUCT_GRADUATED_PRICES_VARIANT_PRODUCT_ID,
+                'articleDetailId' => self::PRODUCT_GRADUATED_PRICES_VARIANT2_PRODUCT_VARIANT_ID,
+                'quantity' => 42,
+            ],
+            'expectedValues' => [
+                'price' => 0.89,
+                'total' => 37.38,
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider provideProductParamsForSavePositionActionOnExistingPosition
+     *
+     * @param array{quantity?: int, price?: float, total?: float} $params
+     * @param array{price: float, total: float}                   $expectedValues
+     */
+    public function testSavePositionActionReturnValuesForGraduatedPricesOnExistingPosition(array $params, array $expectedValues): void
+    {
+        $order = $this->modelManager->getRepository(Order::class)->findOneBy([]);
+        static::assertInstanceOf(Order::class, $order);
+        $newPositionParams = [
+            'id' => 0,
+            'orderId' => $order->getId(),
+            'articleNumber' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_ORDER_NUMBER,
+            'articleName' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_NAME,
+            'articleId' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_PRODUCT_ID,
+            'articleDetailId' => self::PRODUCT_GRADUATED_PRICES_DEMODATA_PRODUCT_VARIANT_ID,
+            'mode' => 0,
+            'quantity' => 2,
+            'statusId' => 0,
+            'statusDescription' => '',
+            'taxId' => 1,
+            'taxRate' => 19.0,
+            'taxDescription' => '',
+            'inStock' => 0,
+            'changed' => $order->getChanged() ? $order->getChanged()->format(DateTimeInterface::ATOM) : '',
+        ];
+
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParams($newPositionParams);
+
+        $controller = $this->getController();
+        $controller->setRequest($request);
+        $controller->savePositionAction();
+        $results = $controller->View()->getAssign();
+
+        static::assertTrue($results['success'], $results['message'] ?? '');
+        static::assertSame(0.84, $results['data']['price']);
+        static::assertSame(1.68, $results['data']['total']);
+
+        $this->modelManager->refresh($order);
+        $changeQuantityParams = [
+            'id' => $results['data']['id'],
+            'price' => $results['data']['price'],
+            'total' => $results['data']['total'],
+            'changed' => $order->getChanged() ? $order->getChanged()->format(DateTimeInterface::ATOM) : '',
+        ];
+        $changeQuantityParams = array_merge($newPositionParams, $changeQuantityParams, $params);
+
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParams($changeQuantityParams);
+
+        $controller->setRequest($request);
+        $controller->savePositionAction();
+        $results = $controller->View()->getAssign();
+
+        static::assertTrue($results['success'], $results['message'] ?? '');
+        static::assertSame($expectedValues['price'], $results['data']['price']);
+        static::assertSame($expectedValues['total'], $results['data']['total']);
+    }
+
+    /**
+     * @return Generator<array{params: array{quantity?: int, price?: float, total?: float}, expectedValues: array{price: float, total: float}}>
+     */
+    public function provideProductParamsForSavePositionActionOnExistingPosition(): Generator
+    {
+        yield 'Only change quantity, graduated price should be considered' => [
+            'params' => [
+                'quantity' => 20,
+            ],
+            'expectedValues' => [
+                'price' => 0.76,
+                'total' => 15.2,
+            ],
+        ];
+        yield 'Only change price, graduated price should be ignored' => [
+            'params' => [
+                'price' => 0.15,
+                'total' => 0.30,
+            ],
+            'expectedValues' => [
+                'price' => 0.15,
+                'total' => 0.30,
+            ],
+        ];
+        yield 'Change quantity and price, graduated price should be considered' => [
+            'params' => [
+                'quantity' => 30,
+                'price' => 0.15,
+                'total' => 0.30,
+            ],
+            'expectedValues' => [
+                'price' => 0.67,
+                'total' => 20.1,
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider provideTaxRuleParams
+     */
+    public function testSavePositionActionWithTaxRule(int $customerGroupId, string $customerGroupKey): void
+    {
+        $this->prepareTestSavePositionActionWithTaxRule($customerGroupId, $customerGroupKey);
 
         $order = $this->modelManager->find(Order::class, self::ORDER_ID);
         static::assertInstanceOf(Order::class, $order);
 
-        $this->Request()->setMethod(Request::METHOD_POST);
-        $this->Request()->setPost([
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParams([
             'id' => 0,
             'orderId' => self::ORDER_ID,
             'mode' => 0,
@@ -240,21 +499,32 @@ class OrderTest extends ControllerTestCase
             'taxDescription' => '',
             'inStock' => 0,
             'total' => 28.99,
-            'changed' => $order->getChanged()->format(DateTimeInterface::ISO8601),
+            'changed' => $order->getChanged()->format(DateTimeInterface::ATOM),
         ]);
 
-        $this->authPlugin->setNoAuth();
-        $this->dispatch('/backend/order/savePosition');
+        $controller = $this->getController();
+        $controller->setRequest($request);
+        $controller->savePositionAction();
 
-        $order = $this->modelManager->find(Order::class, self::ORDER_ID);
-        static::assertInstanceOf(Order::class, $order);
+        $results = $controller->View()->getAssign();
+        static::assertTrue($results['success'], $results['message'] ?? '');
 
-        $expectedTaxRate = (float) $this->connection->executeQuery('SELECT tax FROM s_core_tax_rules WHERE id = :id', ['id' => self::TAX_RULE_ID])->fetchOne();
+        static::assertSame(self::NEW_TAX, $results['data']['taxRate']);
+    }
 
-        $data = $this->View()->getAssign('data');
-        static::assertTrue($this->View()->getAssign('success'), (string) $this->View()->getAssign('message'));
-
-        static::assertSame($expectedTaxRate, $data['taxRate']);
+    /**
+     * @return Generator<array{customerGroupId: int, customerGroupKey: string}>
+     */
+    public function provideTaxRuleParams(): Generator
+    {
+        yield 'EK' => [
+            'customerGroupId' => self::CUSTOMER_GROUP_ID_DEFAULT,
+            'customerGroupKey' => self::CUSTOMER_GROUP_KEY_DEFAULT,
+        ];
+        yield 'H' => [
+            'customerGroupId' => self::CUSTOMER_GROUP_ID_MERCHANT,
+            'customerGroupKey' => self::CUSTOMER_GROUP_KEY_MERCHANT,
+        ];
     }
 
     public function testSavePositionActionWithDifferentTax(): void
@@ -264,8 +534,8 @@ class OrderTest extends ControllerTestCase
         $order = $this->modelManager->find(Order::class, self::ORDER_ID);
         static::assertInstanceOf(Order::class, $order);
 
-        $this->Request()->setMethod(Request::METHOD_POST);
-        $this->Request()->setPost([
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParams([
             'id' => self::ORDER_DETAIL_ID,
             'orderId' => self::ORDER_ID,
             'mode' => 0,
@@ -282,11 +552,13 @@ class OrderTest extends ControllerTestCase
             'taxDescription' => '',
             'inStock' => 0,
             'total' => 70.58,
-            'changed' => $order->getChanged()->format(DateTimeInterface::ISO8601),
+            'changed' => $order->getChanged()->format(DateTimeInterface::ATOM),
         ]);
 
         $this->authPlugin->setNoAuth();
-        $this->dispatch('/backend/order/savePosition');
+        $controller = $this->getController();
+        $controller->setRequest($request);
+        $controller->savePositionAction();
 
         $order = $this->modelManager->find(Order::class, self::ORDER_ID);
         static::assertInstanceOf(Order::class, $order);
@@ -297,6 +569,52 @@ class OrderTest extends ControllerTestCase
         static::assertInstanceOf(Tax::class, $tax);
 
         static::assertSame(self::NEW_TAX_ID, $tax->getId());
+    }
+
+    public function testSaveOrderPositionActionWithArticleDetailRelation(): void
+    {
+        $this->prepareTestSaveOrderPositionActionWithArticleDetailRelation();
+
+        $order = $this->modelManager->find(Order::class, self::ORDER_ID);
+        static::assertInstanceOf(Order::class, $order);
+
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParams([
+            'id' => 0,
+            'orderId' => self::ORDER_ID,
+            'mode' => 0,
+            'articleId' => self::ARTICLE_ID,
+            'articleDetailId' => null,
+            'articleNumber' => self::ARTICLE_DETAIL_NUMBER,
+            'articleName' => '',
+            'quantity' => 1,
+            'statusId' => 0,
+            'statusDescription' => '',
+            'price' => 27.00,
+            'taxId' => 1,
+            'taxRate' => 0,
+            'taxDescription' => '',
+            'inStock' => 0,
+            'total' => 27.00,
+            'changed' => $order->getChanged()->format(DateTimeInterface::ATOM),
+        ]);
+
+        $this->authPlugin->setNoAuth();
+        $controller = $this->getController();
+        $controller->setRequest($request);
+        $controller->savePositionAction();
+
+        $orderDetail = $this->modelManager->getRepository(Detail::class)->findOneBy([
+            'orderId' => self::ORDER_ID,
+            'articleNumber' => self::ARTICLE_DETAIL_NUMBER,
+        ]);
+
+        static::assertInstanceOf(Detail::class, $orderDetail);
+        $articleDetail = $orderDetail->getArticleDetail();
+        static::assertInstanceOf(ArticleDetail::class, $articleDetail);
+
+        static::assertSame(self::ARTICLE_DETAIL_ID, $articleDetail->getId());
+        static::assertSame(self::ARTICLE_DETAIL_NUMBER, $articleDetail->getNumber());
     }
 
     /**
@@ -489,8 +807,6 @@ class OrderTest extends ControllerTestCase
      * Tests a data array for an entry with a specified key value pair
      *
      * @param array<array<string, mixed>> $data
-     *
-     * @throws Exception
      */
     private function assertElementWithKeyValuePairExists(string $expected, string $dataKey, int $id, array $data): void
     {
@@ -502,7 +818,7 @@ class OrderTest extends ControllerTestCase
             }
         }
 
-        throw new Exception('Entry not found');
+        throw new RuntimeException('Entry not found');
     }
 
     /**
@@ -836,15 +1152,20 @@ class OrderTest extends ControllerTestCase
         ];
     }
 
-    private function prepareTestSavePositionActionWithTaxRule(): void
+    private function prepareTestSavePositionActionWithTaxRule(int $customerGroupId, string $customerGroupKey): void
     {
         $taxRuleSQL = file_get_contents(__DIR__ . '/_fixtures/order/tax_rules.sql');
         static::assertIsString($taxRuleSQL);
-        $this->connection->executeStatement($taxRuleSQL, ['taxRuleId' => self::TAX_RULE_ID]);
+        $this->connection->executeStatement($taxRuleSQL, [
+            'customerGroupId' => $customerGroupId,
+        ]);
 
         $customerSql = file_get_contents(__DIR__ . '/_fixtures/order/customer.sql');
         static::assertIsString($customerSql);
-        $this->connection->executeStatement($customerSql, ['customerId' => self::CUSTOMER_ID]);
+        $this->connection->executeStatement($customerSql, [
+            'customerId' => self::CUSTOMER_ID,
+            'customerGroup' => $customerGroupKey,
+        ]);
 
         $orderSql = file_get_contents(__DIR__ . '/_fixtures/order/order.sql');
         static::assertIsString($orderSql);
@@ -852,6 +1173,9 @@ class OrderTest extends ControllerTestCase
             'orderDetailId' => self::ORDER_DETAIL_ID,
             'orderId' => self::ORDER_ID,
             'customerId' => self::CUSTOMER_ID,
+            'countryId' => self::GERMANY_COUNTRY_ID,
+            'stateId' => self::NRW_STATE_ID,
+            'areaId' => self::GERMANY_AREA_ID,
         ]);
     }
 
@@ -859,11 +1183,16 @@ class OrderTest extends ControllerTestCase
     {
         $taxRuleSQL = file_get_contents(__DIR__ . '/_fixtures/order/new_tax.sql');
         static::assertIsString($taxRuleSQL);
-        $this->connection->executeStatement($taxRuleSQL, ['taxRuleId' => self::NEW_TAX_ID]);
+        $this->connection->executeStatement($taxRuleSQL, [
+            'taxRuleId' => self::NEW_TAX_ID,
+        ]);
 
         $customerSql = file_get_contents(__DIR__ . '/_fixtures/order/customer.sql');
         static::assertIsString($customerSql);
-        $this->connection->executeStatement($customerSql, ['customerId' => self::CUSTOMER_ID]);
+        $this->connection->executeStatement($customerSql, [
+            'customerId' => self::CUSTOMER_ID,
+            'customerGroup' => self::CUSTOMER_GROUP_KEY_DEFAULT,
+        ]);
 
         $orderSql = file_get_contents(__DIR__ . '/_fixtures/order/order.sql');
         static::assertIsString($orderSql);
@@ -871,6 +1200,39 @@ class OrderTest extends ControllerTestCase
             'orderDetailId' => self::ORDER_DETAIL_ID,
             'orderId' => self::ORDER_ID,
             'customerId' => self::CUSTOMER_ID,
+            'countryId' => self::GERMANY_COUNTRY_ID,
+            'stateId' => null,
+            'areaId' => null,
         ]);
+    }
+
+    private function prepareTestSaveOrderPositionActionWithArticleDetailRelation(): void
+    {
+        $customerSql = file_get_contents(__DIR__ . '/_fixtures/order/customer.sql');
+        static::assertIsString($customerSql);
+        $this->connection->executeStatement($customerSql, [
+            'customerId' => self::CUSTOMER_ID,
+            'customerGroup' => self::CUSTOMER_GROUP_KEY_DEFAULT,
+        ]);
+
+        $orderSql = file_get_contents(__DIR__ . '/_fixtures/order/order.sql');
+        static::assertIsString($orderSql);
+        $this->connection->executeStatement($orderSql, [
+            'orderDetailId' => self::ORDER_DETAIL_ID,
+            'orderId' => self::ORDER_ID,
+            'customerId' => self::CUSTOMER_ID,
+            'countryId' => self::GERMANY_COUNTRY_ID,
+            'stateId' => null,
+            'areaId' => null,
+        ]);
+    }
+
+    private function getController(): Shopware_Controllers_Backend_Order
+    {
+        $controller = $this->getContainer()->get('shopware_controllers_backend_order');
+        $controller->setView(new Enlight_View_Default(new Enlight_Template_Manager()));
+        $controller->setContainer($this->getContainer());
+
+        return $controller;
     }
 }

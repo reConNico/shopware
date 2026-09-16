@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Article;
@@ -75,7 +75,7 @@ class Supplier extends ModelEntity
      *
      * @var string|null
      *
-     * @ORM\Column(name="meta_keywords", type="string", nullable=true)
+     * @ORM\Column(name="meta_keywords", type="text", nullable=true)
      */
     protected $metaKeywords;
 
@@ -83,7 +83,7 @@ class Supplier extends ModelEntity
      * INVERSE SIDE
      * Articles can be bound to a specific supplier
      *
-     * @var ArrayCollection<\Shopware\Models\Article\Article>
+     * @var ArrayCollection<Article>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Article\Article", mappedBy="supplier", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="id", referencedColumnName="supplierID")
@@ -278,7 +278,7 @@ class Supplier extends ModelEntity
     /**
      * Returns all articles assigned to this supplier
      *
-     * @return ArrayCollection<\Shopware\Models\Article\Article>
+     * @return ArrayCollection<Article>
      */
     public function getArticles()
     {
@@ -288,7 +288,7 @@ class Supplier extends ModelEntity
     /**
      * Takes an array of articles, in most cases doctrine will take care of this.
      *
-     * @param ArrayCollection<\Shopware\Models\Article\Article> $articles
+     * @param ArrayCollection<Article> $articles
      *
      * @return Supplier
      */

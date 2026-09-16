@@ -1,38 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 class MigrationHelper
 {
-    /**
-     * @var \PDO
-     */
-    private $connection;
+    private PDO $connection;
 
-    /**
-     * @param \PDO $connection
-     */
-    public function __construct(\PDO $connection)
+    public function __construct(PDO $connection)
     {
         $this->connection = $connection;
     }
@@ -40,18 +34,18 @@ class MigrationHelper
     /**
      * @param string $table
      *
-     * @return array[]
+     * @return array<array{name: string, type: string}>
      */
     public function getList($table)
     {
         $identifiers = ['id', 'billingID', 'shippingID'];
 
-        $columns = $this->connection->query(sprintf('DESCRIBE `%s`', $table))->fetchAll(\PDO::FETCH_ASSOC);
+        $columns = $this->connection->query(\sprintf('DESCRIBE `%s`', $table))->fetchAll(PDO::FETCH_ASSOC);
 
         $definition = [];
 
         foreach ($columns as $column) {
-            if (in_array($column['Field'], $identifiers)) {
+            if (\in_array($column['Field'], $identifiers)) {
                 continue;
             }
             $definition[] = ['name' => $column['Field'], 'type' => $column['Type']];
@@ -64,6 +58,8 @@ class MigrationHelper
      * @param string $table
      * @param string $name
      * @param string $type
+     *
+     * @return void
      */
     public function update($table, $name, $type)
     {
@@ -79,6 +75,8 @@ class MigrationHelper
     /**
      * @param string $table
      * @param string $keyColumn
+     *
+     * @return void
      */
     public function migrateAttributes($table, $keyColumn)
     {
@@ -113,39 +111,25 @@ SQL;
         $this->connection->exec($sql);
     }
 
-    /**
-     * @param string $table
-     * @param string $name
-     * @param string $type
-     */
-    private function createColumn($table, $name, $type)
+    private function createColumn(string $table, string $name, string $type): void
     {
-        $sql = sprintf('ALTER TABLE `%s` ADD `%s` %s NULL DEFAULT NULL', $table, $name, $type);
+        $sql = \sprintf('ALTER TABLE `%s` ADD `%s` %s NULL DEFAULT NULL', $table, $name, $type);
+        $this->connection->exec($sql);
+    }
+
+    private function changeColumn(string $table, string $name, string $type): void
+    {
+        $sql = \sprintf('ALTER TABLE `%s` CHANGE `%s` `%s` %s NULL DEFAULT NULL;', $table, $name, $name, $type);
         $this->connection->exec($sql);
     }
 
     /**
-     * @param string $table
-     * @param string $name
-     * @param string $type
+     * @return array{name: string, type: string}|null
      */
-    private function changeColumn($table, $name, $type)
+    private function get(string $table, string $name): ?array
     {
-        $sql = sprintf('ALTER TABLE `%s` CHANGE `%s` `%s` %s NULL DEFAULT NULL;', $table, $name, $name, $type);
-        $this->connection->exec($sql);
-    }
-
-    /**
-     * @param string $table
-     * @param string $name
-     *
-     * @return null|array
-     */
-    private function get($table, $name)
-    {
-        $columns = $this->getList($table);
-        foreach ($columns as $column) {
-            if ($name == $column['name']) {
+        foreach ($this->getList($table) as $column) {
+            if ($name === $column['name']) {
                 return $column;
             }
         }

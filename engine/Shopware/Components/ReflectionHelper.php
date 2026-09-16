@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components;
@@ -42,7 +42,7 @@ class ReflectionHelper
      * @param string               $docPath     Optional document root parameter where the class should be found
      * @param array                $directories an array of directories in which the class should be found
      *
-     * @see \Shopware\Components\ReflectionHelper::verifyClass()
+     * @see ReflectionHelper::verifyClass()
      *
      * @throws ReflectionException      Class could not be found
      * @throws InvalidArgumentException
@@ -90,7 +90,7 @@ class ReflectionHelper
 
             if (!isset($arguments[$paramName])) {
                 if (!$constructorParam->isOptional()) {
-                    throw new RuntimeException(sprintf('Required constructor parameter missing: "$%s".', $paramName));
+                    throw new RuntimeException(\sprintf('Required constructor parameter missing: "$%s".', $paramName));
                 }
                 $newParams[] = $constructorParam->getDefaultValue();
 
@@ -123,7 +123,7 @@ class ReflectionHelper
 
         // Trying to execute a class outside the Shopware DocumentRoot
         if ($fileDir !== $docPath) {
-            throw new InvalidArgumentException(sprintf('Class "%s" out of scope', $class->getFileName()), 1);
+            throw new InvalidArgumentException(\sprintf('Class "%s" out of scope', $class->getFileName()), 1);
         }
 
         $fileName = substr($fileName, \strlen($docPath));
@@ -144,13 +144,13 @@ class ReflectionHelper
         }
 
         if ($error) {
-            throw new InvalidArgumentException(sprintf('Class "%s" out of scope', $class->getFileName()), 2);
+            throw new InvalidArgumentException(\sprintf('Class "%s" out of scope', $class->getFileName()), 2);
         }
 
         $className = $class->getName();
         $classImplements = class_implements($className);
         if (!\is_array($classImplements) || !\array_key_exists(ReflectionAwareInterface::class, $classImplements)) {
-            throw new InvalidArgumentException(sprintf('Class %s has to implement the interface %s', $className, ReflectionAwareInterface::class));
+            throw new InvalidArgumentException(\sprintf('Class %s has to implement the interface %s', $className, ReflectionAwareInterface::class));
         }
     }
 }

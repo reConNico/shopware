@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Bundle\CartBundle\CartKey;
@@ -201,7 +201,7 @@ class Shopware_Models_Document_Order extends Enlight_Class implements Enlight_Ho
     public function __construct($id, $config = [])
     {
         // Test-data for preview mode
-        if ((bool) $config['_preview'] === true && (bool) $config['_previewSample'] === true) {
+        if ($config['_preview'] && ($config['_previewSample'] ?? null)) {
             $array = $this->getDemoData();
 
             $array['_order']->language = 1;
@@ -216,7 +216,7 @@ class Shopware_Models_Document_Order extends Enlight_Class implements Enlight_Ho
         $this->_id = $id;
         $this->_config = $config;
         $this->_summaryNet = (bool) ($config['summaryNet'] ?? false);
-        $this->_shippingCostsAsPosition = (bool) $config['shippingCostsAsPosition'];
+        $this->_shippingCostsAsPosition = (bool) ($config['shippingCostsAsPosition'] ?? false);
 
         $this->getOrder();
 
@@ -278,7 +278,7 @@ class Shopware_Models_Document_Order extends Enlight_Class implements Enlight_Ho
         if (property_exists($this, $var_name)) {
             return $this->$var_name;
         }
-        throw new Enlight_Exception(sprintf('Property %s does not exist', $var_name));
+        throw new Enlight_Exception(\sprintf('Property %s does not exist', $var_name));
     }
 
     /**
@@ -298,7 +298,7 @@ class Shopware_Models_Document_Order extends Enlight_Class implements Enlight_Ho
             [$this->_id]);
 
         if (!\is_array($order)) {
-            throw new Enlight_Exception(sprintf('Order with id %d not found!', $this->_id));
+            throw new Enlight_Exception(\sprintf('Order with id %d not found!', $this->_id));
         }
 
         $this->_order = new ArrayObject($order, ArrayObject::ARRAY_AS_PROPS);
@@ -400,7 +400,7 @@ class Shopware_Models_Document_Order extends Enlight_Class implements Enlight_Ho
                         if ($shippingTax !== null) {
                             foreach ($shippingTax as $key => $val) {
                                 if (isset($this->_tax[$key])) {
-                                    $this->_tax[$key] = $this->_tax[$key] + $val;
+                                    $this->_tax[$key] += $val;
                                 } else {
                                     $this->_tax[$key] = $val;
                                 }
@@ -962,17 +962,17 @@ class Shopware_Models_Document_Order extends Enlight_Class implements Enlight_Ho
                 ';
 
         $taxRate = Shopware()->Db()->fetchOne($sql, [
-                $approximateTaxRate, // p.e. 19.971195391 (approx. 20% VAT)
-                $approximateTaxRate,
-                $maxDiff, //default: 0.1
-                $approximateTaxRate,
-                $approximateTaxRate,
-                $maxDiff,
-                $areaId, //p.e. 3 (Europe)
-                $countryId, // p.e. 23 (AT)
-                $stateId, //p.e. 0
-                $customerGroupId, //p.e. 1 (EK)
-            ]);
+            $approximateTaxRate, // p.e. 19.971195391 (approx. 20% VAT)
+            $approximateTaxRate,
+            $maxDiff, // default: 0.1
+            $approximateTaxRate,
+            $approximateTaxRate,
+            $maxDiff,
+            $areaId, // p.e. 3 (Europe)
+            $countryId, // p.e. 23 (AT)
+            $stateId, // p.e. 0
+            $customerGroupId, // p.e. 1 (EK)
+        ]);
 
         if ($taxRate === false) {
             $taxRate = round($approximateTaxRate);
@@ -1040,7 +1040,7 @@ class Shopware_Models_Document_Order extends Enlight_Class implements Enlight_Ho
     {
         $country = $this->countryGateway->getCountry($countryId, $this->context);
         if (!$country instanceof Country) {
-            throw new RuntimeException(sprintf('Country with ID "%s" not found', $countryId));
+            throw new RuntimeException(\sprintf('Country with ID "%s" not found', $countryId));
         }
 
         return $this->structConverter->convertCountryStruct($country);

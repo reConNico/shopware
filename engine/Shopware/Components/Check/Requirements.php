@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Check;
@@ -42,7 +42,7 @@ class Requirements
     public function __construct(string $sourceFile, PDO $connection, Shopware_Components_Snippet_Manager $snippetManager)
     {
         if (!is_readable($sourceFile)) {
-            throw new RuntimeException(sprintf('Cannot read requirements file in %s.', $sourceFile));
+            throw new RuntimeException(\sprintf('Cannot read requirements file in %s.', $sourceFile));
         }
 
         $this->sourceFile = $sourceFile;
@@ -159,13 +159,13 @@ class Requirements
             return true;
         }
 
-        $value = ini_get($name);
+        $value = \ini_get($name);
         if ($value !== '' && $value !== false) {
-            if (strtolower($value) === 'off' || (is_numeric($value) && $value == 0)) {
+            if ((int) $value === 0 || strtolower($value) === 'off') {
                 return false;
             }
 
-            if (strtolower($value) === 'on' || (is_numeric($value) && $value == 1)) {
+            if ((int) $value === 1 || strtolower($value) === 'on') {
                 return true;
             }
 
@@ -252,29 +252,29 @@ class Requirements
             return [];
         }
 
-        $useCwdOption = $this->compare('opcache.use_cwd', ini_get('opcache.use_cwd'), '1');
+        $useCwdOption = $this->compare('opcache.use_cwd', \ini_get('opcache.use_cwd'), '1');
         $opcacheRequirements = [[
             'name' => 'opcache.use_cwd',
             'group' => 'core',
             'required' => 1,
-            'version' => ini_get('opcache.use_cwd'),
-            'result' => ini_get('opcache.use_cwd'),
+            'version' => \ini_get('opcache.use_cwd'),
+            'result' => \ini_get('opcache.use_cwd'),
             'notice' => '',
-            'check' => $this->compare('opcache.use_cwd', ini_get('opcache.use_cwd'), '1'),
+            'check' => $this->compare('opcache.use_cwd', \ini_get('opcache.use_cwd'), '1'),
             'error' => '',
         ]];
 
         try {
             if (fileinode('/') > 2) {
-                $validateRootOption = $this->compare('opcache.validate_root', ini_get('opcache.validate_root'), '1');
+                $validateRootOption = $this->compare('opcache.validate_root', \ini_get('opcache.validate_root'), '1');
                 $opcacheRequirements[] = [
                     'name' => 'opcache.validate_root',
                     'group' => 'core',
                     'required' => 1,
-                    'version' => ini_get('opcache.validate_root'),
-                    'result' => ini_get('opcache.validate_root'),
+                    'version' => \ini_get('opcache.validate_root'),
+                    'result' => \ini_get('opcache.validate_root'),
                     'notice' => '',
-                    'check' => $this->compare('opcache.validate_root', ini_get('opcache.validate_root'), '1'),
+                    'check' => $this->compare('opcache.validate_root', \ini_get('opcache.validate_root'), '1'),
                     'error' => '',
                 ];
             }
@@ -377,7 +377,7 @@ class Requirements
             return (bool) session_save_path();
         }
 
-        if (ini_get('session.save_path')) {
+        if (\ini_get('session.save_path')) {
             return true;
         }
 
@@ -406,7 +406,7 @@ class Requirements
      */
     private function checkSuhosinGetMaxValueLength(): int
     {
-        $length = (int) ini_get('suhosin.get.max_value_length');
+        $length = (int) \ini_get('suhosin.get.max_value_length');
         if ($length === 0) {
             return 2000;
         }
@@ -504,7 +504,7 @@ class Requirements
         if (version_compare($check['version'], $check['maxCompatibleVersion'], '>')) {
             $check['check'] = false;
             $maxCompatibleVersion = str_replace('.99', '', $check['maxCompatibleVersion']);
-            $check['notice'] = sprintf($this->snippetManager->getNamespace('backend/systeminfo/view')->get('php_version_is_too_new_warning'), $maxCompatibleVersion);
+            $check['notice'] = \sprintf($this->snippetManager->getNamespace('backend/systeminfo/view')->get('php_version_is_too_new_warning'), $maxCompatibleVersion);
         }
 
         return $check;

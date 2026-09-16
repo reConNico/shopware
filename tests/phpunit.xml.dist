@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
          bootstrap="./Functional/bootstrap.php"
          colors="true"
          backupGlobals="true"
          beStrictAboutOutputDuringTests="true"
          beStrictAboutResourceUsageDuringSmallTests="true"
          beStrictAboutTodoAnnotatedTests="true"
+         convertDeprecationsToExceptions="true"
          verbose="true">
     <coverage includeUncoveredFiles="false">
         <include>
             <directory suffix=".php">../engine/Shopware/</directory>
+            <directory suffix=".php">../engine/Library/Enlight/</directory>
         </include>
         <exclude>
             <directory>../engine/Shopware/Plugins/Community</directory>
-            <directory>../engine/Shopware/Components/Xml</directory>
+            <directory>../engine/Shopware/Plugins/Local</directory>
         </exclude>
     </coverage>
     <testsuites>

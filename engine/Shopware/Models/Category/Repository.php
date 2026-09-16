@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Category;
@@ -95,7 +95,7 @@ class Repository extends ModelRepository
      * @param int|null $offset
      * @param bool     $selectOnlyActive
      *
-     * @return Query
+     * @return Query<Category>
      */
     public function getListQuery(array $filterBy, array $orderBy = [], $limit = null, $offset = null, $selectOnlyActive = true)
     {
@@ -156,12 +156,12 @@ class Repository extends ModelRepository
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select([
-                'category',
-                'attribute',
-                'emotions',
-                'customerGroups',
-                'media',
-            ])
+            'category',
+            'attribute',
+            'emotions',
+            'customerGroups',
+            'media',
+        ])
             ->from($this->getEntityName(), 'category')
             ->leftJoin('category.attribute', 'attribute')
             ->leftJoin('category.emotions', 'emotions')
@@ -223,7 +223,7 @@ class Repository extends ModelRepository
      *
      * @param int $categoryId
      *
-     * @return Query
+     * @return Query<Category>
      */
     public function getDetailQuery($categoryId)
     {
@@ -238,7 +238,7 @@ class Repository extends ModelRepository
      *
      * @param int $categoryId
      *
-     * @return Query
+     * @return Query<Category>
      */
     public function getDetailQueryWithoutArticles($categoryId)
     {
@@ -319,7 +319,7 @@ class Repository extends ModelRepository
      * @param int      $parentId
      * @param int|null $customerGroupId
      *
-     * @return Query
+     * @return Query<Category>
      */
     public function getActiveByParentIdQuery($parentId, $customerGroupId = null)
     {
@@ -336,7 +336,7 @@ class Repository extends ModelRepository
      * @param int      $articleId
      * @param int|null $parentId
      *
-     * @return Query
+     * @return Query<Category>
      */
     public function getActiveByArticleIdQuery($articleId, $parentId = null)
     {
@@ -362,7 +362,7 @@ class Repository extends ModelRepository
      * @param int      $id              The id of the category
      * @param int|null $customerGroupId
      *
-     * @return Query
+     * @return Query<Category>
      */
     public function getActiveByIdQuery($id, $customerGroupId = null)
     {
@@ -387,7 +387,7 @@ class Repository extends ModelRepository
      * @param int|null $depth
      * @param int|null $shopId
      *
-     * @return array
+     * @return list<array<string, mixed>>
      */
     public function getActiveChildrenTree($id, $customerGroupId = null, $depth = null, $shopId = null)
     {
@@ -471,7 +471,7 @@ class Repository extends ModelRepository
         $builder = $this->getCategoriesByParentBuilder($id);
         $builder->select('COUNT(categories) as categoriesCount');
 
-        return $builder->getQuery()->getSingleScalarResult();
+        return (int) $builder->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -521,7 +521,7 @@ class Repository extends ModelRepository
      *
      * @internal param $filterBy
      *
-     * @return Query
+     * @return Query<Category>
      */
     public function getBlogCategoriesByParentQuery($parentId, $offset = null, $limit = null)
     {
@@ -578,7 +578,7 @@ class Repository extends ModelRepository
      *
      * @param array $filterBy
      *
-     * @return Query
+     * @return Query<Category>
      */
     public function getBlogCategoryTreeListQuery($filterBy)
     {
@@ -734,7 +734,7 @@ class Repository extends ModelRepository
                     ->andHaving('COUNT(cg.id) = 0');
         }
 
-        //to prevent a temporary table and file sort we have to set the same sort and group by condition
+        // to prevent a temporary table and file sort we have to set the same sort and group by condition
         $builder->groupBy('c.parentId')
             ->addGroupBy('c.position')
             ->addGroupBy('c.id')

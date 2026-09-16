@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\StoreFrontBundle;
@@ -45,11 +44,13 @@ use Shopware\Models\Article\Supplier;
 use Shopware\Models\Category\Category;
 use Shopware\Models\Customer\Group as CustomerGroupModel;
 use Shopware\Tests\Functional\Traits\ContainerTrait;
+use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
 use Shopware_Components_Config;
 
 abstract class TestCase extends Enlight_Components_Test_TestCase
 {
     use ContainerTrait;
+    use DatabaseTransactionBehaviour;
 
     protected Helper $helper;
 
@@ -62,14 +63,8 @@ abstract class TestCase extends Enlight_Components_Test_TestCase
         parent::setUp();
     }
 
-    protected function tearDown(): void
-    {
-        $this->helper->cleanUp();
-        parent::tearDown();
-    }
-
     /**
-     * @param array<string, array> $products
+     * @param array<string, array<string, mixed>> $products
      *
      * @return Product[]
      */
@@ -104,11 +99,11 @@ abstract class TestCase extends Enlight_Components_Test_TestCase
     protected function search(
         array $products,
         array $expectedNumbers,
-        Category $category = null,
+        ?Category $category = null,
         array $conditions = [],
         array $facets = [],
         array $sortings = [],
-        TestContext $context = null,
+        ?TestContext $context = null,
         array $configs = [],
         bool $variantSearch = false
     ): ProductNumberSearchResult {
@@ -223,10 +218,10 @@ abstract class TestCase extends Enlight_Components_Test_TestCase
         }, $result->getProducts());
 
         foreach ($numbers as $number) {
-            static::assertContains($number, $expectedNumbers, sprintf('Product with number: `%s` found but not expected', $number));
+            static::assertContains($number, $expectedNumbers, \sprintf('Product with number: `%s` found but not expected', $number));
         }
         foreach ($expectedNumbers as $number) {
-            static::assertContains($number, $numbers, sprintf('Expected product number: `%s` not found', $number));
+            static::assertContains($number, $numbers, \sprintf('Expected product number: `%s` not found', $number));
         }
 
         static::assertCount(\count($expectedNumbers), $result->getProducts());
@@ -246,7 +241,7 @@ abstract class TestCase extends Enlight_Components_Test_TestCase
             static::assertEquals(
                 $expectedProduct,
                 $product->getNumber(),
-                sprintf(
+                \sprintf(
                     'Expected %s at search result position %s, but got product %s',
                     $expectedProduct,
                     $index,
@@ -283,7 +278,7 @@ abstract class TestCase extends Enlight_Components_Test_TestCase
     protected function getProduct(
         string $number,
         ShopContext $context,
-        Category $category = null,
+        ?Category $category = null,
         $additionally = []
     ): array {
         $taxRules = $context->getTaxRules();

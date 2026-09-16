@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Models\ProductFeed\ProductFeed;
@@ -49,7 +49,7 @@ class Shopware_Plugins_Core_CronProductExport_Bootstrap extends Shopware_Compone
     {
         $this->exportProductFiles();
 
-        return sprintf('%s succeeded.', $job->getName());
+        return \sprintf('%s succeeded.', $job->getName());
     }
 
     /**
@@ -65,10 +65,10 @@ class Shopware_Plugins_Core_CronProductExport_Bootstrap extends Shopware_Compone
         $cacheDir = Shopware()->Container()->getParameter('shopware.product_export.cache_dir');
         if (!is_dir($cacheDir)) {
             if (@mkdir($cacheDir, 0777, true) === false) {
-                throw new \RuntimeException(sprintf("Unable to create the %s directory (%s)\n", 'Productexport', $cacheDir));
+                throw new RuntimeException(\sprintf("Unable to create the %s directory (%s)\n", 'Productexport', $cacheDir));
             }
         } elseif (!is_writable($cacheDir)) {
-            throw new \RuntimeException(sprintf("Unable to write in the %s directory (%s)\n", 'Productexport', $cacheDir));
+            throw new RuntimeException(\sprintf("Unable to write in the %s directory (%s)\n", 'Productexport', $cacheDir));
         }
 
         $export = Shopware()->Modules()->Export();
@@ -86,7 +86,7 @@ class Shopware_Plugins_Core_CronProductExport_Bootstrap extends Shopware_Compone
             } elseif ($feedModel->getInterval() > 0) {
                 $diffInterval = time();
                 if ($feedModel->getCacheRefreshed()) {
-                    $diffInterval = $diffInterval - $feedModel->getCacheRefreshed()->getTimestamp();
+                    $diffInterval -= $feedModel->getCacheRefreshed()->getTimestamp();
                 }
 
                 if ($diffInterval < $feedModel->getInterval() && file_exists($filePath)) {

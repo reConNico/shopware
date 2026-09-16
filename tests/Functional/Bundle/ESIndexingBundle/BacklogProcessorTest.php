@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\ESIndexingBundle;
@@ -45,25 +46,13 @@ class BacklogProcessorTest extends TestCase
 {
     use DatabaseTransactionBehaviour;
 
-    /**
-     * @var BacklogProcessorInterface
-     */
-    private $backlogProcessor;
+    private BacklogProcessorInterface $backlogProcessor;
 
-    /**
-     * @var BacklogReader
-     */
-    private $backlogReader;
+    private BacklogReader $backlogReader;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var ContainerAwareEventManager
-     */
-    private $eventManager;
+    private ContainerAwareEventManager $eventManager;
 
     public function setUp(): void
     {
@@ -83,18 +72,15 @@ class BacklogProcessorTest extends TestCase
 
         $backlog = $this->retrieveLatestBacklog();
 
-        static::assertNotNull($backlog);
         static::assertNotNull($backlog->getPayload());
         static::assertEquals($payloadId, $backlog->getPayload()['id']);
     }
 
     public function testBacklogProcessorProcesses(): void
     {
-        $synchronizers = new ArrayCollection([$this->mockProductSynchronizer()]);
-
         $processor = new BacklogProcessor(
             $this->connection,
-            $synchronizers,
+            new ArrayCollection([$this->mockProductSynchronizer()]),
             $this->eventManager
         );
 

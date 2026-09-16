@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Cart;
@@ -74,7 +73,6 @@ class TaxAggregator implements TaxAggregatorInterface
             return null;
         }
 
-        /** @var array<numeric-string, float> $result */
         $result = [];
 
         foreach ($cart[CartKey::POSITIONS] as $cartPosition) {
@@ -84,7 +82,7 @@ class TaxAggregator implements TaxAggregatorInterface
                 continue;
             }
 
-            /** @var numeric-string $taxRateString */
+            /** @var numeric-string&non-empty-string $taxRateString */
             $taxRateString = number_format($taxRate, 2);
 
             if (!\array_key_exists($taxRateString, $result)) {
@@ -112,13 +110,10 @@ class TaxAggregator implements TaxAggregatorInterface
             return null;
         }
 
-        /** @var array<numeric-string, float> $result */
         $result = [];
 
         if (!empty($cart[CheckoutKey::SHIPPING_COSTS_TAX_PROPORTIONAL])) {
-            /** @var callable(array<numeric-string, float> $carry, Price $shippingTax): array<numeric-string, float> $callback */
             $callback = static function (array $carry, Price $shippingTax) {
-                /** @var numeric-string $taxRate */
                 $taxRate = number_format($shippingTax->getTaxRate(), 2);
 
                 if (!\array_key_exists($taxRate, $carry)) {
@@ -132,7 +127,6 @@ class TaxAggregator implements TaxAggregatorInterface
 
             $result = array_reduce($cart[CheckoutKey::SHIPPING_COSTS_TAX_PROPORTIONAL], $callback, []);
         } else {
-            /** @var numeric-string $taxRate */
             $taxRate = number_format((float) $cart[CheckoutKey::SHIPPING_COSTS_TAX], 2);
 
             $result[$taxRate] = $cart[CheckoutKey::SHIPPING_COSTS_WITH_TAX] - $cart[CheckoutKey::SHIPPING_COSTS_NET];
@@ -183,7 +177,6 @@ class TaxAggregator implements TaxAggregatorInterface
             array_diff_key($shippingCostsTaxSum, $positionTaxSum)
         );
 
-        /** @var callable(array<numeric-string, float> $carry, int|numeric-string $taxRate): array<numeric-string, float> $callback */
         $callback = static function (array $carry, $taxRate) use ($positionTaxSum, $shippingCostsTaxSum): array {
             $carry[$taxRate] = $positionTaxSum[$taxRate] + $shippingCostsTaxSum[$taxRate];
 
@@ -220,13 +213,6 @@ class TaxAggregator implements TaxAggregatorInterface
         if (!empty($taxRate)) {
             return [
                 $taxRate,
-                $tax,
-            ];
-        }
-
-        if (!empty($cartPosition['taxPercent'])) {
-            return [
-                $cartPosition['taxPercent'],
                 $tax,
             ];
         }

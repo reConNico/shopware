@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundle;
@@ -30,23 +30,19 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class BatchProductNumberSearch
 {
-    /**
-     * @var ProductNumberSearchInterface
-     */
-    private $productNumberSearch;
+    private ProductNumberSearchInterface $productNumberSearch;
+
+    private BaseProductFactoryServiceInterface $baseProductFactoryService;
 
     /**
-     * @var BaseProductFactoryServiceInterface
+     * @var array<string, int>
      */
-    private $baseProductFactoryService;
+    private array $pointer = [];
 
-    /**
-     * @var array
-     */
-    private $pointer = [];
-
-    public function __construct(ProductNumberSearchInterface $productNumberSearch, BaseProductFactoryServiceInterface $baseProductFactoryService)
-    {
+    public function __construct(
+        ProductNumberSearchInterface $productNumberSearch,
+        BaseProductFactoryServiceInterface $baseProductFactoryService
+    ) {
         $this->productNumberSearch = $productNumberSearch;
         $this->baseProductFactoryService = $baseProductFactoryService;
     }
@@ -104,6 +100,11 @@ class BatchProductNumberSearch
         return array_merge($items, $this->getBaseProductsRange($key, $baseProducts, $missingItems));
     }
 
+    /**
+     * @param array<string, Criteria> $criteriaList
+     *
+     * @return array<string, array<string, BaseProduct>>
+     */
     private function getBaseProductsByCriteriaList(array $criteriaList, ShopContextInterface $context): array
     {
         $products = [];
@@ -128,9 +129,9 @@ class BatchProductNumberSearch
     }
 
     /**
-     * @param Criteria[] $criteriaList
+     * @param array<string, Criteria> $criteriaList
      *
-     * @return array<array{criteria: Criteria, requests: array<array{criteria: Criteria, key: int}>}>
+     * @return array<array{criteria: Criteria, requests: array<array{criteria: Criteria, key: string}>}>
      */
     private function getOptimizedCriteriaList(array $criteriaList): array
     {
@@ -140,6 +141,9 @@ class BatchProductNumberSearch
             $criteriaPosition = $this->getOptimizedCriteriaListPosition($originalCriteria, $optimizedCriteriaList);
 
             if ($criteriaPosition !== false) {
+                if (!isset($optimizedCriteriaList[$criteriaPosition]['criteria'])) {
+                    continue;
+                }
                 $existingCriteria = $optimizedCriteriaList[$criteriaPosition]['criteria'];
 
                 // search requests already exists, increase limit to select more products and satisfy all requests
@@ -164,6 +168,8 @@ class BatchProductNumberSearch
     }
 
     /**
+     * @param array<array{criteria: Criteria, requests: array<array{criteria: Criteria, key: string}>}> $criteriaList
+     *
      * @return int|false
      */
     private function getOptimizedCriteriaListPosition(Criteria $criteria, array $criteriaList)

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace ShopwarePlugin\PaymentMethods\Components;
@@ -27,6 +27,10 @@ namespace ShopwarePlugin\PaymentMethods\Components;
 use DateTime;
 use Doctrine\ORM\AbstractQuery;
 use Enlight_Controller_Request_Request;
+use Shopware\Models\Customer\Customer;
+use Shopware\Models\Customer\PaymentData;
+use Shopware\Models\Order\Order;
+use Shopware\Models\Payment\Payment;
 
 /**
  * Replacement class for legacy core/paymentmeans/debit.php class.
@@ -49,7 +53,7 @@ class DebitPaymentMethod extends GenericPaymentMethod
         ];
 
         foreach ($fields as $field) {
-            $value = $paymentData[$field] ?: '';
+            $value = $paymentData[$field] ?? '';
             $value = trim($value);
 
             if (empty($value)) {
@@ -77,7 +81,7 @@ class DebitPaymentMethod extends GenericPaymentMethod
     {
         $lastPayment = $this->getCurrentPaymentDataAsArray($userId);
 
-        $paymentMean = Shopware()->Models()->getRepository('\Shopware\Models\Payment\Payment')->
+        $paymentMean = Shopware()->Models()->getRepository(Payment::class)->
             getActivePaymentsQuery(['name' => 'debit'])->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
 
         $data = [
@@ -108,19 +112,19 @@ class DebitPaymentMethod extends GenericPaymentMethod
      */
     public function getCurrentPaymentDataAsArray($userId)
     {
-        $paymentData = Shopware()->Models()->getRepository('\Shopware\Models\Customer\PaymentData')
+        $paymentData = Shopware()->Models()->getRepository(PaymentData::class)
             ->getCurrentPaymentDataQueryBuilder($userId, 'debit')->getQuery()->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
 
         if (isset($paymentData)) {
-            $arrayData = [
+            return [
                 'sDebitAccount' => $paymentData['accountNumber'],
                 'sDebitBankcode' => $paymentData['bankCode'],
                 'sDebitBankName' => $paymentData['bankName'],
                 'sDebitBankHolder' => $paymentData['accountHolder'],
             ];
-
-            return $arrayData;
         }
+
+        return null;
     }
 
     /**
@@ -130,16 +134,19 @@ class DebitPaymentMethod extends GenericPaymentMethod
     {
         $orderAmount = Shopware()->Models()->createQueryBuilder()
             ->select('orders.invoiceAmount')
-            ->from('Shopware\Models\Order\Order', 'orders')
+            ->from(Order::class, 'orders')
             ->where('orders.id = ?1')
             ->setParameter(1, $orderId)
             ->getQuery()
             ->getSingleScalarResult();
 
-        $addressData = Shopware()->Models()->getRepository('Shopware\Models\Customer\Customer')
+        $addressData = Shopware()->Models()->getRepository(Customer::class)
             ->find($userId)->getDefaultBillingAddress();
 
         $debitData = $this->getCurrentPaymentDataAsArray($userId);
+        if (!\is_array($debitData)) {
+            $debitData = [];
+        }
 
         $date = new DateTime();
         $data = [

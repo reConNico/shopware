@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Components\CSRFWhitelistAware;
@@ -29,9 +29,6 @@ use Shopware\Models\Menu\Menu;
 
 class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action implements CSRFWhitelistAware
 {
-    public const MIN_DAYS_INSTALLATION_SURVEY = 14;
-    public const MIN_DAYS_BI_TEASER = 10;
-
     /**
      * @var Shopware_Plugins_Backend_Auth_Bootstrap
      */
@@ -39,6 +36,8 @@ class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action imple
 
     /**
      * Loads auth and script renderer resource
+     *
+     * @return void
      */
     public function init()
     {
@@ -89,6 +88,8 @@ class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action imple
      * Backend Menu
      * Licence Information
      * Rss-Data for example
+     *
+     * @return void
      */
     public function indexAction()
     {
@@ -125,7 +126,7 @@ class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action imple
         $controller = Zend_Json::encode($controller);
         $this->View()->assign('controller', $controller, true);
 
-        $this->View()->assign('maxParameterLength', (int) ini_get('suhosin.get.max_value_length') + 0, true);
+        $this->View()->assign('maxParameterLength', (int) \ini_get('suhosin.get.max_value_length') + 0, true);
 
         $firstRunWizardEnabled = $this->isFirstRunWizardEnabled($identity);
         $sbpLogin = 0;
@@ -136,7 +137,6 @@ class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action imple
         }
         $this->View()->assign('sbpLogin', $sbpLogin, true);
         $this->View()->assign('firstRunWizardEnabled', $firstRunWizardEnabled, true);
-        $this->View()->assign('installationSurvey', $this->checkForInstallationSurveyNecessity($identity), true);
 
         $config = $this->get(Shopware_Components_Config::class);
 
@@ -146,18 +146,20 @@ class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action imple
         $this->View()->assign('SHOPWARE_VERSION_TEXT', $shopwareRelease->getVersionText());
         $this->View()->assign('SHOPWARE_REVISION', $shopwareRelease->getRevision());
         $this->View()->assign('updateWizardStarted', $config->get('updateWizardStarted'));
-        $this->View()->assign('feedbackRequired', $this->checkIsFeedbackRequired());
-        $this->View()->assign('biOverviewEnabled', $this->isBIOverviewEnabled());
-        $this->View()->assign('biIsActive', $this->isBIActive());
         $this->View()->assign('extJsDeveloperModeActive', $this->container->getParameter('shopware.extjs.developer_mode'));
     }
 
+    /**
+     * @return void
+     */
     public function authAction()
     {
     }
 
     /**
      * Allows changing the locale by sending a Shopware localeId or an ISO-3166 locale (e.g. de_DE)
+     *
+     * @return void
      */
     public function changeLocaleAction()
     {
@@ -214,6 +216,8 @@ class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action imple
      * Load action for the script renderer.
      *
      * @throws Enlight_Controller_Exception
+     *
+     * @return void
      */
     public function loadAction()
     {
@@ -233,6 +237,8 @@ class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action imple
      * Load action for the script renderer.
      *
      * @throws Enlight_Controller_Exception
+     *
+     * @return void
      */
     public function menuAction()
     {
@@ -260,10 +266,8 @@ class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action imple
      * Returns if the first run wizard should be loaded in the current backend instance
      *
      * @param stdClass $identity
-     *
-     * @return bool
      */
-    private function isFirstRunWizardEnabled($identity)
+    private function isFirstRunWizardEnabled($identity): bool
     {
         // Only admins can see the wizard
         if ($identity->role->getAdmin()) {
@@ -273,12 +277,7 @@ class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action imple
         return false;
     }
 
-    /**
-     * @param int|null $parentId
-     *
-     * @return array
-     */
-    private function buildTree(array $nodes, $parentId = null)
+    private function buildTree(array $nodes, ?int $parentId = null): array
     {
         $menuTree = [];
         foreach ($nodes as $key => $node) {
@@ -292,70 +291,5 @@ class Shopware_Controllers_Backend_Index extends Enlight_Controller_Action imple
         }
 
         return $menuTree;
-    }
-
-    /**
-     * @return bool
-     */
-    private function checkIsFeedbackRequired()
-    {
-        $shopwareVersionText = $this->container->getParameter('shopware.release.version_text');
-
-        return !\in_array($shopwareVersionText, ['', '___VERSION_TEXT___'], true);
-    }
-
-    /**
-     * @param stdClass $identity
-     *
-     * @return bool
-     */
-    private function checkForInstallationSurveyNecessity($identity)
-    {
-        if ($this->checkIsFeedbackRequired() || !$identity->role->getAdmin()) {
-            return false;
-        }
-        $installationSurvey = $this->container->get(Shopware_Components_Config::class)->get('installationSurvey', false);
-        $installationDate = DateTime::createFromFormat('Y-m-d H:i', $this->container->get(Shopware_Components_Config::class)->get('installationDate'));
-        if (!$installationSurvey || !$installationDate) {
-            return false;
-        }
-        $interval = $installationDate->diff(new DateTime());
-
-        return $interval->days >= self::MIN_DAYS_INSTALLATION_SURVEY;
-    }
-
-    /**
-     * @return bool
-     */
-    private function isBIOverviewEnabled()
-    {
-        if (!$this->get(Shopware_Components_Config::class)->get('benchmarkTeaser')) {
-            return false;
-        }
-
-        $configRepository = $this->get('shopware.benchmark_bundle.repository.config');
-
-        $shopwareVersionText = $this->container->getParameter('shopware.release.version_text');
-
-        $waitingOver = true;
-        $installationDate = DateTime::createFromFormat('Y-m-d H:i', $this->container->get(Shopware_Components_Config::class)->get('installationDate'));
-        if ($installationDate) {
-            $interval = $installationDate->diff(new DateTime());
-
-            if ($interval->days < self::MIN_DAYS_BI_TEASER) {
-                $waitingOver = false;
-            }
-        }
-
-        return $waitingOver && $shopwareVersionText !== '___VERSION_TEXT___' && $configRepository->getConfigsCount() === 0;
-    }
-
-    private function isBIActive(): bool
-    {
-        $configRepository = $this->get('shopware.benchmark_bundle.repository.config');
-
-        $validShopCount = \count($configRepository->getValidShops());
-
-        return $validShopCount > 0;
     }
 }

@@ -1,7 +1,7 @@
 {extends file="backend/base/header.tpl"}
 
 {* Page title *}
-{block name='backend/base/header/title'}Shopware {$SHOPWARE_VERSION} {$SHOPWARE_VERSION_TEXT} (Rev. {$SHOPWARE_REVISION}) - Backend (c) shopware AG{/block}
+{block name='backend/base/header/title'}Unofficial Shopware {$SHOPWARE_VERSION} {$SHOPWARE_VERSION_TEXT} (Rev. {$SHOPWARE_REVISION}) - Backend{/block}
 
 {block name="backend/base/header/css" append}
 <link rel="stylesheet" type="text/css" href="{link file="backend/_resources/styles/growl.css"}" />
@@ -70,8 +70,6 @@ iframe { border: 0 none !important; width: 100%; height: 100%; }
                 firstRunWizardEnabled: {$firstRunWizardEnabled|intval},
                 sbpLogin: {$sbpLogin},
                 updateWizardStarted: {$updateWizardStarted|intval},
-                enableInstallationFeedback: {$installationSurvey|intval},
-                enableBetaFeedback: {$feedbackRequired|intval},
                 biOverviewEnabled: {$biOverviewEnabled|intval},
                 biIsActive: {$biIsActive|intval},
             });

@@ -5,28 +5,28 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Api\Resource;
 
 use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Shopware\Bundle\AccountBundle\Service\AddressServiceInterface;
 use Shopware\Bundle\AccountBundle\Service\RegisterServiceInterface;
@@ -71,7 +71,7 @@ class Customer extends Resource
      *
      * @param string $number
      *
-     * @throws ParameterMissingException*
+     * @throws ParameterMissingException
      * @throws NonUniqueIdentifierUsedException
      * @throws NotFoundException
      *
@@ -97,7 +97,7 @@ class Customer extends Resource
         }
 
         if (!$id) {
-            throw new NotFoundException(sprintf('Customer by number %s not found', $number));
+            throw new NotFoundException(\sprintf('Customer by number %s not found', $number));
         }
 
         return $id['id'];
@@ -165,7 +165,7 @@ class Customer extends Resource
         $customer = $builder->getQuery()->getOneOrNullResult($this->getResultMode());
 
         if (!$customer) {
-            throw new NotFoundException(sprintf('Customer by id %d not found', $id));
+            throw new NotFoundException(\sprintf('Customer by id %d not found', $id));
         }
 
         return $customer;
@@ -190,6 +190,7 @@ class Customer extends Resource
         $builder->setFirstResult($offset)
                 ->setMaxResults($limit);
 
+        /** @var Query<CustomerModel|array<string, mixed>> $query */
         $query = $builder->getQuery();
 
         $query->setHydrationMode($this->getResultMode());
@@ -200,7 +201,7 @@ class Customer extends Resource
         $totalResult = $paginator->count();
 
         // Returns the customer data
-        $customers = $paginator->getIterator()->getArrayCopy();
+        $customers = iterator_to_array($paginator);
 
         return ['data' => $customers, 'total' => $totalResult];
     }
@@ -213,7 +214,7 @@ class Customer extends Resource
     public function create(array $params)
     {
         $this->checkPrivilege('create');
-        $this->setupContext($params['shopId']);
+        $this->setupContext($params['shopId'] ?? null);
 
         // Create models
         $customer = new CustomerModel();
@@ -235,13 +236,13 @@ class Customer extends Resource
         $customer->fromArray($params);
 
         $billing = $this->createAddress($params['billing']) ?? new AddressModel();
-        $shipping = $this->createAddress($params['shipping']);
+        $shipping = $this->createAddress($params['shipping'] ?? null);
 
         $registerService = $this->getContainer()->get(RegisterServiceInterface::class);
         $context = $this->getContainer()->get(ContextServiceInterface::class)->getShopContext()->getShop();
 
         $context->addAttribute('sendOptinMail', new Attribute([
-            'sendOptinMail' => $params['sendOptinMail'] === true,
+            'sendOptinMail' => ($params['sendOptinMail'] ?? false) === true,
         ]));
 
         $registerService->register($context, $customer, $billing, $shipping);
@@ -287,7 +288,7 @@ class Customer extends Resource
         $customer = $this->getRepository()->find($id);
 
         if (!$customer instanceof CustomerModel) {
-            throw new NotFoundException(sprintf('Customer by id %d not found', $id));
+            throw new NotFoundException(\sprintf('Customer by id %d not found', $id));
         }
 
         $this->setupContext($customer->getShop()->getId());
@@ -356,7 +357,7 @@ class Customer extends Resource
         $customer = $this->getRepository()->find($id);
 
         if (!$customer) {
-            throw new NotFoundException(sprintf('Customer by id %d not found', $id));
+            throw new NotFoundException(\sprintf('Customer by id %d not found', $id));
         }
 
         $this->getManager()->remove($customer);
@@ -428,7 +429,7 @@ class Customer extends Resource
             if (isset($paymentDataData['paymentMeanId'])) {
                 $paymentMean = $this->getManager()->getRepository(Payment::class)->find($paymentDataData['paymentMeanId']);
                 if ($paymentMean === null) {
-                    throw new CustomValidationException(sprintf('%s by %s %s not found', Payment::class, 'id', $paymentDataData['paymentMeanId']));
+                    throw new CustomValidationException(\sprintf('%s by %s %s not found', Payment::class, 'id', $paymentDataData['paymentMeanId']));
                 }
                 $paymentData->setPaymentMean($paymentMean);
                 unset($paymentDataData['paymentMeanId']);
@@ -466,14 +467,14 @@ class Customer extends Resource
         if (\array_key_exists('groupKey', $params)) {
             $params['group'] = Shopware()->Models()->getRepository(Group::class)->findOneBy(['key' => $params['groupKey']]);
             if (!$params['group']) {
-                throw new CustomValidationException(sprintf('CustomerGroup by key %s not found', $params['groupKey']));
+                throw new CustomValidationException(\sprintf('CustomerGroup by key %s not found', $params['groupKey']));
             }
         }
 
         if (\array_key_exists('shopId', $params)) {
             $params['shop'] = Shopware()->Models()->find(ShopModel::class, $params['shopId']);
             if (!$params['shop']) {
-                throw new CustomValidationException(sprintf('Shop by id %s not found', $params['shopId']));
+                throw new CustomValidationException(\sprintf('Shop by id %s not found', $params['shopId']));
             }
         }
 
@@ -487,7 +488,7 @@ class Customer extends Resource
         }
 
         // If a different payment method is selected, it must also be placed in the "paymentPreset" so that the risk management that does not reset.
-        if ($customer->getId() && $customer->getPaymentId() !== $params['paymentId']) {
+        if (isset($params['paymentId']) && $customer->getId() && $customer->getPaymentId() !== $params['paymentId']) {
             $params['paymentPreset'] = $params['paymentId'];
         }
 
@@ -499,14 +500,14 @@ class Customer extends Resource
      *
      * @throws CustomValidationException
      */
-    private function setupContext(int $shopId = null): void
+    private function setupContext(?int $shopId = null): void
     {
         $shopRepository = $this->getContainer()->get(ModelManager::class)->getRepository(ShopModel::class);
 
         if ($shopId) {
             $shop = $shopRepository->getActiveById($shopId);
             if (!$shop) {
-                throw new CustomValidationException(sprintf('Shop by id %s not found', $shopId));
+                throw new CustomValidationException(\sprintf('Shop by id %s not found', $shopId));
             }
         } else {
             $shop = $shopRepository->getActiveDefault();
@@ -520,13 +521,13 @@ class Customer extends Resource
      *
      * @throws CustomValidationException
      */
-    private function createAddress(array $data = null): ?AddressModel
+    private function createAddress(?array $data = null): ?AddressModel
     {
         if (empty($data)) {
             return null;
         }
 
-        if (!$data['country']) {
+        if (empty($data['country'])) {
             throw new CustomValidationException('A country is required.');
         }
 
@@ -582,11 +583,11 @@ class Customer extends Resource
         unset($params['billing'], $params['shipping'], $params['defaultBillingAddress'], $params['defaultShippingAddress']);
 
         if (!$customer->getDefaultBillingAddress() instanceof AddressModel) {
-            throw new CustomValidationException(sprintf('Customer with ID "%s" has no default billing address', $customer->getId()));
+            throw new CustomValidationException(\sprintf('Customer with ID "%s" has no default billing address', $customer->getId()));
         }
         $customer->getDefaultBillingAddress()->fromArray($billingData);
         if (!$customer->getDefaultShippingAddress() instanceof AddressModel) {
-            throw new CustomValidationException(sprintf('Customer with ID "%s" has no default shipping address', $customer->getId()));
+            throw new CustomValidationException(\sprintf('Customer with ID "%s" has no default shipping address', $customer->getId()));
         }
         $customer->getDefaultShippingAddress()->fromArray($shippingData);
 

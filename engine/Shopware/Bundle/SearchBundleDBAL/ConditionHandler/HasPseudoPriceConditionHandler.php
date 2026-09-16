@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\ConditionHandler;
@@ -30,6 +31,7 @@ use Shopware\Bundle\SearchBundle\ConditionInterface;
 use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Bundle\SearchBundleDBAL\ConditionHandlerInterface;
 use Shopware\Bundle\SearchBundleDBAL\CriteriaAwareInterface;
+use Shopware\Bundle\SearchBundleDBAL\ListingPriceHelper;
 use Shopware\Bundle\SearchBundleDBAL\ListingPriceSwitcher;
 use Shopware\Bundle\SearchBundleDBAL\QueryBuilder;
 use Shopware\Bundle\SearchBundleDBAL\VariantHelperInterface;
@@ -45,10 +47,16 @@ class HasPseudoPriceConditionHandler implements ConditionHandlerInterface, Crite
 
     private VariantHelperInterface $variantHelper;
 
-    public function __construct(ListingPriceSwitcher $listingPriceSwitcher, VariantHelperInterface $variantHelper)
-    {
+    private ListingPriceHelper $listingPriceHelper;
+
+    public function __construct(
+        ListingPriceSwitcher $listingPriceSwitcher,
+        VariantHelperInterface $variantHelper,
+        ListingPriceHelper $listingPriceHelper
+    ) {
         $this->listingPriceSwitcher = $listingPriceSwitcher;
         $this->variantHelper = $variantHelper;
+        $this->listingPriceHelper = $listingPriceHelper;
     }
 
     /**
@@ -75,12 +83,12 @@ class HasPseudoPriceConditionHandler implements ConditionHandlerInterface, Crite
         if (!$query->hasState(self::STATE_INCLUDES_PSEUDO_PRICE_VARIANTS)) {
             if (empty($conditions)) {
                 $this->variantHelper->joinVariants($query);
-                $query->leftJoin('allVariants', 's_articles_prices', 'variantPrices', 'variantPrices.articledetailsID = allVariants.id');
-                $query->andWhere('variantPrices.pseudoprice > 0');
+                $this->joinPrices($query, $context);
             } else {
                 $this->listingPriceSwitcher->joinPrice($query, $this->criteria, $context);
                 $query->andWhere('listing_price.pseudoprice > 0');
             }
+
             $query->addState(self::STATE_INCLUDES_PSEUDO_PRICE_VARIANTS);
         }
     }
@@ -88,5 +96,35 @@ class HasPseudoPriceConditionHandler implements ConditionHandlerInterface, Crite
     public function setCriteria(Criteria $criteria)
     {
         $this->criteria = $criteria;
+    }
+
+    private function joinPrices(QueryBuilder $query, ShopContextInterface $context): void
+    {
+        $hasDifferentCustomerGroups = $this->hasDifferentCustomerGroups($context);
+
+        $priceTable = $this->listingPriceHelper->getPriceTable($context);
+
+        if ($hasDifferentCustomerGroups) {
+            $priceTable->andWhere('IFNULL(customerPrice.`pseudoprice`, defaultPrice.`pseudoprice`) > 0');
+        } else {
+            $priceTable->andWhere('defaultPrice.pseudoprice > 0');
+        }
+
+        $query->innerJoin(
+            'allVariants',
+            '(' . $priceTable->getSQL() . ')',
+            'variantPrices',
+            'variantPrices.articledetailsID = allVariants.id'
+        );
+
+        $query->setParameter(':fallbackCustomerGroup', $context->getFallbackCustomerGroup()->getKey());
+        if ($hasDifferentCustomerGroups) {
+            $query->setParameter(':currentCustomerGroup', $context->getCurrentCustomerGroup()->getKey());
+        }
+    }
+
+    private function hasDifferentCustomerGroups(ShopContextInterface $context): bool
+    {
+        return $context->getCurrentCustomerGroup()->getId() !== $context->getFallbackCustomerGroup()->getId();
     }
 }

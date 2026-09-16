@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 class Shopware_Components_CsvIterator extends Enlight_Class implements Iterator
@@ -77,7 +77,7 @@ class Shopware_Components_CsvIterator extends Enlight_Class implements Iterator
     private $_header;
 
     /**
-     * This is the constructor. It try to open the CSV file.
+     * This is the constructor. It tries to open the CSV file.
      *
      * @param string           $filename  the full path of the CSV file
      * @param non-empty-string $delimiter the delimiter
@@ -90,12 +90,12 @@ class Shopware_Components_CsvIterator extends Enlight_Class implements Iterator
         $realPath = realpath($filename);
 
         if ($realPath === false) {
-            throw new InvalidArgumentException(sprintf('Given file path "%s" does not exist', $filename));
+            throw new InvalidArgumentException(\sprintf('Given file path "%s" does not exist', $filename));
         }
 
         $handler = fopen($realPath, 'r');
         if (!\is_resource($handler)) {
-            throw new Exception(sprintf('The file "%s" cannot be opened', $realPath));
+            throw new Exception(\sprintf('The file "%s" cannot be opened', $realPath));
         }
         $this->_handler = $handler;
 
@@ -111,7 +111,7 @@ class Shopware_Components_CsvIterator extends Enlight_Class implements Iterator
     }
 
     /**
-     * This is the destructor. It close the CSV file.
+     * This is the destructor. It closes the CSV file.
      */
     public function __destruct()
     {
@@ -141,8 +141,11 @@ class Shopware_Components_CsvIterator extends Enlight_Class implements Iterator
     /**
      * This method move the file pointer to the next row.
      *
+     * @deprecated - Native return type will be added with Shopware 5.8
+     *
      * @return void
      */
+    #[ReturnTypeWillChange]
     public function next()
     {
         $this->_read();
@@ -152,8 +155,11 @@ class Shopware_Components_CsvIterator extends Enlight_Class implements Iterator
     /**
      * This method reset the file handler.
      *
+     * @deprecated - Native return type will be added with Shopware 5.8
+     *
      * @return void
      */
+    #[ReturnTypeWillChange]
     public function rewind()
     {
         rewind($this->_handler);
@@ -165,18 +171,24 @@ class Shopware_Components_CsvIterator extends Enlight_Class implements Iterator
     /**
      * This method returns the current row number.
      *
+     * @deprecated - Native return type will be added with Shopware 5.8
+     *
      * @return int|null
      */
+    #[ReturnTypeWillChange]
     public function key()
     {
         return $this->_key;
     }
 
     /**
-     * This methods return the current CSV row data.
+     * This method return the current CSV row data.
+     *
+     * @deprecated - Native return type will be added with Shopware 5.8
      *
      * @return array The row as a one-dimensional array
      */
+    #[ReturnTypeWillChange]
     public function current()
     {
         $data = [];
@@ -190,8 +202,11 @@ class Shopware_Components_CsvIterator extends Enlight_Class implements Iterator
     /**
      * This method checks if the current row is readable.
      *
+     * @deprecated - Native return type will be added with Shopware 5.8
+     *
      * @return bool if the current row is readable
      */
+    #[ReturnTypeWillChange]
     public function valid()
     {
         return $this->_current !== false;
@@ -200,7 +215,7 @@ class Shopware_Components_CsvIterator extends Enlight_Class implements Iterator
     /**
      * Helper function to determine the newline type of the file
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return string Detected new line type
      */
@@ -246,7 +261,9 @@ class Shopware_Components_CsvIterator extends Enlight_Class implements Iterator
         $count = 0;
         $line = stream_get_line($this->_handler, self::DEFAULT_LENGTH, $this->_newline);
         if ($line === false) {
-            throw new RuntimeException('Could not read line');
+            $this->_current = false;
+
+            return;
         }
 
         // Remove possible utf8-bom

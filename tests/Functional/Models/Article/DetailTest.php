@@ -5,23 +5,22 @@ declare(strict_types=1);
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Models\Article;
@@ -116,15 +115,15 @@ class DetailTest extends Enlight_Components_Test_TestCase
                 'number' => '€SW100066@1',
             ],
             [
-                'regex' => '/^[\w-_.@€]+$/',
+                'regex' => '/^[\w\-_.@€]+$/',
                 'number' => '@SW100066€1',
             ],
             [
-                'regex' => '/^[\w\s-_.@€]+$/',
+                'regex' => '/^[\w\s\-_.@€]+$/',
                 'number' => '€SW1 00 066@1',
             ],
             [
-                'regex' => '/^[\w\u-_.@€]+$/',
+                'regex' => '/^[\p{L}\p{N}\p{P}\p{S}]+$/u',
                 'number' => '€SW100💙066@1',
             ],
         ];
@@ -153,6 +152,6 @@ class DetailTest extends Enlight_Components_Test_TestCase
 
         $violations = $this->em->validate($detail);
 
-        static::assertEquals(0, $violations->count(), sprintf('Number "%s" does not match regex "%s"', $number, $regex));
+        static::assertEquals(0, $violations->count(), \sprintf('Number "%s" does not match regex "%s"', $number, $regex));
     }
 }

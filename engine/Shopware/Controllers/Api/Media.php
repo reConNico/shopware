@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Components\Api\Resource\Media;
@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class Shopware_Controllers_Api_Media extends Shopware_Controllers_Api_Rest
 {
     /**
-     * @var Shopware\Components\Api\Resource\Media
+     * @var Media
      */
     protected $resource;
 
@@ -141,7 +141,7 @@ class Shopware_Controllers_Api_Media extends Shopware_Controllers_Api_Rest
             $fileName = $file->getClientOriginalName();
 
             if ($file->getError() !== UPLOAD_ERR_OK) {
-                throw new \Exception(sprintf('Could not upload file "%s"', $file->getClientOriginalName()));
+                throw new Exception(\sprintf('Could not upload file "%s"', $file->getClientOriginalName()));
             }
 
             // use custom name if provided

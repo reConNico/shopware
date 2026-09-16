@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\FacetHandler;
@@ -85,14 +86,14 @@ class PropertyFacetHandler implements PartialFacetHandlerInterface
     /**
      * @deprecated - Will be private with Shopware 5.8
      *
-     * @return Set[]|null
+     * @return array<int, Set>|null
      */
     protected function getProperties(ShopContextInterface $context, Criteria $queryCriteria)
     {
         $query = $this->queryBuilderFactory->createQuery($queryCriteria, $context);
         $this->rebuildQuery($query);
 
-        $propertyData = $query->execute()->fetchAll();
+        $propertyData = $query->execute()->fetchAllAssociative();
 
         $valueIds = array_column($propertyData, 'id');
         $filterGroupIds = array_keys(array_flip(array_column($propertyData, 'filterGroupId')));
@@ -138,8 +139,8 @@ class PropertyFacetHandler implements PartialFacetHandlerInterface
     }
 
     /**
-     * @param Set[] $sets
-     * @param int[] $actives
+     * @param array<Set> $sets
+     * @param array<int> $actives
      */
     private function createCollectionResult(
         PropertyFacet $facet,

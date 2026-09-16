@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Routing;
@@ -96,7 +96,7 @@ class Router extends EnlightRouter implements RouterInterface
     /**
      * {@inheritdoc}
      */
-    public function match($pathInfo, Context $context = null)
+    public function match($pathInfo, ?Context $context = null)
     {
         if ($context === null) {
             $context = clone $this->context;
@@ -116,7 +116,7 @@ class Router extends EnlightRouter implements RouterInterface
     /**
      * {@inheritdoc}
      */
-    public function generateList(array $list, Context $context = null)
+    public function generateList(array $list, ?Context $context = null)
     {
         $context = $context ?? $this->context;
         $contextList = [];
@@ -150,7 +150,7 @@ class Router extends EnlightRouter implements RouterInterface
         }
 
         // At this point only strings should be in the array
-        $urls = array_filter($urls, '\is_string');
+        $urls = array_filter($urls, 'is_string');
         foreach ($this->postFilters as $postFilter) {
             foreach ($urls as $key => &$url) {
                 if ($postFilter instanceof PostFilterInterface) {
@@ -165,7 +165,7 @@ class Router extends EnlightRouter implements RouterInterface
     /**
      * {@inheritdoc}
      */
-    public function assemble($userParams = [], Context $context = null)
+    public function assemble($userParams = [], ?Context $context = null)
     {
         if ($context === null) {
             $context = clone $this->context;
@@ -276,16 +276,16 @@ class Router extends EnlightRouter implements RouterInterface
      */
     public function route(EnlightRequest $request)
     {
-        /* For enlight routing  */
+        /* For enlight routing */
         $this->context->updateFromEnlightRequest($request);
 
         $params = $this->match($request->getPathInfo(), $this->context);
         if ($params !== false) {
-            /* For shopware routing (query === userParams)  */
+            /* For shopware routing (query === userParams) */
             $request->setQuery($params);
         }
 
-        /* For enlight routing  */
+        /* For enlight routing */
         $this->context->updateFromEnlightRequest($request);
         $this->context->setParams([]);
 
@@ -296,7 +296,7 @@ class Router extends EnlightRouter implements RouterInterface
      * Sets a global parameter.
      *
      * @see \Shopware_Controllers_Backend_Newsletter::initMailing
-     * @see \Enlight_Controller_Router::setGlobalParam
+     * @see EnlightRouter::setGlobalParam
      *
      * @param string $name
      * @param string $value

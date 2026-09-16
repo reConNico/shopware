@@ -84,7 +84,7 @@ class Enlight_Components_Cron_Manager
      *
      * @return Enlight_Components_Cron_Manager
      */
-    public function setEventManager(Enlight_Event_EventManager $eventManager = null)
+    public function setEventManager(?Enlight_Event_EventManager $eventManager = null)
     {
         $this->eventManager = $eventManager;
 
@@ -104,19 +104,17 @@ class Enlight_Components_Cron_Manager
     /**
      * Deactivate a given Cron Job in the crontab
      *
-     * @return Enlight_Components_Cron_Adapter
+     * @return void
      */
     public function disableJob(Enlight_Components_Cron_Job $job)
     {
         $job->setActive(false);
 
-        return $this->adapter->updateJob($job);
+        $this->adapter->updateJob($job);
     }
 
     /**
      * Deactivate a given Cron Job
-     *
-     * @param \Enlight_Components_Cron_Job $job
      *
      * @throws Enlight_Exception
      *
@@ -131,8 +129,6 @@ class Enlight_Components_Cron_Manager
 
     /**
      * Updates a cron job
-     *
-     * @param \Enlight_Components_Cron_Job $job
      *
      * @throws Enlight_Exception
      *
@@ -277,7 +273,7 @@ class Enlight_Components_Cron_Manager
             ]);
 
             return $jobArgs;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $job->setData(['error' => $e->getMessage()]);
 
             if ($job->getDisableOnError()) {
